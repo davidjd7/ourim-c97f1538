@@ -50,6 +50,11 @@ export default function InvestissementDetail() {
     bailGmapLink?: string;
     bailGmapNote?: string;
     bailLoyerHT?: number;
+    bailCNR?: number;
+    // Présentation Vente fields
+    netVendeur?: number;
+    agent?: number;
+    honoNotaire?: number;
   }>({
     id: id,
     name: 'Faisanderie Paris',
@@ -74,7 +79,12 @@ export default function InvestissementDetail() {
     bailNextBreak: '2028-01-01',
     bailGmapLink: 'https://maps.google.com/?q=12+rue+de+la+Faisanderie+75016+Paris',
     bailGmapNote: 'Proche métro Trocadéro',
-    bailLoyerHT: 12500
+    bailLoyerHT: 12500,
+    bailCNR: 500,
+    // Présentation Vente mock data
+    netVendeur: 2100000,
+    agent: 0.03, // 3%
+    honoNotaire: 0.08 // 8%
   });
 
   const [tempEditData, setTempEditData] = useState({
@@ -94,7 +104,12 @@ export default function InvestissementDetail() {
     bailNextBreak: investment.bailNextBreak || '',
     bailGmapLink: investment.bailGmapLink || '',
     bailGmapNote: investment.bailGmapNote || '',
-    bailLoyerHT: investment.bailLoyerHT || 0
+    bailLoyerHT: investment.bailLoyerHT || 0,
+    bailCNR: investment.bailCNR || 0,
+    // Présentation Vente fields
+    netVendeur: investment.netVendeur || 0,
+    agent: investment.agent || 0,
+    honoNotaire: investment.honoNotaire || 0.08
   });
 
   const handleStatusChange = (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
@@ -134,7 +149,12 @@ export default function InvestissementDetail() {
       bailNextBreak: tempEditData.bailNextBreak,
       bailGmapLink: tempEditData.bailGmapLink,
       bailGmapNote: tempEditData.bailGmapNote,
-      bailLoyerHT: tempEditData.bailLoyerHT
+      bailLoyerHT: tempEditData.bailLoyerHT,
+      bailCNR: tempEditData.bailCNR,
+      // Présentation Vente fields
+      netVendeur: tempEditData.netVendeur,
+      agent: tempEditData.agent,
+      honoNotaire: tempEditData.honoNotaire
     }));
     setIsEditMode(false);
     toast({
@@ -161,7 +181,12 @@ export default function InvestissementDetail() {
       bailNextBreak: investment.bailNextBreak || '',
       bailGmapLink: investment.bailGmapLink || '',
       bailGmapNote: investment.bailGmapNote || '',
-      bailLoyerHT: investment.bailLoyerHT || 0
+      bailLoyerHT: investment.bailLoyerHT || 0,
+      bailCNR: investment.bailCNR || 0,
+      // Présentation Vente fields
+      netVendeur: investment.netVendeur || 0,
+      agent: investment.agent || 0,
+      honoNotaire: investment.honoNotaire || 0.08
     });
     setIsEditMode(false);
   };
