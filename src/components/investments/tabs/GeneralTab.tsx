@@ -117,30 +117,6 @@ export function GeneralTab({ investmentId, isEditMode = false }: GeneralTabProps
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="status">Statut</Label>
-                {isEditMode ? (
-                  <Select
-                    value={editData.status}
-                    onValueChange={(value: any) => setEditData({ ...editData, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="RECU">Reçu</SelectItem>
-                      <SelectItem value="DUE_DIL">Due Dil</SelectItem>
-                      <SelectItem value="INVESTI">Investi</SelectItem>
-                      <SelectItem value="VENDU">Vendu</SelectItem>
-                      <SelectItem value="DROP">Drop</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Badge variant="outline" className={statusConfig[data.status].className}>
-                    {statusConfig[data.status].label}
-                  </Badge>
-                )}
-              </div>
 
               <div>
                 <Label htmlFor="address">Adresse</Label>
