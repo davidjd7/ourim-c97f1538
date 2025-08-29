@@ -13,9 +13,9 @@ import {
 
 export default function Dashboard() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Page Header */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
         <p className="text-lg text-muted-foreground">
           Vue d'ensemble de votre portefeuille d'investissements
@@ -23,7 +23,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards - General */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Nombre d'Investissements"
           value="12"
@@ -56,12 +56,12 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards - By Asset Type */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <h2 className="text-xl font-semibold text-foreground">Par Type d'Actif</h2>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Immobilier */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
               <Building className="h-5 w-5 text-primary" />
               Immobilier
@@ -85,7 +85,7 @@ export default function Dashboard() {
           </div>
 
           {/* Private Equity */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
               Private Equity  
@@ -111,10 +111,10 @@ export default function Dashboard() {
       </div>
 
       {/* Pipeline Overview */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <h2 className="text-xl font-semibold text-foreground">Pipelines</h2>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Pipeline Immobilier */}
           <div className="card-financial p-6">
             <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">

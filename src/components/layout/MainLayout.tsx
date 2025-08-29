@@ -22,7 +22,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           sidebarOpen={sidebarOpen}
         />
         
-        <main className="p-6">
+        <main className="p-4 pt-2">
           {children}
         </main>
       </div>
