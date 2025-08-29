@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import PipelineImmo from "./pages/PipelineImmo";
 import PipelinePE from "./pages/PipelinePE";
 import Investissements from "./pages/Investissements";
+import InvestissementDetail from "./pages/InvestissementDetail";
 import Dettes from "./pages/Dettes";
 import Parametres from "./pages/Parametres";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/pipeline-immo" element={<PipelineImmo />} />
             <Route path="/pipeline-pe" element={<PipelinePE />} />
             <Route path="/investissements" element={<Investissements />} />
+            <Route path="/investissement/:id" element={<InvestissementDetail />} />
             <Route path="/dettes" element={<Dettes />} />
             <Route path="/parametres" element={<Parametres />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

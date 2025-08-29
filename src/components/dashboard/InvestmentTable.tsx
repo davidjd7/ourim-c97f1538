@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -71,6 +72,8 @@ const statusConfig = {
 };
 
 export function InvestmentTable() {
+  const navigate = useNavigate();
+  
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -157,7 +160,11 @@ export function InvestmentTable() {
                 </div>
               </TableCell>
               <TableCell>
-                <Button variant="ghost" size="icon">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => navigate(`/investissement/${investment.id}`)}
+                >
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </TableCell>
