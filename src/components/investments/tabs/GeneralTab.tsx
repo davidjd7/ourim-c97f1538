@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Building, MapPin, Calendar, FileText, Link, Calculator } from 'lucide-react';
+import { Building, MapPin, Calendar, FileText, Link, Calculator, Settings } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 
 interface GeneralData {
@@ -508,22 +508,15 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             </div>
 
             <div>
-              <Label htmlFor="honoNotaire">Hono Notaire (%)</Label>
-              {isEditMode ? (
-                <Input
-                  id="honoNotaire"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="1"
-                  value={editData.honoNotaire}
-                  onChange={(e) => handleDataChange({ ...editData, honoNotaire: Number(e.target.value) })}
-                />
-              ) : (
-                <p className="font-medium">
-                  {(data.honoNotaire * 100).toFixed(2)}%
-                </p>
-              )}
+              <Label htmlFor="honoNotaire" className="flex items-center gap-2">
+                Hono Notaire (%)
+                <div title="Géré dans les paramètres">
+                  <Settings className="h-3 w-3 text-muted-foreground" />
+                </div>
+              </Label>
+              <p className="font-medium text-muted-foreground">
+                {(data.honoNotaire * 100).toFixed(2)}%
+              </p>
             </div>
 
             {/* Champs calculés */}
