@@ -10,8 +10,9 @@ interface InvestmentCardProps {
     type: 'IMMO' | 'PE';
     status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
     surface?: number;
-    rentAmount?: number;
+    bailLoyerHT?: number;
     lastValue?: number;
+    price?: number;
   };
   onDragStart?: (e: React.DragEvent, investmentId: string) => void;
 }
@@ -73,21 +74,23 @@ export function InvestmentCard({ investment, onDragStart }: InvestmentCardProps)
       </CardHeader>
       
       <CardContent className="px-3 pb-3 space-y-1">
-        {investment.rentAmount && (
+        {investment.bailLoyerHT && investment.bailLoyerHT > 0 && (
           <div className="text-xs text-muted-foreground">
-            <span className="font-medium">Loyer: </span>
-            <span className="financial-value">{formatCurrency(investment.rentAmount)}</span>
+            <span className="font-medium">Loyer HT: </span>
+            <span className="financial-value">{formatCurrency(investment.bailLoyerHT)}</span>
           </div>
         )}
         
-        {investment.lastValue && (
+        {((investment.lastValue && investment.lastValue > 0) || (investment.price && investment.price > 0)) && (
           <div className="text-xs text-muted-foreground">
             <span className="font-medium">Valeur: </span>
-            <span className="financial-value">{formatCurrency(investment.lastValue)}</span>
+            <span className="financial-value">
+              {formatCurrency(investment.lastValue || investment.price || 0)}
+            </span>
           </div>
         )}
         
-        {investment.surface && (
+        {investment.surface && investment.surface > 0 && (
           <div className="text-xs text-muted-foreground">
             <span className="font-medium">Surface: </span>
             <span>{investment.surface} m²</span>
