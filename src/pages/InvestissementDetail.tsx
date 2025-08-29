@@ -87,10 +87,8 @@ export default function InvestissementDetail() {
                 </div>
                 {canEdit && (
                   <Button 
-                    variant="ghost" 
-                    size="sm"
                     onClick={() => setIsEditMode(!isEditMode)}
-                    className="flex items-center gap-2"
+                    className="btn-financial gap-2"
                   >
                     <Edit2 className="h-4 w-4" />
                     {isEditMode ? 'Annuler' : 'Modifier'}
