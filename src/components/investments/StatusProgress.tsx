@@ -21,11 +21,10 @@ const statusOrder: InvestmentStatus[] = ['RECU', 'DUE_DIL', 'INVESTI', 'VENDU'];
 
 export function StatusProgress({ currentStatus, className }: StatusProgressProps) {
   const currentStep = statusConfig[currentStatus].step;
-  const progress = currentStatus === 'DROP' ? 0 : (currentStep / 4) * 100;
 
   return (
     <div className={className}>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-muted-foreground">Progression du statut</h3>
         <Badge variant="outline" className={statusConfig[currentStatus].className}>
           {statusConfig[currentStatus].label}
@@ -33,28 +32,47 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
       </div>
       
       {currentStatus !== 'DROP' && (
-        <>
-          <Progress value={progress} className="mb-4" />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            {statusOrder.map((status) => (
-              <span
-                key={status}
-                className={`${
-                  statusConfig[status].step <= currentStep
-                    ? 'text-primary font-medium'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                {statusConfig[status].label}
-              </span>
+        <div className="relative">
+          {/* Barre de progression de fond */}
+          <div className="w-full h-2 bg-muted rounded-full">
+            <div 
+              className="h-2 bg-gradient-to-r from-primary to-primary-glow rounded-full transition-all duration-500"
+              style={{ width: `${(currentStep / 4) * 100}%` }}
+            />
+          </div>
+          
+          {/* Points d'étapes */}
+          <div className="flex justify-between relative -mt-1">
+            {statusOrder.map((status, index) => (
+              <div key={status} className="flex flex-col items-center">
+                <div 
+                  className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${
+                    statusConfig[status].step <= currentStep
+                      ? 'bg-primary border-primary shadow-md' 
+                      : 'bg-background border-muted-foreground/30'
+                  }`}
+                />
+                <span 
+                  className={`text-xs mt-2 transition-colors duration-300 ${
+                    statusConfig[status].step <= currentStep
+                      ? 'text-primary font-medium'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  {statusConfig[status].label}
+                </span>
+              </div>
             ))}
           </div>
-        </>
+        </div>
       )}
       
       {currentStatus === 'DROP' && (
-        <div className="text-center py-2">
-          <span className="text-destructive text-sm">Investissement abandonné</span>
+        <div className="text-center py-4">
+          <div className="w-full h-2 bg-destructive/20 rounded-full mb-4">
+            <div className="h-2 bg-destructive rounded-full w-full" />
+          </div>
+          <span className="text-destructive text-sm font-medium">Investissement abandonné</span>
         </div>
       )}
     </div>
