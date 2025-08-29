@@ -221,6 +221,16 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
             </Dialog>
           </div>
         );
+      case 'INVESTI':
+        return (
+          <Button 
+            size="sm" 
+            onClick={() => handleStatusChange('VENDU')}
+            className="btn-financial"
+          >
+            Marquer comme vendu
+          </Button>
+        );
       default:
         return null;
     }

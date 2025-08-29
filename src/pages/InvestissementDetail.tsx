@@ -25,7 +25,7 @@ export default function InvestissementDetail() {
     id: id,
     name: 'Faisanderie Paris',
     type: 'IMMO' as const,
-    status: 'INVESTI' as const,
+    status: 'DUE_DIL' as const, // Changé pour tester les boutons
     dateInvestment: '2023-03-15',
     lastValue: 2170000,
     lastTRI: 6.8,
