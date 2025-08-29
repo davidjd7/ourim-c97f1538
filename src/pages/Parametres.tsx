@@ -34,6 +34,9 @@ export default function Parametres() {
     // Ici on sauvegarderait normalement dans une base de données ou localStorage
     localStorage.setItem('familyOfficeSettings', JSON.stringify(settings));
     
+    // Déclencher un événement pour notifier les autres composants
+    window.dispatchEvent(new CustomEvent('settingsUpdated'));
+    
     toast({
       title: "Paramètres sauvegardés",
       description: "Les paramètres ont été sauvegardés avec succès.",

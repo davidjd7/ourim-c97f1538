@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Building, MapPin, Calendar, FileText, Link, Calculator, Settings } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useSettings } from '@/hooks/useSettings';
 
 interface GeneralData {
   name: string;
@@ -106,6 +107,7 @@ const statusConfig = {
 
 export function GeneralTab({ investmentId, isEditMode = false, investmentData, tempEditData, onDataChange }: GeneralTabProps) {
   const { canEdit } = useUserRole();
+  const settings = useSettings();
   
   // Utiliser les données passées en prop ou les données mock par défaut
   const initialData = investmentData ? {
@@ -129,11 +131,14 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     bailGmapNote: investmentData.bailGmapNote || '',
     bailLoyerHT: investmentData.bailLoyerHT || 0,
     bailCNR: investmentData.bailCNR || 0,
-    // Présentation Vente fields avec valeurs par défaut
+    // Présentation Vente fields avec valeurs par défaut - utiliser les paramètres pour honoNotaire
     netVendeur: investmentData.netVendeur || 0,
     agent: investmentData.agent || 0,
-    honoNotaire: investmentData.honoNotaire || 0.08
-  } : mockGeneralData;
+    honoNotaire: settings.notaryFees / 100 // Convertir en décimal depuis les paramètres
+  } : {
+    ...mockGeneralData,
+    honoNotaire: settings.notaryFees / 100 // Utiliser la valeur des paramètres
+  };
   
   const [data, setData] = useState<GeneralData>(initialData);
   
@@ -170,14 +175,14 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
         bailGmapNote: investmentData.bailGmapNote || '',
         bailLoyerHT: investmentData.bailLoyerHT || 0,
         bailCNR: investmentData.bailCNR || 0,
-        // Présentation Vente fields avec valeurs par défaut
+        // Présentation Vente fields avec valeurs par défaut - utiliser les paramètres pour honoNotaire
         netVendeur: investmentData.netVendeur || 0,
         agent: investmentData.agent || 0,
-        honoNotaire: investmentData.honoNotaire || 0.08
+        honoNotaire: settings.notaryFees / 100 // Utiliser la valeur des paramètres
       };
       setData(newData);
     }
-  }, [investmentData]);
+  }, [investmentData, settings.notaryFees]); // Ajouter settings.notaryFees comme dépendance
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
