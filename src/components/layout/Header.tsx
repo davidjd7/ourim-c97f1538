@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, Plus, Building2, User, Menu } from 'lucide-react';
+import { Search, Plus, Building2, User, Menu, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,6 +26,8 @@ interface HeaderProps {
 }
 
 export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
+  const { user, signOut } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -106,7 +109,7 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2">
                 <User className="h-4 w-4" />
-                Utilisateur
+                {user?.email || 'Utilisateur'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -115,7 +118,10 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
               <DropdownMenuItem>Profil</DropdownMenuItem>
               <DropdownMenuItem>Paramètres</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Se déconnecter</DropdownMenuItem>
+              <DropdownMenuItem onClick={signOut} className="text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                Se déconnecter
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
