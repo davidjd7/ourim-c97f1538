@@ -240,12 +240,9 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
     <div className={className}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-muted-foreground">Progression du statut</h3>
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className={statusConfig[currentStatus].className}>
-            {statusConfig[currentStatus].label}
-          </Badge>
-          {getAvailableActions()}
-        </div>
+         <div className="flex items-center gap-3">
+           {getAvailableActions()}
+         </div>
       </div>
       
       {currentStatus !== 'DROP' && (
