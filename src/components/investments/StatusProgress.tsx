@@ -258,23 +258,53 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
           {/* Points d'étapes */}
           <div className="flex justify-between relative -mt-1">
             {statusOrder.map((status, index) => (
-              <div key={status} className="flex flex-col items-center">
-                <div 
-                  className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${
-                    statusConfig[status].step <= currentStep
-                      ? 'bg-primary border-primary shadow-md' 
-                      : 'bg-background border-muted-foreground/30'
-                  }`}
-                />
+              <div key={status} className="flex flex-col items-center group">
+                <div className="relative">
+                  <div 
+                    className={`w-6 h-6 rounded-full border-3 transition-all duration-500 ${
+                      statusConfig[status].step <= currentStep
+                        ? 'bg-gradient-to-br from-primary to-primary-glow border-primary shadow-lg shadow-primary/30 scale-110' 
+                        : 'bg-background border-muted-foreground/40 hover:border-muted-foreground/60'
+                    }`}
+                  >
+                    {statusConfig[status].step <= currentStep && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-2 h-2 bg-primary-foreground rounded-full animate-scale-in" />
+                      </div>
+                    )}
+                    {statusConfig[status].step === currentStep && (
+                      <div className="absolute -inset-1 bg-primary/20 rounded-full animate-pulse" />
+                    )}
+                  </div>
+                  
+                  {/* Connecteur vers l'étape suivante */}
+                  {index < statusOrder.length - 1 && (
+                    <div className="absolute top-3 left-6 w-full h-0.5">
+                      <div 
+                        className={`h-full transition-all duration-700 ${
+                          statusConfig[status].step < currentStep
+                            ? 'bg-gradient-to-r from-primary to-primary-glow'
+                            : 'bg-muted-foreground/20'
+                        }`}
+                        style={{ width: 'calc(100% + 1rem)' }}
+                      />
+                    </div>
+                  )}
+                </div>
+                
                 <span 
-                  className={`text-xs mt-2 transition-colors duration-300 ${
+                  className={`text-xs mt-3 transition-all duration-500 font-medium ${
                     statusConfig[status].step <= currentStep
-                      ? 'text-primary font-medium'
-                      : 'text-muted-foreground'
+                      ? 'text-primary font-semibold' 
+                      : 'text-muted-foreground group-hover:text-foreground'
                   }`}
                 >
                   {statusConfig[status].label}
                 </span>
+                
+                {statusConfig[status].step === currentStep && (
+                  <div className="mt-1 w-1 h-1 bg-primary rounded-full animate-pulse" />
+                )}
               </div>
             ))}
           </div>
