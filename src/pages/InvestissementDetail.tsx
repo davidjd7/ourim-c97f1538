@@ -62,8 +62,10 @@ export default function InvestissementDetail() {
       // Si on passe au statut INVESTI, mettre à jour les données financières
       if (newStatus === 'INVESTI' && data) {
         updated.investmentAmount = data.amount;
-        updated.dateInvestment = data.date.toISOString().split('T')[0];
-        updated.acquisitionDate = data.date.toISOString().split('T')[0];
+        // Corriger le décalage de date en utilisant le fuseau horaire local
+        const localDateString = `${data.date.getFullYear()}-${String(data.date.getMonth() + 1).padStart(2, '0')}-${String(data.date.getDate()).padStart(2, '0')}`;
+        updated.dateInvestment = localDateString;
+        updated.acquisitionDate = localDateString;
         updated.notaryFees = data.cost;
       }
       
