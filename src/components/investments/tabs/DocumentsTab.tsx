@@ -16,6 +16,7 @@ interface Document {
 
 interface DocumentsTabProps {
   investmentId: string;
+  isEditMode?: boolean;
 }
 
 const mockDocuments: Document[] = [

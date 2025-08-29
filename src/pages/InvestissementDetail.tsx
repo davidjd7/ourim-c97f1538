@@ -18,6 +18,7 @@ export default function InvestissementDetail() {
   const navigate = useNavigate();
   const { canEdit, isLoading } = useUserRole();
   const [activeTab, setActiveTab] = useState('general');
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Mock data - en attendant la vraie intégration
   const investment = {
@@ -71,30 +72,36 @@ export default function InvestissementDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           
-          <div className="flex items-center gap-3">
-            {investment.type === 'IMMO' ? (
-              <Building className="h-6 w-6 text-muted-foreground" />
-            ) : (
-              <TrendingUp className="h-6 w-6 text-muted-foreground" />
-            )}
-            <div>
-              <h1 className="text-2xl font-bold">{investment.name}</h1>
-              <p className="text-muted-foreground">
-                {investment.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
-              </p>
+            <div className="flex items-center gap-3">
+              {investment.type === 'IMMO' ? (
+                <Building className="h-6 w-6 text-muted-foreground" />
+              ) : (
+                <TrendingUp className="h-6 w-6 text-muted-foreground" />
+              )}
+              <div className="flex items-center gap-3">
+                <div>
+                  <h1 className="text-2xl font-bold">{investment.name}</h1>
+                  <p className="text-muted-foreground">
+                    {investment.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+                  </p>
+                </div>
+                {canEdit && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setIsEditMode(!isEditMode)}
+                    className="flex items-center gap-2"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                    {isEditMode ? 'Annuler' : 'Modifier'}
+                  </Button>
+                )}
+              </div>
+              <Badge variant="outline" className={statusConfig[investment.status].className}>
+                {statusConfig[investment.status].label}
+              </Badge>
             </div>
-            <Badge variant="outline" className={statusConfig[investment.status].className}>
-              {statusConfig[investment.status].label}
-            </Badge>
-          </div>
         </div>
-
-        {canEdit && (
-          <Button className="flex items-center gap-2">
-            <Edit2 className="h-4 w-4" />
-            Mode édition
-          </Button>
-        )}
       </div>
 
       {/* Status Progress */}
@@ -143,27 +150,27 @@ export default function InvestissementDetail() {
         </TabsList>
 
         <TabsContent value="general" className="mt-6">
-          <GeneralTab investmentId={id || ''} />
+          <GeneralTab investmentId={id || ''} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="performance" className="mt-6">
-          <PerformanceTab investmentId={id || ''} />
+          <PerformanceTab investmentId={id || ''} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-6">
-          <DocumentsTab investmentId={id || ''} />
+          <DocumentsTab investmentId={id || ''} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-6">
-          <NotesTab investmentId={id || ''} />
+          <NotesTab investmentId={id || ''} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="dette" className="mt-6">
-          <DetteTab investmentId={id || ''} />
+          <DetteTab investmentId={id || ''} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="historique" className="mt-6">
-          <HistoriqueTab investmentId={id || ''} />
+          <HistoriqueTab investmentId={id || ''} isEditMode={isEditMode} />
         </TabsContent>
       </Tabs>
     </div>

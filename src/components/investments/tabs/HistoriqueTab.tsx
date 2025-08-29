@@ -20,6 +20,7 @@ interface HistoryEvent {
 
 interface HistoriqueTabProps {
   investmentId: string;
+  isEditMode?: boolean;
 }
 
 const mockHistory: HistoryEvent[] = [

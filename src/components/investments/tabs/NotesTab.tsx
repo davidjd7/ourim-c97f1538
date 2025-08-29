@@ -19,6 +19,7 @@ interface Note {
 
 interface NotesTabProps {
   investmentId: string;
+  isEditMode?: boolean;
 }
 
 const mockNotes: Note[] = [

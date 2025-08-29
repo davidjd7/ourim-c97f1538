@@ -23,6 +23,7 @@ interface PerformanceData {
 
 interface PerformanceTabProps {
   investmentId: string;
+  isEditMode?: boolean;
 }
 
 const mockPerformanceData: PerformanceData = {

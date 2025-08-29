@@ -21,6 +21,7 @@ interface Debt {
 
 interface DetteTabProps {
   investmentId: string;
+  isEditMode?: boolean;
 }
 
 const mockDebts: Debt[] = [

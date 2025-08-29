@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Building, MapPin, Calendar, Edit2, Save, X } from 'lucide-react';
+import { Building, MapPin, Calendar } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 
 interface GeneralData {
@@ -25,6 +24,7 @@ interface GeneralData {
 
 interface GeneralTabProps {
   investmentId: string;
+  isEditMode?: boolean;
 }
 
 const mockGeneralData: GeneralData = {
@@ -49,10 +49,9 @@ const statusConfig = {
   DROP: { label: 'Drop', className: 'status-drop' }
 };
 
-export function GeneralTab({ investmentId }: GeneralTabProps) {
+export function GeneralTab({ investmentId, isEditMode = false }: GeneralTabProps) {
   const { canEdit } = useUserRole();
   const [data, setData] = useState<GeneralData>(mockGeneralData);
-  const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<GeneralData>(data);
 
   const formatCurrency = (amount: number) => {
@@ -63,45 +62,14 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
     }).format(amount);
   };
 
-  const handleSave = () => {
-    setData(editData);
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditData(data);
-    setIsEditing(false);
-  };
-
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" />
             Informations générales
           </CardTitle>
-          {canEdit && (
-            <div className="flex gap-2">
-              {isEditing ? (
-                <>
-                  <Button size="sm" onClick={handleSave} className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Enregistrer
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleCancel} className="flex items-center gap-2">
-                    <X className="h-4 w-4" />
-                    Annuler
-                  </Button>
-                </>
-              ) : (
-                <Button size="sm" onClick={() => setIsEditing(true)} className="flex items-center gap-2">
-                  <Edit2 className="h-4 w-4" />
-                  Modifier
-                </Button>
-              )}
-            </div>
-          )}
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
@@ -109,7 +77,7 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="name">Nom de l'investissement</Label>
-                {isEditing ? (
+                {isEditMode ? (
                   <Input
                     id="name"
                     value={editData.name}
@@ -122,7 +90,7 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
 
               <div>
                 <Label htmlFor="type">Type</Label>
-                {isEditing ? (
+                {isEditMode ? (
                   <Select
                     value={editData.type}
                     onValueChange={(value: 'IMMO' | 'PE') => setEditData({ ...editData, type: value })}
@@ -151,7 +119,7 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
 
               <div>
                 <Label htmlFor="status">Statut</Label>
-                {isEditing ? (
+                {isEditMode ? (
                   <Select
                     value={editData.status}
                     onValueChange={(value: any) => setEditData({ ...editData, status: value })}
@@ -176,7 +144,7 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
 
               <div>
                 <Label htmlFor="address">Adresse</Label>
-                {isEditing ? (
+                {isEditMode ? (
                   <Input
                     id="address"
                     value={editData.address}
@@ -195,7 +163,7 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="investmentAmount">Montant d'investissement</Label>
-                {isEditing ? (
+                {isEditMode ? (
                   <Input
                     id="investmentAmount"
                     type="number"
@@ -211,7 +179,7 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
 
               <div>
                 <Label htmlFor="acquisitionDate">Date d'acquisition</Label>
-                {isEditing ? (
+                {isEditMode ? (
                   <Input
                     id="acquisitionDate"
                     type="date"
@@ -228,7 +196,7 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
 
               <div>
                 <Label htmlFor="surface">Surface (m²)</Label>
-                {isEditing ? (
+                {isEditMode ? (
                   <Input
                     id="surface"
                     type="number"
@@ -242,7 +210,7 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
 
               <div>
                 <Label htmlFor="notaryFees">Frais de notaire</Label>
-                {isEditing ? (
+                {isEditMode ? (
                   <Input
                     id="notaryFees"
                     type="number"
@@ -260,7 +228,7 @@ export function GeneralTab({ investmentId }: GeneralTabProps) {
 
           <div className="mt-6">
             <Label htmlFor="description">Description</Label>
-            {isEditing ? (
+            {isEditMode ? (
               <Textarea
                 id="description"
                 value={editData.description}
