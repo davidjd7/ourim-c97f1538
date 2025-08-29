@@ -246,64 +246,53 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
       </div>
       
       {currentStatus !== 'DROP' && (
-        <div className="relative">
-          {/* Barre de progression de fond */}
-          <div className="w-full h-2 bg-muted rounded-full">
+        <div className="space-y-4">
+          {/* Barre de progression segmentée */}
+          <div className="relative">
+            <div className="flex h-3 rounded-full overflow-hidden bg-muted">
+              {statusOrder.map((status, index) => (
+                <div
+                  key={status}
+                  className={`flex-1 transition-all duration-700 ${
+                    statusConfig[status].step <= currentStep
+                      ? 'bg-gradient-to-r from-primary to-primary-glow'
+                      : 'bg-muted'
+                  } ${index > 0 ? 'border-l border-background' : ''}`}
+                  style={{ 
+                    animationDelay: `${index * 200}ms`,
+                    opacity: statusConfig[status].step <= currentStep ? 1 : 0.3
+                  }}
+                />
+              ))}
+            </div>
+            
+            {/* Indicateur de progression en pourcentage */}
             <div 
-              className="h-2 bg-gradient-to-r from-primary to-primary-glow rounded-full transition-all duration-500"
-              style={{ width: `${(currentStep / 4) * 100}%` }}
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-success to-success-glow rounded-full transition-all duration-1000"
+              style={{ width: `${(currentStep / statusOrder.length) * 100}%` }}
             />
           </div>
           
-          {/* Points d'étapes */}
-          <div className="flex justify-between relative -mt-1">
+          {/* Labels des étapes */}
+          <div className="flex justify-between">
             {statusOrder.map((status, index) => (
-              <div key={status} className="flex flex-col items-center group">
-                <div className="relative">
-                  <div 
-                    className={`w-6 h-6 rounded-full border-3 transition-all duration-500 ${
-                      statusConfig[status].step <= currentStep
-                        ? 'bg-gradient-to-br from-primary to-primary-glow border-primary shadow-lg shadow-primary/30 scale-110' 
-                        : 'bg-background border-muted-foreground/40 hover:border-muted-foreground/60'
-                    }`}
-                  >
-                    {statusConfig[status].step <= currentStep && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-2 h-2 bg-primary-foreground rounded-full animate-scale-in" />
-                      </div>
-                    )}
-                    {statusConfig[status].step === currentStep && (
-                      <div className="absolute -inset-1 bg-primary/20 rounded-full animate-pulse" />
-                    )}
-                  </div>
-                  
-                  {/* Connecteur vers l'étape suivante */}
-                  {index < statusOrder.length - 1 && (
-                    <div className="absolute top-3 left-6 w-full h-0.5">
-                      <div 
-                        className={`h-full transition-all duration-700 ${
-                          statusConfig[status].step < currentStep
-                            ? 'bg-gradient-to-r from-primary to-primary-glow'
-                            : 'bg-muted-foreground/20'
-                        }`}
-                        style={{ width: 'calc(100% + 1rem)' }}
-                      />
-                    </div>
-                  )}
-                </div>
-                
-                <span 
-                  className={`text-xs mt-3 transition-all duration-500 font-medium ${
-                    statusConfig[status].step <= currentStep
-                      ? 'text-primary font-semibold' 
-                      : 'text-muted-foreground group-hover:text-foreground'
-                  }`}
-                >
+              <div key={status} className="flex flex-col items-center flex-1">
+                <div className={`text-xs font-medium transition-colors duration-300 ${
+                  statusConfig[status].step <= currentStep
+                    ? 'text-primary' 
+                    : 'text-muted-foreground'
+                }`}>
                   {statusConfig[status].label}
-                </span>
-                
+                </div>
                 {statusConfig[status].step === currentStep && (
-                  <div className="mt-1 w-1 h-1 bg-primary rounded-full animate-pulse" />
+                  <div className="mt-1 text-xs text-success font-medium">
+                    En cours
+                  </div>
+                )}
+                {statusConfig[status].step < currentStep && (
+                  <div className="mt-1 text-xs text-primary/70">
+                    ✓ Terminé
+                  </div>
                 )}
               </div>
             ))}
