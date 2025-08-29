@@ -50,6 +50,27 @@ export default function Parametres() {
                   <Input id="fx-rate" type="number" step="0.0001" placeholder="1.0500" />
                 </div>
               </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="notary-fees">Honoraires Notaire (%)</Label>
+                  <Input 
+                    id="notary-fees" 
+                    type="number" 
+                    step="0.01" 
+                    min="0" 
+                    max="100"
+                    defaultValue="8.00"
+                    placeholder="8.00" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Application</Label>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Utilisé pour tous les calculs All In des investissements
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
