@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Building, MapPin, Calendar } from 'lucide-react';
+import { Building, MapPin, Calendar, FileText, Link } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 
 interface GeneralData {
@@ -20,6 +20,14 @@ interface GeneralData {
   acquisitionDate: string;
   notaryFees: number;
   renovationBudget: number;
+  // Bail fields
+  bailPriseEffet: string;
+  bailActivite: string;
+  bailAnciennete: number;
+  bailNextBreak: string;
+  bailGmapLink: string;
+  bailGmapNote: string;
+  bailLoyerHT: number;
 }
 
 interface GeneralTabProps {
@@ -38,6 +46,14 @@ interface GeneralTabProps {
     acquisitionDate: string;
     notaryFees: number;
     renovationBudget: number;
+    // Bail fields
+    bailPriseEffet?: string;
+    bailActivite?: string;
+    bailAnciennete?: number;
+    bailNextBreak?: string;
+    bailGmapLink?: string;
+    bailGmapNote?: string;
+    bailLoyerHT?: number;
   };
 }
 
@@ -52,7 +68,15 @@ const mockGeneralData: GeneralData = {
   investmentAmount: 0, // Sera mis à jour quand le statut passe à INVESTI
   acquisitionDate: '2023-03-15',
   notaryFees: 168000,
-  renovationBudget: 50000
+  renovationBudget: 50000,
+  // Bail mock data
+  bailPriseEffet: '2023-01-01',
+  bailActivite: 'Bureau',
+  bailAnciennete: 5,
+  bailNextBreak: '2028-01-01',
+  bailGmapLink: 'https://maps.google.com/?q=12+rue+de+la+Faisanderie+75016+Paris',
+  bailGmapNote: 'Proche métro Trocadéro',
+  bailLoyerHT: 12500
 };
 
 const statusConfig = {
@@ -78,7 +102,15 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
     investmentAmount: investmentData.investmentAmount,
     acquisitionDate: investmentData.acquisitionDate,
     notaryFees: investmentData.notaryFees,
-    renovationBudget: investmentData.renovationBudget
+    renovationBudget: investmentData.renovationBudget,
+    // Bail fields avec valeurs par défaut
+    bailPriseEffet: investmentData.bailPriseEffet || '',
+    bailActivite: investmentData.bailActivite || '',
+    bailAnciennete: investmentData.bailAnciennete || 0,
+    bailNextBreak: investmentData.bailNextBreak || '',
+    bailGmapLink: investmentData.bailGmapLink || '',
+    bailGmapNote: investmentData.bailGmapNote || '',
+    bailLoyerHT: investmentData.bailLoyerHT || 0
   } : mockGeneralData;
   
   const [data, setData] = useState<GeneralData>(initialData);
@@ -98,7 +130,15 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
         investmentAmount: investmentData.investmentAmount,
         acquisitionDate: investmentData.acquisitionDate,
         notaryFees: investmentData.notaryFees,
-        renovationBudget: investmentData.renovationBudget
+        renovationBudget: investmentData.renovationBudget,
+        // Bail fields avec valeurs par défaut
+        bailPriseEffet: investmentData.bailPriseEffet || '',
+        bailActivite: investmentData.bailActivite || '',
+        bailAnciennete: investmentData.bailAnciennete || 0,
+        bailNextBreak: investmentData.bailNextBreak || '',
+        bailGmapLink: investmentData.bailGmapLink || '',
+        bailGmapNote: investmentData.bailGmapNote || '',
+        bailLoyerHT: investmentData.bailLoyerHT || 0
       };
       setData(newData);
       setEditData(newData);
@@ -227,6 +267,147 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
               />
             ) : (
               <p className="text-muted-foreground mt-2">{data.description}</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section Bail */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Informations du Bail
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <Label htmlFor="bailPriseEffet">Date de prise d'Effet</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailPriseEffet"
+                  type="date"
+                  value={editData.bailPriseEffet}
+                  onChange={(e) => setEditData({ ...editData, bailPriseEffet: e.target.value })}
+                />
+              ) : (
+                <p className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {data.bailPriseEffet ? new Date(data.bailPriseEffet).toLocaleDateString('fr-FR') : 'Non défini'}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="bailActivite">Activité</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailActivite"
+                  value={editData.bailActivite}
+                  onChange={(e) => setEditData({ ...editData, bailActivite: e.target.value })}
+                />
+              ) : (
+                <p className="font-medium">{data.bailActivite || 'Non défini'}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="bailAnciennete">Ancienneté (années)</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailAnciennete"
+                  type="number"
+                  value={editData.bailAnciennete}
+                  onChange={(e) => setEditData({ ...editData, bailAnciennete: Number(e.target.value) })}
+                />
+              ) : (
+                <p className="font-medium">{data.bailAnciennete} années</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="bailNextBreak">Next Break</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailNextBreak"
+                  type="date"
+                  value={editData.bailNextBreak}
+                  onChange={(e) => setEditData({ ...editData, bailNextBreak: e.target.value })}
+                />
+              ) : (
+                <p className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {data.bailNextBreak ? new Date(data.bailNextBreak).toLocaleDateString('fr-FR') : 'Non défini'}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="bailGmapLink">Lien Gmap</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailGmapLink"
+                  type="url"
+                  value={editData.bailGmapLink}
+                  onChange={(e) => setEditData({ ...editData, bailGmapLink: e.target.value })}
+                />
+              ) : (
+                <div className="flex items-center gap-2">
+                  {data.bailGmapLink ? (
+                    <a 
+                      href={data.bailGmapLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary hover:underline"
+                    >
+                      <Link className="h-4 w-4" />
+                      Voir sur Google Maps
+                    </a>
+                  ) : (
+                    <p className="text-muted-foreground">Non défini</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="bailLoyerHT">Loyer HT.HC</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailLoyerHT"
+                  type="number"
+                  step="0.01"
+                  value={editData.bailLoyerHT}
+                  onChange={(e) => setEditData({ ...editData, bailLoyerHT: Number(e.target.value) })}
+                />
+              ) : (
+                <p className="font-medium financial-value">
+                  {formatCurrency(data.bailLoyerHT)}
+                </p>
+              )}
+            </div>
+
+            {/* Champ calculé */}
+            <div>
+              <Label>Loyer HT.HC/ m2</Label>
+              <p className="font-medium financial-value">
+                {data.surface > 0 ? formatCurrency(data.bailLoyerHT / data.surface) : 'N/A'}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <Label htmlFor="bailGmapNote">Note Gmap</Label>
+            {isEditMode ? (
+              <Textarea
+                id="bailGmapNote"
+                value={editData.bailGmapNote}
+                onChange={(e) => setEditData({ ...editData, bailGmapNote: e.target.value })}
+                rows={3}
+              />
+            ) : (
+              <p className="text-muted-foreground mt-2">{data.bailGmapNote || 'Aucune note'}</p>
             )}
           </div>
         </CardContent>
