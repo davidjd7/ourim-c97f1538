@@ -95,9 +95,6 @@ export default function InvestissementDetail() {
                   </Button>
                 )}
               </div>
-              <Badge variant="outline" className={statusConfig[investment.status].className}>
-                {statusConfig[investment.status].label}
-              </Badge>
             </div>
         </div>
       </div>
