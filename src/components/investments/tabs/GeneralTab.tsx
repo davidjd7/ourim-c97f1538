@@ -21,6 +21,7 @@ interface GeneralData {
   acquisitionDate: string;
   notaryFees: number;
   renovationBudget: number;
+  company?: string;
   // Bail fields
   bailPriseEffet: string;
   bailActivite: string;
@@ -52,6 +53,7 @@ interface GeneralTabProps {
     acquisitionDate: string;
     notaryFees: number;
     renovationBudget: number;
+    company?: string;
     // Bail fields
     bailPriseEffet?: string;
     bailActivite?: string;
@@ -122,6 +124,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     acquisitionDate: investmentData.acquisitionDate,
     notaryFees: investmentData.notaryFees,
     renovationBudget: investmentData.renovationBudget,
+    company: investmentData.company,
     // Bail fields avec valeurs par défaut
     bailPriseEffet: investmentData.bailPriseEffet || '',
     bailActivite: investmentData.bailActivite || '',
@@ -166,6 +169,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
         acquisitionDate: investmentData.acquisitionDate,
         notaryFees: investmentData.notaryFees,
         renovationBudget: investmentData.renovationBudget,
+        company: investmentData.company,
         // Bail fields avec valeurs par défaut
         bailPriseEffet: investmentData.bailPriseEffet || '',
         bailActivite: investmentData.bailActivite || '',
@@ -310,6 +314,86 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
           </div>
         </CardContent>
       </Card>
+
+      {/* Section Informations d'Investissement - uniquement si status = INVESTI */}
+      {data.status === 'INVESTI' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Informations d'Investissement
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <Label htmlFor="dateInvestment">Date investissement</Label>
+                {isEditMode ? (
+                  <Input
+                    id="dateInvestment"
+                    type="date"
+                    value={editData.dateInvestment}
+                    onChange={(e) => handleDataChange({ ...editData, dateInvestment: e.target.value })}
+                  />
+                ) : (
+                  <p className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {new Date(data.dateInvestment).toLocaleDateString('fr-FR')}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="investmentAmount">Montant Investi</Label>
+                {isEditMode ? (
+                  <Input
+                    id="investmentAmount"
+                    type="number"
+                    value={editData.investmentAmount}
+                    onChange={(e) => handleDataChange({ ...editData, investmentAmount: Number(e.target.value) })}
+                  />
+                ) : (
+                  <p className="font-medium financial-value">
+                    {formatCurrency(data.investmentAmount)}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="notaryFees">Coût Investissement</Label>
+                {isEditMode ? (
+                  <Input
+                    id="notaryFees"
+                    type="number"
+                    value={editData.notaryFees}
+                    onChange={(e) => handleDataChange({ ...editData, notaryFees: Number(e.target.value) })}
+                  />
+                ) : (
+                  <p className="font-medium financial-value">
+                    {formatCurrency(data.notaryFees)}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="company">Société</Label>
+                {isEditMode ? (
+                  <Input
+                    id="company"
+                    value={editData.company || ''}
+                    onChange={(e) => handleDataChange({ ...editData, company: e.target.value })}
+                    placeholder="Ex: Ma SCI"
+                  />
+                ) : (
+                  <p className="font-medium">
+                    {data.company || 'Non défini'}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Section Bail */}
       <Card>

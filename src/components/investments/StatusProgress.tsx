@@ -45,6 +45,7 @@ export function StatusProgress({ currentStatus, className, onStatusChange }: Sta
   const [investmentDate, setInvestmentDate] = useState<Date>();
   const [investedAmount, setInvestedAmount] = useState('');
   const [investmentCost, setInvestmentCost] = useState('');
+  const [company, setCompany] = useState('');
 
   const handleStatusChange = (newStatus: InvestmentStatus, data?: any) => {
     // Appeler le callback si fourni
@@ -77,7 +78,7 @@ export function StatusProgress({ currentStatus, className, onStatusChange }: Sta
   };
 
   const handleInvest = () => {
-    if (!investmentDate || !investedAmount || !investmentCost) {
+    if (!investmentDate || !investedAmount || !investmentCost || !company) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs",
@@ -90,7 +91,8 @@ export function StatusProgress({ currentStatus, className, onStatusChange }: Sta
     const investmentData = {
       date: investmentDate,
       amount: Number(investedAmount),
-      cost: Number(investmentCost)
+      cost: Number(investmentCost),
+      company: company
     };
     
     console.log('Investissement:', investmentData);
@@ -100,6 +102,7 @@ export function StatusProgress({ currentStatus, className, onStatusChange }: Sta
     setInvestmentDate(undefined);
     setInvestedAmount('');
     setInvestmentCost('');
+    setCompany('');
   };
 
   const getAvailableActions = () => {
@@ -178,6 +181,17 @@ export function StatusProgress({ currentStatus, className, onStatusChange }: Sta
                       value={investmentCost}
                       onChange={(e) => setInvestmentCost(e.target.value)}
                       placeholder="Ex: 50000"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="company">Société</Label>
+                    <Input
+                      id="company"
+                      type="text"
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                      placeholder="Ex: Ma SCI"
                     />
                   </div>
                   
