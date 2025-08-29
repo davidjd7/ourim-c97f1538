@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { InvestmentCard } from '@/components/investments/InvestmentCard';
@@ -12,15 +12,14 @@ interface KanbanColumn {
   color: string;
 }
 
-// Remove old mock data and columns since we now use the global context
-
 interface KanbanBoardProps {
   title: string;
   type: 'IMMO' | 'PE';
 }
 
 export function KanbanBoard({ title, type }: KanbanBoardProps) {
-  const { investments } = useInvestments();
+  const { investments, updateInvestment } = useInvestments();
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
   
   // Filter investments by type and pipeline statuses
   const pipelineStatuses = ['RECU', 'DUE_DIL'];
@@ -67,6 +66,31 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
     }
   ];
 
+  const handleDragStart = (e: React.DragEvent, investmentId: string) => {
+    setDraggedItem(investmentId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetStatus: string) => {
+    e.preventDefault();
+    const investmentId = e.dataTransfer.getData('text/plain');
+    
+    if (investmentId && targetStatus) {
+      updateInvestment(investmentId, {
+        status: targetStatus as 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP'
+      });
+    }
+    
+    setDraggedItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -76,12 +100,19 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 min-h-[600px]">
+      <div className="grid gap-6 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2">
         {columns.map((column) => (
-          <Card key={column.id} className={`${column.color} h-fit`}>
+          <Card 
+            key={column.id} 
+            className={`${column.color} min-h-[500px] transition-all duration-300 ${
+              draggedItem ? 'ring-2 ring-primary/20' : ''
+            }`}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, column.status)}
+          >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">
+                <CardTitle className="text-sm font-medium text-foreground">
                   {column.title}
                 </CardTitle>
                 <Badge variant="secondary" className="text-xs">
@@ -90,18 +121,17 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {column.investments.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">
+              {column.investments.map((investment) => (
+                <InvestmentCard 
+                  key={investment.id} 
+                  investment={investment}
+                  onDragStart={handleDragStart}
+                />
+              ))}
+              {column.investments.length === 0 && (
+                <div className="text-center text-muted-foreground text-sm py-8 border-2 border-dashed border-muted rounded-lg">
                   Aucun investissement
                 </div>
-              ) : (
-                column.investments.map((investment) => (
-                  <InvestmentCard 
-                    key={investment.id} 
-                    investment={investment}
-                    currentStatus={column.status}
-                  />
-                ))
               )}
             </CardContent>
           </Card>
