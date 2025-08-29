@@ -184,7 +184,12 @@ export default function InvestissementDetail() {
           <Button 
             variant="outline" 
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              console.log('Back button clicked');
+              navigate('/');
+            }}
+            className="flex items-center justify-center cursor-pointer hover:bg-accent transition-colors"
+            title="Retour"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
