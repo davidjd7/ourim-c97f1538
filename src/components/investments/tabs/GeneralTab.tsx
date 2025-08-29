@@ -183,7 +183,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
               )}
 
               <div>
-                <Label htmlFor="surface">Surface (m²)</Label>
+                <Label htmlFor="surface">Surface Utile Pondérée (m2.UP)</Label>
                 {isEditMode ? (
                   <Input
                     id="surface"
