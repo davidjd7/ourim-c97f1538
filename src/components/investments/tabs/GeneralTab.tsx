@@ -406,6 +406,19 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             </div>
 
             <div>
+              <Label htmlFor="bailGmapNote">Note Gmap</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailGmapNote"
+                  value={editData.bailGmapNote}
+                  onChange={(e) => handleDataChange({ ...editData, bailGmapNote: e.target.value })}
+                />
+              ) : (
+                <p className="font-medium">{data.bailGmapNote || 'Aucune note'}</p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="bailLoyerHT">Loyer HT.HC</Label>
               {isEditMode ? (
                 <Input
@@ -420,6 +433,13 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                   {formatCurrency(data.bailLoyerHT)}
                 </p>
               )}
+            </div>
+
+            <div>
+              <Label>Loyer HT.HC/ m2</Label>
+              <p className="font-medium financial-value">
+                {data.surface > 0 ? formatCurrency(data.bailLoyerHT / data.surface) : 'N/A'}
+              </p>
             </div>
 
             <div>
@@ -438,28 +458,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                 </p>
               )}
             </div>
-
-            {/* Champ calculé */}
-            <div>
-              <Label>Loyer HT.HC/ m2</Label>
-              <p className="font-medium financial-value">
-                {data.surface > 0 ? formatCurrency(data.bailLoyerHT / data.surface) : 'N/A'}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Label htmlFor="bailGmapNote">Note Gmap</Label>
-            {isEditMode ? (
-              <Textarea
-                id="bailGmapNote"
-                value={editData.bailGmapNote}
-                onChange={(e) => handleDataChange({ ...editData, bailGmapNote: e.target.value })}
-                rows={3}
-              />
-            ) : (
-              <p className="text-muted-foreground mt-2">{data.bailGmapNote || 'Aucune note'}</p>
-            )}
           </div>
         </CardContent>
       </Card>
