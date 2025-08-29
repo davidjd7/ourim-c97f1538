@@ -2,95 +2,97 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Family Office Design System - Professional Financial Interface */
 
 @layer base {
   :root {
+    /* Professional Family Office Color Palette */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 220 13% 18%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 13% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 13% 18%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Teal/Green Primary - Professional Finance Color */
+    --primary: 180 84% 25%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 180 84% 35%;
+    --primary-lighter: 180 50% 85%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Sophisticated Gray */
+    --secondary: 220 13% 95%;
+    --secondary-foreground: 220 13% 18%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 13% 95%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 180 50% 95%;
+    --accent-foreground: 180 84% 25%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 142 76% 46%;
+    --success-lighter: 142 50% 90%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 180 84% 25%;
 
     --radius: 0.5rem;
 
+    /* Financial Dashboard Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(var(--success-light)));
+    --gradient-card: linear-gradient(180deg, hsl(var(--card)), hsl(var(--accent)));
+
+    /* Professional Shadows */
+    --shadow-card: 0 2px 8px -1px hsl(var(--foreground) / 0.08);
+    --shadow-elevated: 0 8px 25px -5px hsl(var(--foreground) / 0.1);
+    --shadow-financial: 0 0 0 1px hsl(var(--primary) / 0.05), 0 4px 16px -4px hsl(var(--primary) / 0.1);
+
+    /* Animation timings */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s ease-out;
+
+    /* Sidebar variables */
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
+    --sidebar-primary: 180 84% 25%;
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 180 84% 25%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Dark mode - minimal implementation as requested no dark mode priority */
+    --background: 220 13% 9%;
+    --foreground: 0 0% 95%;
+    --card: 220 13% 9%;
+    --card-foreground: 0 0% 95%;
+    --popover: 220 13% 9%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 180 84% 35%;
+    --primary-foreground: 220 13% 9%;
+    --secondary: 220 13% 15%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 220 13% 15%;
+    --muted-foreground: 220 9% 65%;
+    --accent: 220 13% 15%;
+    --accent-foreground: 0 0% 95%;
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
+    --ring: 180 84% 35%;
   }
 }
 
@@ -100,6 +102,101 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  } 
+
+  /* Professional typography for financial data */
+  .font-financial {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Custom scrollbars */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground));
+  }
+}
+
+@layer components {
+  /* Financial card styles */
+  .card-financial {
+    @apply bg-card border border-border shadow-sm rounded-lg;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-elevated {
+    @apply bg-card border border-border rounded-lg;
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .card-financial-primary {
+    @apply bg-gradient-to-br from-primary to-primary-light text-primary-foreground border-0 rounded-lg;
+    box-shadow: var(--shadow-financial);
+  }
+
+  /* Status badges */
+  .status-recu {
+    @apply bg-blue-50 text-blue-700 border-blue-200;
+  }
+
+  .status-due-dil {
+    @apply bg-orange-50 text-orange-700 border-orange-200;
+  }
+
+  .status-investi {
+    @apply bg-success-lighter text-success border-success-light;
+  }
+
+  .status-vendu {
+    @apply bg-purple-50 text-purple-700 border-purple-200;
+  }
+
+  .status-drop {
+    @apply bg-red-50 text-red-700 border-red-200;
+  }
+
+  /* Button financial variants */
+  .btn-financial {
+    @apply bg-primary hover:bg-primary-light text-primary-foreground font-medium px-6 py-2.5 rounded-lg;
+    transition: var(--transition-fast);
+  }
+
+  .btn-financial-outline {
+    @apply border border-primary text-primary hover:bg-primary-lighter font-medium px-6 py-2.5 rounded-lg;
+    transition: var(--transition-fast);
+  }
+
+  /* Financial data display */
+  .financial-value {
+    @apply font-financial font-semibold text-right;
+  }
+
+  .currency-eur::before {
+    content: "€ ";
+    @apply text-muted-foreground font-normal;
+  }
+
+  .percentage::after {
+    content: " %";
+    @apply text-muted-foreground font-normal;
   }
 }
