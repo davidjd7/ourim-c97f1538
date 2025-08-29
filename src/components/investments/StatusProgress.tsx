@@ -230,13 +230,22 @@ export function StatusProgress({ currentStatus, className, onStatusChange }: Sta
         );
       case 'INVESTI':
         return (
-          <Button 
-            size="sm" 
-            onClick={() => handleStatusChange('VENDU')}
-            className="btn-financial"
-          >
-            Marquer comme vendu
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => handleStatusChange('DUE_DIL')}
+            >
+              Retour Due Dil
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={() => handleStatusChange('VENDU')}
+              className="btn-financial"
+            >
+              Marquer comme vendu
+            </Button>
+          </div>
         );
       default:
         return null;
