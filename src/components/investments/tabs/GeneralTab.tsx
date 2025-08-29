@@ -153,22 +153,24 @@ export function GeneralTab({ investmentId, isEditMode = false }: GeneralTabProps
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="acquisitionDate">Date d'acquisition</Label>
-                {isEditMode ? (
-                  <Input
-                    id="acquisitionDate"
-                    type="date"
-                    value={editData.acquisitionDate}
-                    onChange={(e) => setEditData({ ...editData, acquisitionDate: e.target.value })}
-                  />
-                ) : (
-                  <p className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {new Date(data.acquisitionDate).toLocaleDateString('fr-FR')}
-                  </p>
-                )}
-              </div>
+              {data.status === 'INVESTI' && (
+                <div>
+                  <Label htmlFor="acquisitionDate">Date d'acquisition</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="acquisitionDate"
+                      type="date"
+                      value={editData.dateInvestment}
+                      onChange={(e) => setEditData({ ...editData, dateInvestment: e.target.value, acquisitionDate: e.target.value })}
+                    />
+                  ) : (
+                    <p className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(data.dateInvestment).toLocaleDateString('fr-FR')}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="surface">Surface (m²)</Label>
