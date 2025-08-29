@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Building, TrendingUp, Edit2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StatusProgress } from '@/components/investments/StatusProgress';
+import { DocumentsTab } from '@/components/investments/tabs/DocumentsTab';
+import { NotesTab } from '@/components/investments/tabs/NotesTab';
+import { GeneralTab } from '@/components/investments/tabs/GeneralTab';
+import { PerformanceTab } from '@/components/investments/tabs/PerformanceTab';
+import { DetteTab } from '@/components/investments/tabs/DetteTab';
+import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export default function InvestissementDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { canEdit, isLoading } = useUserRole();
+  const [activeTab, setActiveTab] = useState('general');
 
   // Mock data - en attendant la vraie intégration
   const investment = {
@@ -43,132 +54,118 @@ export default function InvestissementDetail() {
     return `${value.toFixed(1)}%`;
   };
 
+  if (isLoading) {
+    return <div>Chargement...</div>;
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header with back button */}
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        
-        <div className="flex items-center gap-3">
-          {investment.type === 'IMMO' ? (
-            <Building className="h-6 w-6 text-muted-foreground" />
-          ) : (
-            <TrendingUp className="h-6 w-6 text-muted-foreground" />
-          )}
-          <div>
-            <h1 className="text-2xl font-bold">{investment.name}</h1>
-            <p className="text-muted-foreground">
-              {investment.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          
+          <div className="flex items-center gap-3">
+            {investment.type === 'IMMO' ? (
+              <Building className="h-6 w-6 text-muted-foreground" />
+            ) : (
+              <TrendingUp className="h-6 w-6 text-muted-foreground" />
+            )}
+            <div>
+              <h1 className="text-2xl font-bold">{investment.name}</h1>
+              <p className="text-muted-foreground">
+                {investment.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+              </p>
+            </div>
+            <Badge variant="outline" className={statusConfig[investment.status].className}>
+              {statusConfig[investment.status].label}
+            </Badge>
+          </div>
+        </div>
+
+        {canEdit && (
+          <Button className="flex items-center gap-2">
+            <Edit2 className="h-4 w-4" />
+            Mode édition
+          </Button>
+        )}
+      </div>
+
+      {/* Status Progress */}
+      <StatusProgress currentStatus={investment.status} className="mb-6" />
+
+      {/* Performance Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-3 mb-6">
+        <div className="card-financial">
+          <div className="p-4">
+            <label className="text-sm text-muted-foreground">Dernière valeur</label>
+            <p className="font-medium financial-value text-xl">
+              {formatCurrency(investment.lastValue)}
             </p>
           </div>
-          <Badge variant="outline" className={statusConfig[investment.status].className}>
-            {statusConfig[investment.status].label}
-          </Badge>
         </div>
-      </div>
-
-      {/* Investment details */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Basic Info */}
         <div className="card-financial">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Informations générales</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm text-muted-foreground">Date d'investissement</label>
-                <p className="font-medium">
-                  {investment.dateInvestment ? 
-                    new Date(investment.dateInvestment).toLocaleDateString('fr-FR') : 
-                    '-'
-                  }
-                </p>
-              </div>
-              {investment.type === 'IMMO' && (
-                <>
-                  <div>
-                    <label className="text-sm text-muted-foreground">Adresse</label>
-                    <p className="font-medium">{investment.address}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground">Surface</label>
-                    <p className="font-medium">{investment.surface} m²</p>
-                  </div>
-                </>
-              )}
-            </div>
+          <div className="p-4">
+            <label className="text-sm text-muted-foreground">TRI</label>
+            <p className="font-medium financial-value text-xl">
+              {formatPercentage(investment.lastTRI)}
+            </p>
           </div>
         </div>
-
-        {/* Financial Performance */}
         <div className="card-financial">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Performance</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm text-muted-foreground">Dernière valeur</label>
-                <p className="font-medium financial-value text-lg">
-                  {formatCurrency(investment.lastValue)}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground">TRI</label>
-                <p className="font-medium financial-value text-lg">
-                  {formatPercentage(investment.lastTRI)}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground">Dernier cashflow</label>
-                <p className="font-medium financial-value">
-                  {formatCurrency(investment.lastCashflow)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Performance Variation */}
-        <div className="card-financial">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Dernière variation</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm text-muted-foreground">Variation en valeur</label>
-                <p className={`font-medium financial-value text-lg ${
-                  investment.lastVariation.value >= 0 ? 'text-success' : 'text-destructive'
-                }`}>
-                  {investment.lastVariation.value >= 0 ? '+' : ''}
-                  {formatCurrency(investment.lastVariation.value)}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground">Variation en %</label>
-                <p className={`font-medium financial-value text-lg ${
-                  investment.lastVariation.percentage >= 0 ? 'text-success' : 'text-destructive'
-                }`}>
-                  {investment.lastVariation.percentage >= 0 ? '+' : ''}
-                  {formatPercentage(investment.lastVariation.percentage)}
-                </p>
-              </div>
-            </div>
+          <div className="p-4">
+            <label className="text-sm text-muted-foreground">Variation</label>
+            <p className={`font-medium financial-value text-xl ${
+              investment.lastVariation.percentage >= 0 ? 'text-success' : 'text-destructive'
+            }`}>
+              {investment.lastVariation.percentage >= 0 ? '+' : ''}
+              {formatPercentage(investment.lastVariation.percentage)}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Additional sections placeholder */}
-      <div className="card-financial">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Détails avancés</h3>
-          <p className="text-muted-foreground">
-            Cette section contiendra les détails avancés de l'investissement (documents, notes, historique, etc.)
-          </p>
-        </div>
-      </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="general">Général</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="documents">Documents & IA</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="dette">Dette</TabsTrigger>
+          <TabsTrigger value="historique">Historique</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general" className="mt-6">
+          <GeneralTab investmentId={id || ''} />
+        </TabsContent>
+
+        <TabsContent value="performance" className="mt-6">
+          <PerformanceTab investmentId={id || ''} />
+        </TabsContent>
+
+        <TabsContent value="documents" className="mt-6">
+          <DocumentsTab investmentId={id || ''} />
+        </TabsContent>
+
+        <TabsContent value="notes" className="mt-6">
+          <NotesTab investmentId={id || ''} />
+        </TabsContent>
+
+        <TabsContent value="dette" className="mt-6">
+          <DetteTab investmentId={id || ''} />
+        </TabsContent>
+
+        <TabsContent value="historique" className="mt-6">
+          <HistoriqueTab investmentId={id || ''} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
