@@ -198,123 +198,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            Informations générales
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="address">Adresse</Label>
-              {isEditMode ? (
-                <Input
-                  id="address"
-                  value={editData.address}
-                  onChange={(e) => handleDataChange({ ...editData, address: e.target.value })}
-                />
-              ) : (
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    {data.address}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Financial Data */}
-            <div className="space-y-4">
-              {data.status === 'INVESTI' && (
-                <div>
-                  <Label htmlFor="investmentAmount">Montant d'investissement</Label>
-                  {isEditMode ? (
-                    <Input
-                      id="investmentAmount"
-                      type="number"
-                      value={editData.investmentAmount}
-                      onChange={(e) => handleDataChange({ ...editData, investmentAmount: Number(e.target.value) })}
-                    />
-                  ) : (
-                    <p className="text-lg font-medium financial-value">
-                      {formatCurrency(data.investmentAmount)}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {data.status === 'INVESTI' && (
-                <div>
-                  <Label htmlFor="acquisitionDate">Date d'acquisition</Label>
-                  {isEditMode ? (
-                    <Input
-                      id="acquisitionDate"
-                      type="date"
-                      value={editData.dateInvestment}
-                      onChange={(e) => handleDataChange({ ...editData, dateInvestment: e.target.value, acquisitionDate: e.target.value })}
-                    />
-                  ) : (
-                    <p className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(data.dateInvestment).toLocaleDateString('fr-FR')}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="surface">Surface Utile Pondérée (m2.UP)</Label>
-                {isEditMode ? (
-                  <Input
-                    id="surface"
-                    type="number"
-                    value={editData.surface}
-                    onChange={(e) => handleDataChange({ ...editData, surface: Number(e.target.value) })}
-                  />
-                ) : (
-                  <p className="font-medium">{data.surface} m²</p>
-                )}
-              </div>
-
-              {data.status === 'INVESTI' && (
-                <div>
-                  <Label htmlFor="notaryFees">Coût d'investissement</Label>
-                  {isEditMode ? (
-                    <Input
-                      id="notaryFees"
-                      type="number"
-                      value={editData.notaryFees}
-                      onChange={(e) => handleDataChange({ ...editData, notaryFees: Number(e.target.value) })}
-                    />
-                  ) : (
-                    <p className="font-medium financial-value">
-                      {formatCurrency(data.notaryFees)}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Label htmlFor="description">Description</Label>
-            {isEditMode ? (
-              <Textarea
-                id="description"
-                value={editData.description}
-                onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
-                rows={4}
-              />
-            ) : (
-              <p className="text-muted-foreground mt-2">{data.description}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Section Informations d'Investissement - uniquement si status = INVESTI */}
       {data.status === 'INVESTI' && (
         <Card>
@@ -394,6 +277,71 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building className="h-5 w-5" />
+            Informations générales
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="address">Adresse</Label>
+              {isEditMode ? (
+                <Input
+                  id="address"
+                  value={editData.address}
+                  onChange={(e) => handleDataChange({ ...editData, address: e.target.value })}
+                />
+              ) : (
+                  <p className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    {data.address}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="surface">Surface Utile Pondérée (m2.UP)</Label>
+                {isEditMode ? (
+                  <Input
+                    id="surface"
+                    type="number"
+                    value={editData.surface}
+                    onChange={(e) => handleDataChange({ ...editData, surface: Number(e.target.value) })}
+                  />
+                ) : (
+                  <p className="font-medium">{data.surface} m²</p>
+                )}
+              </div>
+            </div>
+
+            {/* Financial Data */}
+            <div className="space-y-4">
+              {/* Placeholder pour équilibrer la grille */}
+              <div></div>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <Label htmlFor="description">Description</Label>
+            {isEditMode ? (
+              <Textarea
+                id="description"
+                value={editData.description}
+                onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
+                rows={4}
+              />
+            ) : (
+              <p className="text-muted-foreground mt-2">{data.description}</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Section Bail */}
       <Card>
