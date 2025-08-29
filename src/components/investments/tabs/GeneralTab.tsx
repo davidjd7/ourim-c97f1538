@@ -127,49 +127,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
             {/* Basic Information */}
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Nom de l'investissement</Label>
-                {isEditMode ? (
-                  <Input
-                    id="name"
-                    value={editData.name}
-                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                  />
-                ) : (
-                  <p className="text-lg font-medium">{data.name}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="type">Type</Label>
-                {isEditMode ? (
-                  <Select
-                    value={editData.type}
-                    onValueChange={(value: 'IMMO' | 'PE') => setEditData({ ...editData, type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="IMMO">Immobilier</SelectItem>
-                      <SelectItem value="PE">Private Equity</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="flex items-center gap-2">
-                    {data.type === 'IMMO' ? (
-                      <>
-                        <Building className="h-4 w-4" />
-                        Immobilier
-                      </>
-                    ) : (
-                      'Private Equity'
-                    )}
-                  </p>
-                )}
-              </div>
-
-
-              <div>
                 <Label htmlFor="address">Adresse</Label>
                 {isEditMode ? (
                   <Input
