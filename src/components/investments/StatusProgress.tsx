@@ -247,51 +247,47 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
       
       {currentStatus !== 'DROP' && (
         <div className="space-y-4">
-          {/* Barre de progression segmentée */}
-          <div className="relative">
-            <div className="flex h-3 rounded-full overflow-hidden bg-muted">
-              {statusOrder.map((status, index) => (
-                <div
-                  key={status}
-                  className={`flex-1 transition-all duration-700 ${
-                    statusConfig[status].step <= currentStep
-                      ? 'bg-gradient-to-r from-primary to-primary-glow'
-                      : 'bg-muted'
-                  } ${index > 0 ? 'border-l border-background' : ''}`}
-                  style={{ 
-                    animationDelay: `${index * 200}ms`,
-                    opacity: statusConfig[status].step <= currentStep ? 1 : 0.3
-                  }}
-                />
-              ))}
-            </div>
-            
-            {/* Indicateur de progression en pourcentage */}
-            <div 
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-success to-success-glow rounded-full transition-all duration-1000"
-              style={{ width: `${(currentStep / statusOrder.length) * 100}%` }}
-            />
-          </div>
-          
-          {/* Labels des étapes */}
-          <div className="flex justify-between">
+          {/* Progression avec flèches */}
+          <div className="flex items-center justify-between">
             {statusOrder.map((status, index) => (
-              <div key={status} className="flex flex-col items-center flex-1">
-                <div className={`text-xs font-medium transition-colors duration-300 ${
-                  statusConfig[status].step <= currentStep
-                    ? 'text-primary' 
-                    : 'text-muted-foreground'
-                }`}>
-                  {statusConfig[status].label}
-                </div>
-                {statusConfig[status].step === currentStep && (
-                  <div className="mt-1 text-xs text-success font-medium">
-                    En cours
+              <div key={status} className="flex items-center flex-1">
+                {/* Étape */}
+                <div className="flex flex-col items-center">
+                  <div 
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-500 ${
+                      statusConfig[status].step <= currentStep
+                        ? 'bg-primary text-primary-foreground shadow-lg' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {statusConfig[status].step <= currentStep ? '✓' : statusConfig[status].step}
                   </div>
-                )}
-                {statusConfig[status].step < currentStep && (
-                  <div className="mt-1 text-xs text-primary/70">
-                    ✓ Terminé
+                  <span 
+                    className={`text-xs mt-2 font-medium transition-colors duration-300 ${
+                      statusConfig[status].step <= currentStep
+                        ? 'text-primary' 
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    {statusConfig[status].label}
+                  </span>
+                  {statusConfig[status].step === currentStep && (
+                    <div className="mt-1 text-xs text-success font-medium">
+                      En cours
+                    </div>
+                  )}
+                </div>
+                
+                {/* Flèche vers l'étape suivante */}
+                {index < statusOrder.length - 1 && (
+                  <div className="flex-1 flex items-center justify-center mx-4">
+                    <div 
+                      className={`w-0 h-0 transition-all duration-500 ${
+                        statusConfig[status].step < currentStep
+                          ? 'border-l-[12px] border-l-primary border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent'
+                          : 'border-l-[12px] border-l-muted-foreground/30 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent'
+                      }`}
+                    />
                   </div>
                 )}
               </div>
