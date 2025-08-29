@@ -424,7 +424,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             </div>
 
             <div>
-              <Label htmlFor="bailLoyerHT">Loyer HT.HC</Label>
+              <Label htmlFor="bailLoyerHT">Loyer HT.HC (annuel)</Label>
               {isEditMode ? (
                 <Input
                   id="bailLoyerHT"
@@ -543,7 +543,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
               <Label>Rendement All In</Label>
               <p className="font-medium">
                 {data.netVendeur > 0 ? 
-                  `${(((data.bailLoyerHT - data.bailCNR) * 12) / (data.netVendeur * (1 + data.agent + data.honoNotaire)) * 100).toFixed(2)}%` 
+                  `${((data.bailLoyerHT - data.bailCNR) / (data.netVendeur * (1 + data.agent + data.honoNotaire)) * 100).toFixed(2)}%` 
                   : 'N/A'
                 }
               </p>
