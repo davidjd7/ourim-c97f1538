@@ -25,17 +25,31 @@ interface GeneralData {
 interface GeneralTabProps {
   investmentId: string;
   isEditMode?: boolean;
+  investmentData?: {
+    id: string | undefined;
+    name: string;
+    type: 'IMMO' | 'PE';
+    status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
+    dateInvestment: string;
+    address: string;
+    surface: number;
+    description?: string;
+    investmentAmount: number;
+    acquisitionDate: string;
+    notaryFees: number;
+    renovationBudget: number;
+  };
 }
 
 const mockGeneralData: GeneralData = {
   name: 'Faisanderie Paris',
   type: 'IMMO',
-  status: 'INVESTI',
+  status: 'DUE_DIL', // Changé de INVESTI à DUE_DIL pour refléter l'état actuel
   dateInvestment: '2023-03-15',
   address: '12 rue de la Faisanderie, 75016 Paris',
   surface: 250,
   description: 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris. Situé au 3ème étage avec ascenseur, vue dégagée sur jardins privatifs.',
-  investmentAmount: 2100000,
+  investmentAmount: 0, // Sera mis à jour quand le statut passe à INVESTI
   acquisitionDate: '2023-03-15',
   notaryFees: 168000,
   renovationBudget: 50000
@@ -49,10 +63,47 @@ const statusConfig = {
   DROP: { label: 'Drop', className: 'status-drop' }
 };
 
-export function GeneralTab({ investmentId, isEditMode = false }: GeneralTabProps) {
+export function GeneralTab({ investmentId, isEditMode = false, investmentData }: GeneralTabProps) {
   const { canEdit } = useUserRole();
-  const [data, setData] = useState<GeneralData>(mockGeneralData);
+  
+  // Utiliser les données passées en prop ou les données mock par défaut
+  const initialData = investmentData ? {
+    name: investmentData.name,
+    type: investmentData.type,
+    status: investmentData.status,
+    dateInvestment: investmentData.dateInvestment,
+    address: investmentData.address,
+    surface: investmentData.surface,
+    description: investmentData.description || 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris. Situé au 3ème étage avec ascenseur, vue dégagée sur jardins privatifs.',
+    investmentAmount: investmentData.investmentAmount,
+    acquisitionDate: investmentData.acquisitionDate,
+    notaryFees: investmentData.notaryFees,
+    renovationBudget: investmentData.renovationBudget
+  } : mockGeneralData;
+  
+  const [data, setData] = useState<GeneralData>(initialData);
   const [editData, setEditData] = useState<GeneralData>(data);
+
+  // Synchroniser avec les données externes quand elles changent
+  React.useEffect(() => {
+    if (investmentData) {
+      const newData = {
+        name: investmentData.name,
+        type: investmentData.type,
+        status: investmentData.status,
+        dateInvestment: investmentData.dateInvestment,
+        address: investmentData.address,
+        surface: investmentData.surface,
+        description: investmentData.description || 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris. Situé au 3ème étage avec ascenseur, vue dégagée sur jardins privatifs.',
+        investmentAmount: investmentData.investmentAmount,
+        acquisitionDate: investmentData.acquisitionDate,
+        notaryFees: investmentData.notaryFees,
+        renovationBudget: investmentData.renovationBudget
+      };
+      setData(newData);
+      setEditData(newData);
+    }
+  }, [investmentData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -137,21 +188,23 @@ export function GeneralTab({ investmentId, isEditMode = false }: GeneralTabProps
 
             {/* Financial Data */}
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="investmentAmount">Montant d'investissement</Label>
-                {isEditMode ? (
-                  <Input
-                    id="investmentAmount"
-                    type="number"
-                    value={editData.investmentAmount}
-                    onChange={(e) => setEditData({ ...editData, investmentAmount: Number(e.target.value) })}
-                  />
-                ) : (
-                  <p className="text-lg font-medium financial-value">
-                    {formatCurrency(data.investmentAmount)}
-                  </p>
-                )}
-              </div>
+              {data.status === 'INVESTI' && (
+                <div>
+                  <Label htmlFor="investmentAmount">Montant d'investissement</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="investmentAmount"
+                      type="number"
+                      value={editData.investmentAmount}
+                      onChange={(e) => setEditData({ ...editData, investmentAmount: Number(e.target.value) })}
+                    />
+                  ) : (
+                    <p className="text-lg font-medium financial-value">
+                      {formatCurrency(data.investmentAmount)}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {data.status === 'INVESTI' && (
                 <div>

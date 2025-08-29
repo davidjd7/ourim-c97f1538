@@ -19,6 +19,7 @@ type InvestmentStatus = 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
 interface StatusProgressProps {
   currentStatus: InvestmentStatus;
   className?: string;
+  onStatusChange?: (newStatus: InvestmentStatus, data?: any) => void;
 }
 
 const statusConfig = {
@@ -31,7 +32,7 @@ const statusConfig = {
 
 const statusOrder: InvestmentStatus[] = ['RECU', 'DUE_DIL', 'INVESTI', 'VENDU'];
 
-export function StatusProgress({ currentStatus, className }: StatusProgressProps) {
+export function StatusProgress({ currentStatus, className, onStatusChange }: StatusProgressProps) {
   const currentStep = statusConfig[currentStatus].step;
   const { toast } = useToast();
   
@@ -45,8 +46,12 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
   const [investedAmount, setInvestedAmount] = useState('');
   const [investmentCost, setInvestmentCost] = useState('');
 
-  const handleStatusChange = (newStatus: InvestmentStatus) => {
-    // Ici on pourrait appeler une fonction pour mettre à jour le statut
+  const handleStatusChange = (newStatus: InvestmentStatus, data?: any) => {
+    // Appeler le callback si fourni
+    if (onStatusChange) {
+      onStatusChange(newStatus, data);
+    }
+    
     console.log('Changement de statut vers:', newStatus);
     toast({
       title: "Statut mis à jour",
@@ -81,14 +86,16 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
       return;
     }
     
-    // Sauvegarder les données d'investissement
-    console.log('Investissement:', {
+    // Préparer les données d'investissement
+    const investmentData = {
       date: investmentDate,
-      amount: investedAmount,
-      cost: investmentCost
-    });
+      amount: Number(investedAmount),
+      cost: Number(investmentCost)
+    };
     
-    handleStatusChange('INVESTI');
+    console.log('Investissement:', investmentData);
+    
+    handleStatusChange('INVESTI', investmentData);
     setInvestDialogOpen(false);
     setInvestmentDate(undefined);
     setInvestedAmount('');

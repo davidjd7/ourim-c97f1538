@@ -21,18 +21,53 @@ export default function InvestissementDetail() {
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Mock data - en attendant la vraie intégration
-  const investment = {
+  const [investment, setInvestment] = useState<{
+    id: string | undefined;
+    name: string;
+    type: 'IMMO' | 'PE';
+    status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
+    dateInvestment: string;
+    lastValue: number;
+    lastTRI: number;
+    lastCashflow: number;
+    lastVariation: { value: number; percentage: number };
+    address: string;
+    surface: number;
+    investmentAmount: number;
+    acquisitionDate: string;
+    notaryFees: number;
+    renovationBudget: number;
+  }>({
     id: id,
     name: 'Faisanderie Paris',
-    type: 'IMMO' as const,
-    status: 'DUE_DIL' as const, // Changé pour tester les boutons
+    type: 'IMMO',
+    status: 'DUE_DIL',
     dateInvestment: '2023-03-15',
     lastValue: 2170000,
     lastTRI: 6.8,
     lastCashflow: 98084,
     lastVariation: { value: 50000, percentage: 2.4 },
     address: '12 rue de la Faisanderie, 75016 Paris',
-    surface: 250
+    surface: 250,
+    investmentAmount: 0,
+    acquisitionDate: '2023-03-15',
+    notaryFees: 168000,
+    renovationBudget: 50000
+  });
+
+  const handleStatusChange = (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
+    setInvestment(prev => {
+      const updated = { ...prev, status: newStatus };
+      
+      // Si on passe au statut INVESTI, mettre à jour les données financières
+      if (newStatus === 'INVESTI' && data) {
+        updated.investmentAmount = data.amount;
+        updated.dateInvestment = data.date.toISOString().split('T')[0];
+        updated.acquisitionDate = data.date.toISOString().split('T')[0];
+      }
+      
+      return updated;
+    });
   };
 
   const statusConfig = {
@@ -100,7 +135,11 @@ export default function InvestissementDetail() {
       </div>
 
       {/* Status Progress */}
-      <StatusProgress currentStatus={investment.status} className="mb-6" />
+      <StatusProgress 
+        currentStatus={investment.status} 
+        className="mb-6" 
+        onStatusChange={handleStatusChange}
+      />
 
       {/* Performance Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3 mb-6">
@@ -145,7 +184,11 @@ export default function InvestissementDetail() {
         </TabsList>
 
         <TabsContent value="general" className="mt-6">
-          <GeneralTab investmentId={id || ''} isEditMode={isEditMode} />
+          <GeneralTab 
+            investmentId={id || ''} 
+            isEditMode={isEditMode}
+            investmentData={investment}
+          />
         </TabsContent>
 
         <TabsContent value="performance" className="mt-6">
