@@ -237,7 +237,7 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
   };
 
   return (
-    <div className={className}>
+    <div className={`${className} card-financial p-6 border border-border/50 shadow-lg rounded-xl bg-gradient-to-br from-background to-background/95`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-muted-foreground">Progression du statut</h3>
          <div className="flex items-center gap-3">
