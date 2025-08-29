@@ -45,7 +45,16 @@ export default function Auth() {
         navigate('/');
       }
     } catch (error: any) {
-      setError(error.message);
+      // Translate common error messages to French
+      const frenchErrorMessages: { [key: string]: string } = {
+        'Invalid login credentials': 'Identifiants de connexion invalides',
+        'Email not confirmed': 'Email non confirmé',
+        'Too many requests': 'Trop de tentatives de connexion',
+        'Invalid email': 'Email invalide',
+        'Password should be at least 6 characters': 'Le mot de passe doit contenir au moins 6 caractères'
+      };
+      
+      setError(frenchErrorMessages[error.message] || 'Erreur de connexion. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
