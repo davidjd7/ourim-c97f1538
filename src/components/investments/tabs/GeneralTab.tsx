@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Building, MapPin, Calendar, FileText, Link } from 'lucide-react';
+import { Building, MapPin, Calendar, FileText, Link, Calculator } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 
 interface GeneralData {
@@ -28,6 +28,11 @@ interface GeneralData {
   bailGmapLink: string;
   bailGmapNote: string;
   bailLoyerHT: number;
+  bailCNR: number;
+  // Présentation Vente fields
+  netVendeur: number;
+  agent: number;
+  honoNotaire: number; // Ce sera géré via les paramètres plus tard
 }
 
 interface GeneralTabProps {
@@ -54,6 +59,11 @@ interface GeneralTabProps {
     bailGmapLink?: string;
     bailGmapNote?: string;
     bailLoyerHT?: number;
+    bailCNR?: number;
+    // Présentation Vente fields
+    netVendeur?: number;
+    agent?: number;
+    honoNotaire?: number;
   };
   tempEditData?: any;
   onDataChange?: (data: any) => void;
@@ -78,7 +88,12 @@ const mockGeneralData: GeneralData = {
   bailNextBreak: '2028-01-01',
   bailGmapLink: 'https://maps.google.com/?q=12+rue+de+la+Faisanderie+75016+Paris',
   bailGmapNote: 'Proche métro Trocadéro',
-  bailLoyerHT: 12500
+  bailLoyerHT: 12500,
+  bailCNR: 500,
+  // Présentation Vente mock data
+  netVendeur: 2100000,
+  agent: 0.03, // 3%
+  honoNotaire: 0.08 // 8% - sera géré par les paramètres plus tard
 };
 
 const statusConfig = {
@@ -112,7 +127,12 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     bailNextBreak: investmentData.bailNextBreak || '',
     bailGmapLink: investmentData.bailGmapLink || '',
     bailGmapNote: investmentData.bailGmapNote || '',
-    bailLoyerHT: investmentData.bailLoyerHT || 0
+    bailLoyerHT: investmentData.bailLoyerHT || 0,
+    bailCNR: investmentData.bailCNR || 0,
+    // Présentation Vente fields avec valeurs par défaut
+    netVendeur: investmentData.netVendeur || 0,
+    agent: investmentData.agent || 0,
+    honoNotaire: investmentData.honoNotaire || 0.08
   } : mockGeneralData;
   
   const [data, setData] = useState<GeneralData>(initialData);
@@ -148,7 +168,12 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
         bailNextBreak: investmentData.bailNextBreak || '',
         bailGmapLink: investmentData.bailGmapLink || '',
         bailGmapNote: investmentData.bailGmapNote || '',
-        bailLoyerHT: investmentData.bailLoyerHT || 0
+        bailLoyerHT: investmentData.bailLoyerHT || 0,
+        bailCNR: investmentData.bailCNR || 0,
+        // Présentation Vente fields avec valeurs par défaut
+        netVendeur: investmentData.netVendeur || 0,
+        agent: investmentData.agent || 0,
+        honoNotaire: investmentData.honoNotaire || 0.08
       };
       setData(newData);
     }
@@ -397,6 +422,23 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
               )}
             </div>
 
+            <div>
+              <Label htmlFor="bailCNR">Charge Non Récupérable (CNR)</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailCNR"
+                  type="number"
+                  step="0.01"
+                  value={editData.bailCNR}
+                  onChange={(e) => handleDataChange({ ...editData, bailCNR: Number(e.target.value) })}
+                />
+              ) : (
+                <p className="font-medium financial-value">
+                  {formatCurrency(data.bailCNR)}
+                </p>
+              )}
+            </div>
+
             {/* Champ calculé */}
             <div>
               <Label>Loyer HT.HC/ m2</Label>
@@ -418,6 +460,98 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             ) : (
               <p className="text-muted-foreground mt-2">{data.bailGmapNote || 'Aucune note'}</p>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section Présentation Vente */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calculator className="h-5 w-5" />
+            Présentation Vente
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <Label htmlFor="netVendeur">Net Vendeur</Label>
+              {isEditMode ? (
+                <Input
+                  id="netVendeur"
+                  type="number"
+                  value={editData.netVendeur}
+                  onChange={(e) => handleDataChange({ ...editData, netVendeur: Number(e.target.value) })}
+                />
+              ) : (
+                <p className="font-medium financial-value">
+                  {formatCurrency(data.netVendeur)}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="agent">Agent (%)</Label>
+              {isEditMode ? (
+                <Input
+                  id="agent"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="1"
+                  value={editData.agent}
+                  onChange={(e) => handleDataChange({ ...editData, agent: Number(e.target.value) })}
+                />
+              ) : (
+                <p className="font-medium">
+                  {(data.agent * 100).toFixed(2)}%
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="honoNotaire">Hono Notaire (%)</Label>
+              {isEditMode ? (
+                <Input
+                  id="honoNotaire"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="1"
+                  value={editData.honoNotaire}
+                  onChange={(e) => handleDataChange({ ...editData, honoNotaire: Number(e.target.value) })}
+                />
+              ) : (
+                <p className="font-medium">
+                  {(data.honoNotaire * 100).toFixed(2)}%
+                </p>
+              )}
+            </div>
+
+            {/* Champs calculés */}
+            <div>
+              <Label>All In</Label>
+              <p className="font-medium financial-value">
+                {formatCurrency(data.netVendeur * (1 + data.agent + data.honoNotaire))}
+              </p>
+            </div>
+
+            <div>
+              <Label>All In/ m2</Label>
+              <p className="font-medium financial-value">
+                {data.surface > 0 ? formatCurrency((data.netVendeur * (1 + data.agent + data.honoNotaire)) / data.surface) : 'N/A'}
+              </p>
+            </div>
+
+            <div>
+              <Label>Rendement All In</Label>
+              <p className="font-medium">
+                {data.netVendeur > 0 ? 
+                  `${(((data.bailLoyerHT - data.bailCNR) * 12) / (data.netVendeur * (1 + data.agent + data.honoNotaire)) * 100).toFixed(2)}%` 
+                  : 'N/A'
+                }
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
