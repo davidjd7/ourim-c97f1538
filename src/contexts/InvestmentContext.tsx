@@ -40,6 +40,10 @@ export interface Investment {
   netVendeur?: number;
   agent?: number;
   honoNotaire?: number;
+  // Kanban card fields
+  rentAmount?: number;
+  priceNV?: number;
+  tri?: number;
 }
 
 interface InvestmentContextType {
@@ -85,7 +89,11 @@ const initialInvestments: Investment[] = [
     bailAnciennete: 5,
     netVendeur: 2100000,
     agent: 0.03,
-    honoNotaire: 0.08
+    honoNotaire: 0.08,
+    // Mock data for Kanban cards
+    rentAmount: 150000,
+    priceNV: 2100000,
+    tri: 6.8
   },
   {
     id: '2',
@@ -100,7 +108,13 @@ const initialInvestments: Investment[] = [
     investmentAmount: 1090000,
     acquisitionDate: '2023-01-20',
     notaryFees: 87200,
-    renovationBudget: 0
+    renovationBudget: 0,
+    // Mock data for Kanban cards
+    address: 'Avenue Robespierre, Bagnolet',
+    surface: 231,
+    rentAmount: 80000,
+    priceNV: 1090000,
+    tri: 7.2
   },
   {
     id: '3',
@@ -115,7 +129,53 @@ const initialInvestments: Investment[] = [
     investmentAmount: 1690000,
     acquisitionDate: '2022-11-10',
     notaryFees: 135200,
-    renovationBudget: 25000
+    renovationBudget: 25000,
+    // Mock data for Kanban cards
+    address: 'Avenue du Général Leclerc, Rosny',
+    surface: 626,
+    rentAmount: 124000,
+    priceNV: 1690000,
+    tri: 8.1
+  },
+  {
+    id: '4',
+    name: 'Commercial Montreuil',
+    type: 'IMMO',
+    status: 'RECU',
+    dateInvestment: '2024-01-15',
+    lastValue: 1200000,
+    lastTRI: 0,
+    lastCashflow: 0,
+    lastVariation: { value: 0, percentage: 0 },
+    investmentAmount: 0,
+    acquisitionDate: '',
+    notaryFees: 0,
+    renovationBudget: 0,
+    // Mock data for Kanban cards
+    address: 'Centre commercial, Montreuil',
+    surface: 450,
+    rentAmount: 95000,
+    priceNV: 1200000
+  },
+  {
+    id: '5',
+    name: 'Bureaux La Défense',
+    type: 'IMMO',
+    status: 'DROP',
+    dateInvestment: '',
+    lastValue: 0,
+    lastTRI: 0,
+    lastCashflow: 0,
+    lastVariation: { value: 0, percentage: 0 },
+    investmentAmount: 0,
+    acquisitionDate: '',
+    notaryFees: 0,
+    renovationBudget: 0,
+    // Mock data for Kanban cards
+    address: 'Tour CB21, La Défense',
+    surface: 2100,
+    rentAmount: 280000,
+    priceNV: 4500000
   }
 ];
 

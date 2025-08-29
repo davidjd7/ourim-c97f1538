@@ -96,9 +96,10 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
                 </div>
               ) : (
                 column.investments.map((investment) => (
-                  <InvestmentCard
-                    key={investment.id}
+                  <InvestmentCard 
+                    key={investment.id} 
                     investment={investment}
+                    currentStatus={column.status}
                   />
                 ))
               )}
