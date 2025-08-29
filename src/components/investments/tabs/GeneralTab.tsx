@@ -239,21 +239,23 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="notaryFees">Frais de notaire</Label>
-                {isEditMode ? (
-                  <Input
-                    id="notaryFees"
-                    type="number"
-                    value={editData.notaryFees}
-                    onChange={(e) => setEditData({ ...editData, notaryFees: Number(e.target.value) })}
-                  />
-                ) : (
-                  <p className="font-medium financial-value">
-                    {formatCurrency(data.notaryFees)}
-                  </p>
-                )}
-              </div>
+              {data.status === 'INVESTI' && (
+                <div>
+                  <Label htmlFor="notaryFees">Coût d'investissement</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="notaryFees"
+                      type="number"
+                      value={editData.notaryFees}
+                      onChange={(e) => setEditData({ ...editData, notaryFees: Number(e.target.value) })}
+                    />
+                  ) : (
+                    <p className="font-medium financial-value">
+                      {formatCurrency(data.notaryFees)}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
