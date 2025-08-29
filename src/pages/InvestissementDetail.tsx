@@ -1,106 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Building, TrendingUp, Edit2, Save } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 import { StatusProgress } from '@/components/investments/StatusProgress';
-import { DocumentsTab } from '@/components/investments/tabs/DocumentsTab';
-import { NotesTab } from '@/components/investments/tabs/NotesTab';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GeneralTab } from '@/components/investments/tabs/GeneralTab';
 import { PerformanceTab } from '@/components/investments/tabs/PerformanceTab';
-import { DetteTab } from '@/components/investments/tabs/DetteTab';
+import { DocumentsTab } from '@/components/investments/tabs/DocumentsTab';
+import { NotesTab } from '@/components/investments/tabs/NotesTab';
 import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
-import { useUserRole } from '@/hooks/useUserRole';
-import { useToast } from '@/hooks/use-toast';
+import { DetteTab } from '@/components/investments/tabs/DetteTab';
+import { useInvestments } from '@/contexts/InvestmentContext';
 
 export default function InvestissementDetail() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { canEdit, isLoading } = useUserRole();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('general');
   const [isEditMode, setIsEditMode] = useState(false);
+  const { investments, updateInvestment, getInvestment } = useInvestments();
 
-  // Mock data - en attendant la vraie intégration
-  const [investment, setInvestment] = useState<{
-    id: string | undefined;
-    name: string;
-    type: 'IMMO' | 'PE';
-    status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
-    dateInvestment: string;
-    lastValue: number;
-    lastTRI: number;
-    lastCashflow: number;
-    lastVariation: { value: number; percentage: number };
-    address: string;
-    surface: number;
-    investmentAmount: number;
-    acquisitionDate: string;
-    notaryFees: number;
-    renovationBudget: number;
-    description?: string;
-    // Bail fields
-    bailPriseEffet?: string;
-    bailActivite?: string;
-    bailAnciennete?: number;
-    bailNextBreak?: string;
-    bailGmapLink?: string;
-    bailGmapNote?: string;
-    bailLoyerHT?: number;
-    bailCNR?: number;
-    // Présentation Vente fields
-    netVendeur?: number;
-    agent?: number;
-    honoNotaire?: number;
-  }>({
-    id: id,
-    name: 'Faisanderie Paris',
-    type: 'IMMO',
-    status: 'DUE_DIL',
-    dateInvestment: '2023-03-15',
-    lastValue: 2170000,
-    lastTRI: 6.8,
-    lastCashflow: 98084,
-    lastVariation: { value: 50000, percentage: 2.4 },
-    address: '12 rue de la Faisanderie, 75016 Paris',
-    surface: 250,
-    investmentAmount: 0,
-    acquisitionDate: '2023-03-15',
-    notaryFees: 168000,
-    renovationBudget: 50000,
-    description: 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris. Situé au 3ème étage avec ascenseur, vue dégagée sur jardins privatifs.',
-    // Bail mock data
-    bailPriseEffet: '2023-01-01',
-    bailActivite: 'Bureau',
-    bailAnciennete: 5,
-    bailNextBreak: '2028-01-01',
-    bailGmapLink: 'https://maps.google.com/?q=12+rue+de+la+Faisanderie+75016+Paris',
-    bailGmapNote: 'Proche métro Trocadéro',
-    bailLoyerHT: 12500,
-    bailCNR: 500,
-    // Présentation Vente mock data
-    netVendeur: 2100000,
-    agent: 0.03, // 3%
-    honoNotaire: 0.08 // 8%
-  });
+  // Get investment from global context
+  const investment = getInvestment(id || '');
+
+  if (!investment) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p>Investissement introuvable</p>
+      </div>
+    );
+  }
 
   const [tempEditData, setTempEditData] = useState({
     name: investment.name,
-    type: investment.type,
-    address: investment.address,
-    surface: investment.surface,
-    description: investment.description || '',
-    investmentAmount: investment.investmentAmount,
-    acquisitionDate: investment.acquisitionDate,
-    notaryFees: investment.notaryFees,
-    renovationBudget: investment.renovationBudget,
+    address: investment.address || '',
+    surface: investment.surface || 0,
+    price: investment.price || 0,
+    dateAcquisition: investment.dateAcquisition || '',
     // Bail fields
-    bailPriseEffet: investment.bailPriseEffet || '',
-    bailActivite: investment.bailActivite || '',
-    bailAnciennete: investment.bailAnciennete || 0,
+    locataire: investment.locataire || '',
+    dateEntree: investment.dateEntree || '',
+    typeBail: investment.typeBail || '',
+    dureeBail: investment.dureeBail || 0,
     bailNextBreak: investment.bailNextBreak || '',
     bailGmapLink: investment.bailGmapLink || '',
     bailGmapNote: investment.bailGmapNote || '',
@@ -112,40 +53,63 @@ export default function InvestissementDetail() {
     honoNotaire: investment.honoNotaire || 0.08
   });
 
-  const handleStatusChange = (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
-    setInvestment(prev => {
-      const updated = { ...prev, status: newStatus };
-      
-      // Si on passe au statut INVESTI, mettre à jour les données financières
-      if (newStatus === 'INVESTI' && data) {
-        updated.investmentAmount = data.amount;
-        // Corriger le décalage de date en utilisant le fuseau horaire local
-        const localDateString = `${data.date.getFullYear()}-${String(data.date.getMonth() + 1).padStart(2, '0')}-${String(data.date.getDate()).padStart(2, '0')}`;
-        updated.dateInvestment = localDateString;
-        updated.acquisitionDate = localDateString;
-        updated.notaryFees = data.cost;
-      }
-      
-      return updated;
+  // Update tempEditData when investment changes
+  useEffect(() => {
+    setTempEditData({
+      name: investment.name,
+      address: investment.address || '',
+      surface: investment.surface || 0,
+      price: investment.price || 0,
+      dateAcquisition: investment.dateAcquisition || '',
+      // Bail fields
+      locataire: investment.locataire || '',
+      dateEntree: investment.dateEntree || '',
+      typeBail: investment.typeBail || '',
+      dureeBail: investment.dureeBail || 0,
+      bailNextBreak: investment.bailNextBreak || '',
+      bailGmapLink: investment.bailGmapLink || '',
+      bailGmapNote: investment.bailGmapNote || '',
+      bailLoyerHT: investment.bailLoyerHT || 0,
+      bailCNR: investment.bailCNR || 0,
+      // Présentation Vente fields
+      netVendeur: investment.netVendeur || 0,
+      agent: investment.agent || 0,
+      honoNotaire: investment.honoNotaire || 0.08
     });
+  }, [investment]);
+
+  const handleStatusChange = (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
+    const updates: any = { status: newStatus };
+    
+    // Si on passe au statut INVESTI, mettre à jour les données financières
+    if (newStatus === 'INVESTI' && data) {
+      updates.price = data.amount;
+      updates.dateInvestment = data.date;
+      updates.dateAcquisition = data.date;
+    }
+    
+    updateInvestment(investment.id, updates);
+  };
+
+  const handleDataChange = (updates: any) => {
+    setTempEditData(prev => ({ ...prev, ...updates }));
   };
 
   const handleSaveChanges = () => {
-    setInvestment(prev => ({
-      ...prev,
+    console.log('Saving changes:', tempEditData);
+    
+    // Update the investment in global context
+    updateInvestment(investment.id, {
       name: tempEditData.name,
-      type: tempEditData.type,
       address: tempEditData.address,
       surface: tempEditData.surface,
-      description: tempEditData.description,
-      investmentAmount: tempEditData.investmentAmount,
-      acquisitionDate: tempEditData.acquisitionDate,
-      notaryFees: tempEditData.notaryFees,
-      renovationBudget: tempEditData.renovationBudget,
+      price: tempEditData.price,
+      dateAcquisition: tempEditData.dateAcquisition,
       // Bail fields
-      bailPriseEffet: tempEditData.bailPriseEffet,
-      bailActivite: tempEditData.bailActivite,
-      bailAnciennete: tempEditData.bailAnciennete,
+      locataire: tempEditData.locataire,
+      dateEntree: tempEditData.dateEntree,
+      typeBail: tempEditData.typeBail,
+      dureeBail: tempEditData.dureeBail,
       bailNextBreak: tempEditData.bailNextBreak,
       bailGmapLink: tempEditData.bailGmapLink,
       bailGmapNote: tempEditData.bailGmapNote,
@@ -155,7 +119,7 @@ export default function InvestissementDetail() {
       netVendeur: tempEditData.netVendeur,
       agent: tempEditData.agent,
       honoNotaire: tempEditData.honoNotaire
-    }));
+    });
     setIsEditMode(false);
     toast({
       title: "Modifications sauvegardées",
@@ -166,18 +130,15 @@ export default function InvestissementDetail() {
   const handleCancelEdit = () => {
     setTempEditData({
       name: investment.name,
-      type: investment.type,
-      address: investment.address,
-      surface: investment.surface,
-      description: investment.description || '',
-      investmentAmount: investment.investmentAmount,
-      acquisitionDate: investment.acquisitionDate,
-      notaryFees: investment.notaryFees,
-      renovationBudget: investment.renovationBudget,
+      address: investment.address || '',
+      surface: investment.surface || 0,
+      price: investment.price || 0,
+      dateAcquisition: investment.dateAcquisition || '',
       // Bail fields
-      bailPriseEffet: investment.bailPriseEffet || '',
-      bailActivite: investment.bailActivite || '',
-      bailAnciennete: investment.bailAnciennete || 0,
+      locataire: investment.locataire || '',
+      dateEntree: investment.dateEntree || '',
+      typeBail: investment.typeBail || '',
+      dureeBail: investment.dureeBail || 0,
       bailNextBreak: investment.bailNextBreak || '',
       bailGmapLink: investment.bailGmapLink || '',
       bailGmapNote: investment.bailGmapNote || '',
@@ -211,13 +172,9 @@ export default function InvestissementDetail() {
     return `${value.toFixed(1)}%`;
   };
 
-  if (isLoading) {
-    return <div>Chargement...</div>;
-  }
-
   return (
     <div className="space-y-6">
-      {/* Header with back button */}
+      {/* Header with back button and investment title */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button 
@@ -228,91 +185,43 @@ export default function InvestissementDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           
-            <div className="flex items-center gap-3">
-              {!isEditMode ? (
-                <>
-                  {investment.type === 'IMMO' ? (
-                    <Building className="h-6 w-6 text-muted-foreground" />
-                  ) : (
-                    <TrendingUp className="h-6 w-6 text-muted-foreground" />
-                  )}
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <h1 className="text-2xl font-bold">{investment.name}</h1>
-                      <p className="text-muted-foreground">
-                        {investment.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
-                      </p>
-                    </div>
-                    {canEdit && (
-                      <Button 
-                        onClick={() => setIsEditMode(true)}
-                        className="btn-financial gap-2"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                        Modifier
-                      </Button>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  {tempEditData.type === 'IMMO' ? (
-                    <Building className="h-6 w-6 text-muted-foreground" />
-                  ) : (
-                    <TrendingUp className="h-6 w-6 text-muted-foreground" />
-                  )}
-                  <div className="flex items-center gap-3">
-                    <div className="space-y-2">
-                      <Input
-                        value={tempEditData.name}
-                        onChange={(e) => setTempEditData(prev => ({ ...prev, name: e.target.value }))}
-                        className="text-2xl font-bold border-0 p-0 h-auto"
-                      />
-                      <Select
-                        value={tempEditData.type}
-                        onValueChange={(value: 'IMMO' | 'PE') => setTempEditData(prev => ({ ...prev, type: value }))}
-                      >
-                        <SelectTrigger className="w-auto border-0 p-0 h-auto text-muted-foreground">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="IMMO">Investissement Immobilier</SelectItem>
-                          <SelectItem value="PE">Private Equity</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={handleSaveChanges}
-                        className="btn-financial gap-2"
-                      >
-                        <Save className="h-4 w-4" />
-                        Sauvegarder
-                      </Button>
-                      <Button 
-                        onClick={handleCancelEdit}
-                        variant="outline"
-                        className="gap-2"
-                      >
-                        Annuler
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">{investment.name}</h1>
+            <p className="text-lg text-muted-foreground">
+              {investment.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {isEditMode ? (
+            <>
+              <Button onClick={handleSaveChanges} size="sm">
+                <Save className="h-4 w-4 mr-2" />
+                Sauvegarder
+              </Button>
+              <Button variant="outline" onClick={handleCancelEdit} size="sm">
+                <X className="h-4 w-4 mr-2" />
+                Annuler
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => setIsEditMode(true)} variant="outline" size="sm">
+              <Edit className="h-4 w-4 mr-2" />
+              Modifier
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Status Progress */}
       <StatusProgress 
-        currentStatus={investment.status} 
-        className="mb-6" 
+        currentStatus={investment.status}
         onStatusChange={handleStatusChange}
       />
 
       {/* Performance Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
+      <div className="grid gap-4 md:grid-cols-3">
         <div className="card-financial">
           <div className="p-4">
             <label className="text-sm text-muted-foreground">Dernière valeur</label>
@@ -343,11 +252,11 @@ export default function InvestissementDetail() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs defaultValue="general" className="w-full">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="documents">Documents & IA</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="dette">Dette</TabsTrigger>
           <TabsTrigger value="historique">Historique</TabsTrigger>
@@ -355,32 +264,42 @@ export default function InvestissementDetail() {
 
         <TabsContent value="general" className="mt-6">
           <GeneralTab 
-            investmentId={id || ''} 
+            investmentId={investment.id}
             isEditMode={isEditMode}
-            investmentData={investment}
+            investmentData={{
+              ...investment,
+              dateInvestment: investment.dateInvestment || '',
+              address: investment.address || '',
+              surface: investment.surface || 0,
+              description: investment.description || '',
+              investmentAmount: investment.investmentAmount || 0,
+              acquisitionDate: investment.acquisitionDate || '',
+              notaryFees: investment.notaryFees || 0,
+              renovationBudget: investment.renovationBudget || 0
+            }}
             tempEditData={tempEditData}
-            onDataChange={setTempEditData}
+            onDataChange={handleDataChange}
           />
         </TabsContent>
 
         <TabsContent value="performance" className="mt-6">
-          <PerformanceTab investmentId={id || ''} isEditMode={isEditMode} />
+          <PerformanceTab investmentId={investment.id} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-6">
-          <DocumentsTab investmentId={id || ''} isEditMode={isEditMode} />
+          <DocumentsTab investmentId={investment.id} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-6">
-          <NotesTab investmentId={id || ''} isEditMode={isEditMode} />
+          <NotesTab investmentId={investment.id} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="dette" className="mt-6">
-          <DetteTab investmentId={id || ''} isEditMode={isEditMode} />
+          <DetteTab investmentId={investment.id} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="historique" className="mt-6">
-          <HistoriqueTab investmentId={id || ''} isEditMode={isEditMode} />
+          <HistoriqueTab investmentId={investment.id} isEditMode={isEditMode} />
         </TabsContent>
       </Tabs>
     </div>

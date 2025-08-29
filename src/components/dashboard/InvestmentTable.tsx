@@ -11,57 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Building, TrendingUp } from 'lucide-react';
-
-interface Investment {
-  id: string;
-  name: string;
-  type: 'IMMO' | 'PE';
-  status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
-  dateInvestment?: string;
-  lastValue: number;
-  lastTRI: number;
-  lastCashflow: number;
-  lastVariation: {
-    value: number;
-    percentage: number;
-  };
-}
-
-const mockInvestments: Investment[] = [
-  {
-    id: '1',
-    name: 'Faisanderie Paris',
-    type: 'IMMO',
-    status: 'INVESTI',
-    dateInvestment: '2023-03-15',
-    lastValue: 2170000,
-    lastTRI: 6.8,
-    lastCashflow: 98084,
-    lastVariation: { value: 50000, percentage: 2.4 }
-  },
-  {
-    id: '2',
-    name: 'Robespierre Bagnolet',
-    type: 'IMMO',
-    status: 'INVESTI',
-    dateInvestment: '2023-01-20',
-    lastValue: 1090000,
-    lastTRI: 7.2,
-    lastCashflow: 70443,
-    lastVariation: { value: -15000, percentage: -1.4 }
-  },
-  {
-    id: '3',
-    name: 'Général Leclerc Rosny',
-    type: 'IMMO',
-    status: 'INVESTI',
-    dateInvestment: '2022-11-10',
-    lastValue: 1690000,
-    lastTRI: 8.1,
-    lastCashflow: 112692,
-    lastVariation: { value: 80000, percentage: 5.0 }
-  }
-];
+import { useInvestments } from '@/contexts/InvestmentContext';
 
 const statusConfig = {
   RECU: { label: 'Reçu', className: 'status-recu' },
@@ -73,6 +23,10 @@ const statusConfig = {
 
 export function InvestmentTable() {
   const navigate = useNavigate();
+  const { investments } = useInvestments();
+  
+  // Filter to show only invested assets (not pipeline)
+  const investedAssets = investments.filter(inv => inv.status === 'INVESTI');
   
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -116,7 +70,7 @@ export function InvestmentTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockInvestments.map((investment) => (
+          {investedAssets.map((investment) => (
             <TableRow key={investment.id}>
               <TableCell>
                 <div className="flex items-center gap-2">

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { InvestmentCard } from '@/components/investments/InvestmentCard';
 import { Badge } from '@/components/ui/badge';
+import { InvestmentCard } from '@/components/investments/InvestmentCard';
+import { useInvestments } from '@/contexts/InvestmentContext';
 
 interface KanbanColumn {
   id: string;
@@ -11,99 +12,7 @@ interface KanbanColumn {
   color: string;
 }
 
-const mockInvestments = [
-  {
-    id: '1',
-    name: 'Faisanderie Paris',
-    type: 'IMMO' as const,
-    status: 'RECU' as const,
-    address: '12 rue de la Faisanderie, Paris 16e',
-    surface: 156,
-    rentAmount: 120000,
-    priceNV: 2500000,
-  },
-  {
-    id: '2',
-    name: 'Robespierre Bagnolet',
-    type: 'IMMO' as const,
-    status: 'DUE_DIL' as const,
-    address: 'Avenue Robespierre, Bagnolet',
-    surface: 231,
-    rentAmount: 80000,
-    priceNV: 1090000,
-  },
-  {
-    id: '3',
-    name: 'Général Leclerc Rosny',
-    type: 'IMMO' as const,
-    status: 'INVESTI' as const,
-    address: 'Avenue du Général Leclerc, Rosny',
-    surface: 626,
-    rentAmount: 124000,
-    priceNV: 1690000,
-    tri: 8.1,
-    lastValue: 1690000,
-  },
-  {
-    id: '4',
-    name: 'Commercial Montreuil',
-    type: 'IMMO' as const,
-    status: 'VENDU' as const,
-    address: 'Centre commercial, Montreuil',
-    surface: 450,
-    rentAmount: 95000,
-    priceNV: 1200000,
-    tri: 12.5,
-  },
-  {
-    id: '5',
-    name: 'Bureaux La Défense',
-    type: 'IMMO' as const,
-    status: 'DROP' as const,
-    address: 'Tour CB21, La Défense',
-    surface: 2100,
-    rentAmount: 280000,
-    priceNV: 4500000,
-  },
-];
-
-const columns: KanbanColumn[] = [
-  {
-    id: 'recu',
-    title: 'Reçu',
-    status: 'RECU',
-    investments: mockInvestments.filter(inv => inv.status === 'RECU'),
-    color: 'bg-blue-50 border-blue-200'
-  },
-  {
-    id: 'due-dil',
-    title: 'Due Diligence',
-    status: 'DUE_DIL',
-    investments: mockInvestments.filter(inv => inv.status === 'DUE_DIL'),
-    color: 'bg-orange-50 border-orange-200'
-  },
-  {
-    id: 'investi',
-    title: 'Investi',
-    status: 'INVESTI',
-    investments: mockInvestments.filter(inv => inv.status === 'INVESTI'),
-    color: 'bg-success-lighter border-success-light'
-  },
-  {
-    id: 'vendu',
-    title: 'Vendu',
-    status: 'VENDU',
-    investments: mockInvestments.filter(inv => inv.status === 'VENDU'),
-    color: 'bg-purple-50 border-purple-200'
-  },
-  {
-    id: 'drop',
-    title: 'Abandonné',
-    status: 'DROP',
-    investments: mockInvestments.filter(inv => inv.status === 'DROP'),
-    color: 'bg-red-50 border-red-200'
-  }
-];
+// Remove old mock data and columns since we now use the global context
 
 interface KanbanBoardProps {
   title: string;
@@ -111,6 +20,53 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ title, type }: KanbanBoardProps) {
+  const { investments } = useInvestments();
+  
+  // Filter investments by type and pipeline statuses
+  const pipelineStatuses = ['RECU', 'DUE_DIL'];
+  const pipelineInvestments = investments.filter(inv => 
+    inv.type === type && pipelineStatuses.includes(inv.status)
+  );
+
+  // Update columns to use real data
+  const columns = [
+    {
+      id: 'recu',
+      title: 'Reçu',
+      status: 'RECU' as const,
+      investments: pipelineInvestments.filter(inv => inv.status === 'RECU'),
+      color: 'bg-blue-50 border-blue-200'
+    },
+    {
+      id: 'due-dil',
+      title: 'Due Diligence',
+      status: 'DUE_DIL' as const,
+      investments: pipelineInvestments.filter(inv => inv.status === 'DUE_DIL'),
+      color: 'bg-yellow-50 border-yellow-200'
+    },
+    {
+      id: 'investi',
+      title: 'Investi',
+      status: 'INVESTI' as const,
+      investments: investments.filter(inv => inv.type === type && inv.status === 'INVESTI'),
+      color: 'bg-green-50 border-green-200'
+    },
+    {
+      id: 'vendu',
+      title: 'Vendu',
+      status: 'VENDU' as const,
+      investments: investments.filter(inv => inv.type === type && inv.status === 'VENDU'),
+      color: 'bg-purple-50 border-purple-200'
+    },
+    {
+      id: 'drop',
+      title: 'Drop',
+      status: 'DROP' as const,
+      investments: investments.filter(inv => inv.type === type && inv.status === 'DROP'),
+      color: 'bg-red-50 border-red-200'
+    }
+  ];
+
   return (
     <div className="space-y-6">
       <div>
