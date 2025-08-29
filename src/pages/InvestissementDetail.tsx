@@ -41,6 +41,15 @@ export default function InvestissementDetail() {
     acquisitionDate: string;
     notaryFees: number;
     renovationBudget: number;
+    description?: string;
+    // Bail fields
+    bailPriseEffet?: string;
+    bailActivite?: string;
+    bailAnciennete?: number;
+    bailNextBreak?: string;
+    bailGmapLink?: string;
+    bailGmapNote?: string;
+    bailLoyerHT?: number;
   }>({
     id: id,
     name: 'Faisanderie Paris',
@@ -56,12 +65,36 @@ export default function InvestissementDetail() {
     investmentAmount: 0,
     acquisitionDate: '2023-03-15',
     notaryFees: 168000,
-    renovationBudget: 50000
+    renovationBudget: 50000,
+    description: 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris. Situé au 3ème étage avec ascenseur, vue dégagée sur jardins privatifs.',
+    // Bail mock data
+    bailPriseEffet: '2023-01-01',
+    bailActivite: 'Bureau',
+    bailAnciennete: 5,
+    bailNextBreak: '2028-01-01',
+    bailGmapLink: 'https://maps.google.com/?q=12+rue+de+la+Faisanderie+75016+Paris',
+    bailGmapNote: 'Proche métro Trocadéro',
+    bailLoyerHT: 12500
   });
 
   const [tempEditData, setTempEditData] = useState({
     name: investment.name,
-    type: investment.type
+    type: investment.type,
+    address: investment.address,
+    surface: investment.surface,
+    description: investment.description || '',
+    investmentAmount: investment.investmentAmount,
+    acquisitionDate: investment.acquisitionDate,
+    notaryFees: investment.notaryFees,
+    renovationBudget: investment.renovationBudget,
+    // Bail fields
+    bailPriseEffet: investment.bailPriseEffet || '',
+    bailActivite: investment.bailActivite || '',
+    bailAnciennete: investment.bailAnciennete || 0,
+    bailNextBreak: investment.bailNextBreak || '',
+    bailGmapLink: investment.bailGmapLink || '',
+    bailGmapNote: investment.bailGmapNote || '',
+    bailLoyerHT: investment.bailLoyerHT || 0
   });
 
   const handleStatusChange = (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
@@ -86,7 +119,22 @@ export default function InvestissementDetail() {
     setInvestment(prev => ({
       ...prev,
       name: tempEditData.name,
-      type: tempEditData.type
+      type: tempEditData.type,
+      address: tempEditData.address,
+      surface: tempEditData.surface,
+      description: tempEditData.description,
+      investmentAmount: tempEditData.investmentAmount,
+      acquisitionDate: tempEditData.acquisitionDate,
+      notaryFees: tempEditData.notaryFees,
+      renovationBudget: tempEditData.renovationBudget,
+      // Bail fields
+      bailPriseEffet: tempEditData.bailPriseEffet,
+      bailActivite: tempEditData.bailActivite,
+      bailAnciennete: tempEditData.bailAnciennete,
+      bailNextBreak: tempEditData.bailNextBreak,
+      bailGmapLink: tempEditData.bailGmapLink,
+      bailGmapNote: tempEditData.bailGmapNote,
+      bailLoyerHT: tempEditData.bailLoyerHT
     }));
     setIsEditMode(false);
     toast({
@@ -98,7 +146,22 @@ export default function InvestissementDetail() {
   const handleCancelEdit = () => {
     setTempEditData({
       name: investment.name,
-      type: investment.type
+      type: investment.type,
+      address: investment.address,
+      surface: investment.surface,
+      description: investment.description || '',
+      investmentAmount: investment.investmentAmount,
+      acquisitionDate: investment.acquisitionDate,
+      notaryFees: investment.notaryFees,
+      renovationBudget: investment.renovationBudget,
+      // Bail fields
+      bailPriseEffet: investment.bailPriseEffet || '',
+      bailActivite: investment.bailActivite || '',
+      bailAnciennete: investment.bailAnciennete || 0,
+      bailNextBreak: investment.bailNextBreak || '',
+      bailGmapLink: investment.bailGmapLink || '',
+      bailGmapNote: investment.bailGmapNote || '',
+      bailLoyerHT: investment.bailLoyerHT || 0
     });
     setIsEditMode(false);
   };
@@ -270,6 +333,8 @@ export default function InvestissementDetail() {
             investmentId={id || ''} 
             isEditMode={isEditMode}
             investmentData={investment}
+            tempEditData={tempEditData}
+            onDataChange={setTempEditData}
           />
         </TabsContent>
 

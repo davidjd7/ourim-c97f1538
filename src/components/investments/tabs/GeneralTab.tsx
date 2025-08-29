@@ -55,6 +55,8 @@ interface GeneralTabProps {
     bailGmapNote?: string;
     bailLoyerHT?: number;
   };
+  tempEditData?: any;
+  onDataChange?: (data: any) => void;
 }
 
 const mockGeneralData: GeneralData = {
@@ -87,7 +89,7 @@ const statusConfig = {
   DROP: { label: 'Drop', className: 'status-drop' }
 };
 
-export function GeneralTab({ investmentId, isEditMode = false, investmentData }: GeneralTabProps) {
+export function GeneralTab({ investmentId, isEditMode = false, investmentData, tempEditData, onDataChange }: GeneralTabProps) {
   const { canEdit } = useUserRole();
   
   // Utiliser les données passées en prop ou les données mock par défaut
@@ -114,7 +116,15 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
   } : mockGeneralData;
   
   const [data, setData] = useState<GeneralData>(initialData);
-  const [editData, setEditData] = useState<GeneralData>(data);
+  
+  // En mode édition, utiliser tempEditData du parent, sinon utiliser l'état local
+  const editData = isEditMode && tempEditData ? tempEditData : data;
+  
+  const handleDataChange = (newData: any) => {
+    if (isEditMode && onDataChange) {
+      onDataChange(newData);
+    }
+  };
 
   // Synchroniser avec les données externes quand elles changent
   React.useEffect(() => {
@@ -141,7 +151,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
         bailLoyerHT: investmentData.bailLoyerHT || 0
       };
       setData(newData);
-      setEditData(newData);
     }
   }, [investmentData]);
 
@@ -168,13 +177,13 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
             <div className="space-y-4">
               <div>
                 <Label htmlFor="address">Adresse</Label>
-                {isEditMode ? (
-                  <Input
-                    id="address"
-                    value={editData.address}
-                    onChange={(e) => setEditData({ ...editData, address: e.target.value })}
-                  />
-                ) : (
+              {isEditMode ? (
+                <Input
+                  id="address"
+                  value={editData.address}
+                  onChange={(e) => handleDataChange({ ...editData, address: e.target.value })}
+                />
+              ) : (
                   <p className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     {data.address}
@@ -193,7 +202,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                       id="investmentAmount"
                       type="number"
                       value={editData.investmentAmount}
-                      onChange={(e) => setEditData({ ...editData, investmentAmount: Number(e.target.value) })}
+                      onChange={(e) => handleDataChange({ ...editData, investmentAmount: Number(e.target.value) })}
                     />
                   ) : (
                     <p className="text-lg font-medium financial-value">
@@ -211,7 +220,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                       id="acquisitionDate"
                       type="date"
                       value={editData.dateInvestment}
-                      onChange={(e) => setEditData({ ...editData, dateInvestment: e.target.value, acquisitionDate: e.target.value })}
+                      onChange={(e) => handleDataChange({ ...editData, dateInvestment: e.target.value, acquisitionDate: e.target.value })}
                     />
                   ) : (
                     <p className="flex items-center gap-2">
@@ -229,7 +238,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                     id="surface"
                     type="number"
                     value={editData.surface}
-                    onChange={(e) => setEditData({ ...editData, surface: Number(e.target.value) })}
+                    onChange={(e) => handleDataChange({ ...editData, surface: Number(e.target.value) })}
                   />
                 ) : (
                   <p className="font-medium">{data.surface} m²</p>
@@ -244,7 +253,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                       id="notaryFees"
                       type="number"
                       value={editData.notaryFees}
-                      onChange={(e) => setEditData({ ...editData, notaryFees: Number(e.target.value) })}
+                      onChange={(e) => handleDataChange({ ...editData, notaryFees: Number(e.target.value) })}
                     />
                   ) : (
                     <p className="font-medium financial-value">
@@ -262,7 +271,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
               <Textarea
                 id="description"
                 value={editData.description}
-                onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
                 rows={4}
               />
             ) : (
@@ -289,7 +298,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                   id="bailPriseEffet"
                   type="date"
                   value={editData.bailPriseEffet}
-                  onChange={(e) => setEditData({ ...editData, bailPriseEffet: e.target.value })}
+                  onChange={(e) => handleDataChange({ ...editData, bailPriseEffet: e.target.value })}
                 />
               ) : (
                 <p className="flex items-center gap-2">
@@ -305,7 +314,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                 <Input
                   id="bailActivite"
                   value={editData.bailActivite}
-                  onChange={(e) => setEditData({ ...editData, bailActivite: e.target.value })}
+                  onChange={(e) => handleDataChange({ ...editData, bailActivite: e.target.value })}
                 />
               ) : (
                 <p className="font-medium">{data.bailActivite || 'Non défini'}</p>
@@ -319,7 +328,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                   id="bailAnciennete"
                   type="number"
                   value={editData.bailAnciennete}
-                  onChange={(e) => setEditData({ ...editData, bailAnciennete: Number(e.target.value) })}
+                  onChange={(e) => handleDataChange({ ...editData, bailAnciennete: Number(e.target.value) })}
                 />
               ) : (
                 <p className="font-medium">{data.bailAnciennete} années</p>
@@ -333,7 +342,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                   id="bailNextBreak"
                   type="date"
                   value={editData.bailNextBreak}
-                  onChange={(e) => setEditData({ ...editData, bailNextBreak: e.target.value })}
+                  onChange={(e) => handleDataChange({ ...editData, bailNextBreak: e.target.value })}
                 />
               ) : (
                 <p className="flex items-center gap-2">
@@ -350,7 +359,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                   id="bailGmapLink"
                   type="url"
                   value={editData.bailGmapLink}
-                  onChange={(e) => setEditData({ ...editData, bailGmapLink: e.target.value })}
+                  onChange={(e) => handleDataChange({ ...editData, bailGmapLink: e.target.value })}
                 />
               ) : (
                 <div className="flex items-center gap-2">
@@ -379,7 +388,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
                   type="number"
                   step="0.01"
                   value={editData.bailLoyerHT}
-                  onChange={(e) => setEditData({ ...editData, bailLoyerHT: Number(e.target.value) })}
+                  onChange={(e) => handleDataChange({ ...editData, bailLoyerHT: Number(e.target.value) })}
                 />
               ) : (
                 <p className="font-medium financial-value">
@@ -403,7 +412,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData }:
               <Textarea
                 id="bailGmapNote"
                 value={editData.bailGmapNote}
-                onChange={(e) => setEditData({ ...editData, bailGmapNote: e.target.value })}
+                onChange={(e) => handleDataChange({ ...editData, bailGmapNote: e.target.value })}
                 rows={3}
               />
             ) : (
