@@ -64,6 +64,7 @@ export default function InvestissementDetail() {
         updated.investmentAmount = data.amount;
         updated.dateInvestment = data.date.toISOString().split('T')[0];
         updated.acquisitionDate = data.date.toISOString().split('T')[0];
+        updated.notaryFees = data.cost;
       }
       
       return updated;
