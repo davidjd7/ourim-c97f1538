@@ -48,6 +48,9 @@ export default function InvestissementDetail() {
     bailGmapNote: investment.bailGmapNote || '',
     bailLoyerHT: investment.bailLoyerHT || 0,
     bailCNR: investment.bailCNR || 0,
+    bailPriseEffet: investment.bailPriseEffet || '',
+    bailActivite: investment.bailActivite || '',
+    bailAnciennete: investment.bailAnciennete || 0,
     // Présentation Vente fields
     netVendeur: investment.netVendeur || 0,
     agent: investment.agent || 0,
@@ -73,6 +76,9 @@ export default function InvestissementDetail() {
       bailGmapNote: investment.bailGmapNote || '',
       bailLoyerHT: investment.bailLoyerHT || 0,
       bailCNR: investment.bailCNR || 0,
+      bailPriseEffet: investment.bailPriseEffet || '',
+      bailActivite: investment.bailActivite || '',
+      bailAnciennete: investment.bailAnciennete || 0,
       // Présentation Vente fields
       netVendeur: investment.netVendeur || 0,
       agent: investment.agent || 0,
@@ -118,6 +124,9 @@ export default function InvestissementDetail() {
       bailGmapNote: tempEditData.bailGmapNote,
       bailLoyerHT: tempEditData.bailLoyerHT,
       bailCNR: tempEditData.bailCNR,
+      bailPriseEffet: tempEditData.bailPriseEffet,
+      bailActivite: tempEditData.bailActivite,
+      bailAnciennete: tempEditData.bailAnciennete,
       // Présentation Vente fields
       netVendeur: tempEditData.netVendeur,
       agent: tempEditData.agent,
@@ -148,6 +157,9 @@ export default function InvestissementDetail() {
       bailGmapNote: investment.bailGmapNote || '',
       bailLoyerHT: investment.bailLoyerHT || 0,
       bailCNR: investment.bailCNR || 0,
+      bailPriseEffet: investment.bailPriseEffet || '',
+      bailActivite: investment.bailActivite || '',
+      bailAnciennete: investment.bailAnciennete || 0,
       // Présentation Vente fields
       netVendeur: investment.netVendeur || 0,
       agent: investment.agent || 0,
