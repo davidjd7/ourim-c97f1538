@@ -27,7 +27,6 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
     inv.type === type && pipelineStatuses.includes(inv.status)
   );
 
-  // Update columns to use real data (sans Drop qui sera séparé)
   const columns = [
     {
       id: 'recu',
@@ -56,11 +55,15 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
       status: 'VENDU' as const,
       investments: investments.filter(inv => inv.type === type && inv.status === 'VENDU'),
       color: 'bg-purple-50 border-purple-200'
+    },
+    {
+      id: 'drop',
+      title: 'Drop',
+      status: 'DROP' as const,
+      investments: investments.filter(inv => inv.type === type && inv.status === 'DROP'),
+      color: 'bg-red-50 border-red-200'
     }
   ];
-
-  // Zone Drop séparée
-  const droppedInvestments = investments.filter(inv => inv.type === type && inv.status === 'DROP');
 
   const handleDragStart = (e: React.DragEvent, investmentId: string) => {
     setDraggedItem(investmentId);
@@ -96,12 +99,14 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
         </p>
       </div>
 
-      {/* Grid des 4 colonnes principales */}
-      <div className="grid gap-6 lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1">
+      {/* Grid des 5 colonnes */}
+      <div className="grid gap-6 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-1">
         {columns.map((column) => (
           <Card 
             key={column.id} 
             className={`${column.color} min-h-[500px]`}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, column.status)}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -131,53 +136,6 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
           </Card>
         ))}
       </div>
-
-      {/* Zone Drop séparée en bas */}
-      <Card className="bg-red-50 border-red-200 border-2">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium text-destructive">
-              Drop - Investissements abandonnés
-            </CardTitle>
-            <Badge variant="destructive" className="text-xs">
-              {droppedInvestments.length}
-            </Badge>
-          </div>
-        </CardHeader>
-        
-        <CardContent>
-          {/* Zone de drop principale */}
-          <div 
-            className={`w-full min-h-[120px] border-2 border-dashed rounded-lg flex flex-col items-center justify-center transition-all duration-200 mb-4 ${
-              draggedItem 
-                ? 'border-destructive bg-destructive/10 text-destructive' 
-                : 'border-red-300 text-muted-foreground'
-            }`}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, 'DROP')}
-          >
-            <span className="text-sm font-medium mb-2">
-              {draggedItem ? 'Déposer ici pour abandonner l\'investissement' : 'Zone d\'abandon'}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              Les investissements déposés ici seront marqués comme abandonnés
-            </span>
-          </div>
-
-          {/* Affichage des investissements abandonnés */}
-          {droppedInvestments.length > 0 && (
-            <div className="grid gap-3 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2">
-              {droppedInvestments.map((investment) => (
-                <InvestmentCard 
-                  key={investment.id} 
-                  investment={investment}
-                  onDragStart={handleDragStart}
-                />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
