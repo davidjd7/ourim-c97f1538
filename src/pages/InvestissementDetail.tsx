@@ -33,6 +33,7 @@ export default function InvestissementDetail() {
 
   const [tempEditData, setTempEditData] = useState({
     name: investment.name,
+    type: investment.type,
     address: investment.address || '',
     surface: investment.surface || 0,
     price: investment.price || 0,
@@ -57,6 +58,7 @@ export default function InvestissementDetail() {
   useEffect(() => {
     setTempEditData({
       name: investment.name,
+      type: investment.type,
       address: investment.address || '',
       surface: investment.surface || 0,
       price: investment.price || 0,
@@ -101,6 +103,7 @@ export default function InvestissementDetail() {
     // Update the investment in global context
     updateInvestment(investment.id, {
       name: tempEditData.name,
+      type: tempEditData.type,
       address: tempEditData.address,
       surface: tempEditData.surface,
       price: tempEditData.price,
@@ -130,6 +133,7 @@ export default function InvestissementDetail() {
   const handleCancelEdit = () => {
     setTempEditData({
       name: investment.name,
+      type: investment.type,
       address: investment.address || '',
       surface: investment.surface || 0,
       price: investment.price || 0,
@@ -186,10 +190,31 @@ export default function InvestissementDetail() {
           </Button>
           
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{investment.name}</h1>
-            <p className="text-lg text-muted-foreground">
-              {investment.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
-            </p>
+            {isEditMode ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={tempEditData.name}
+                  onChange={(e) => handleDataChange({ name: e.target.value })}
+                  className="text-3xl font-bold bg-transparent border-b border-border focus:border-primary outline-none text-foreground"
+                />
+                <select
+                  value={tempEditData.type}
+                  onChange={(e) => handleDataChange({ type: e.target.value as 'IMMO' | 'PE' })}
+                  className="text-lg bg-transparent border-b border-border focus:border-primary outline-none text-muted-foreground"
+                >
+                  <option value="IMMO">Investissement Immobilier</option>
+                  <option value="PE">Private Equity</option>
+                </select>
+              </div>
+            ) : (
+              <>
+                <h1 className="text-3xl font-bold text-foreground">{investment.name}</h1>
+                <p className="text-lg text-muted-foreground">
+                  {investment.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+                </p>
+              </>
+            )}
           </div>
         </div>
         
