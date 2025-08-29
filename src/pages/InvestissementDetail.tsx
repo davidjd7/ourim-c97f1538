@@ -176,6 +176,21 @@ export default function InvestissementDetail() {
     return `${value.toFixed(1)}%`;
   };
 
+  const getBackPath = () => {
+    if (investment.status === 'RECU' || investment.status === 'DUE_DIL') {
+      return investment.type === 'IMMO' ? '/pipeline-immo' : '/pipeline-pe';
+    } else if (investment.status === 'INVESTI') {
+      return '/investissements';
+    }
+    // Pour les autres statuts (VENDU, DROP), retour à la page d'accueil
+    return '/';
+  };
+
+  const handleBackClick = () => {
+    console.log('Back button clicked, navigating to:', getBackPath());
+    navigate(getBackPath());
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with back button and investment title */}
@@ -184,10 +199,7 @@ export default function InvestissementDetail() {
           <Button 
             variant="outline" 
             size="icon"
-            onClick={() => {
-              console.log('Back button clicked');
-              navigate('/');
-            }}
+            onClick={handleBackClick}
             className="flex items-center justify-center cursor-pointer hover:bg-accent transition-colors"
             title="Retour"
           >
