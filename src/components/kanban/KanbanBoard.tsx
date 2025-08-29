@@ -104,11 +104,7 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
         {columns.map((column) => (
           <Card 
             key={column.id} 
-            className={`${column.color} min-h-[500px] transition-all duration-300 ${
-              draggedItem ? 'ring-2 ring-primary/20' : ''
-            }`}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, column.status)}
+            className={`${column.color} min-h-[500px] flex flex-col`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -120,19 +116,37 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {column.investments.map((investment) => (
-                <InvestmentCard 
-                  key={investment.id} 
-                  investment={investment}
-                  onDragStart={handleDragStart}
-                />
-              ))}
-              {column.investments.length === 0 && (
-                <div className="text-center text-muted-foreground text-sm py-8 border-2 border-dashed border-muted rounded-lg">
-                  Aucun investissement
-                </div>
-              )}
+            
+            <CardContent className="space-y-3 flex-1 flex flex-col">
+              <div className="space-y-3">
+                {column.investments.map((investment) => (
+                  <InvestmentCard 
+                    key={investment.id} 
+                    investment={investment}
+                    onDragStart={handleDragStart}
+                  />
+                ))}
+                {column.investments.length === 0 && (
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                    Aucun investissement
+                  </div>
+                )}
+              </div>
+              
+              {/* Zone de drop en bas */}
+              <div 
+                className={`mt-auto w-full h-16 border-2 border-dashed rounded-lg flex items-center justify-center transition-all duration-200 ${
+                  draggedItem 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-muted-foreground/30 text-muted-foreground'
+                }`}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, column.status)}
+              >
+                <span className="text-xs font-medium">
+                  {draggedItem ? `Déposer ici pour ${column.title}` : 'Zone de dépôt'}
+                </span>
+              </div>
             </CardContent>
           </Card>
         ))}
