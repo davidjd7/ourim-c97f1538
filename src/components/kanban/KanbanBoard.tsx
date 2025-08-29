@@ -55,15 +55,17 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
       status: 'VENDU' as const,
       investments: investments.filter(inv => inv.type === type && inv.status === 'VENDU'),
       color: 'bg-purple-50 border-purple-200'
-    },
-    {
-      id: 'drop',
-      title: 'Drop',
-      status: 'DROP' as const,
-      investments: investments.filter(inv => inv.type === type && inv.status === 'DROP'),
-      color: 'bg-red-50 border-red-200'
     }
   ];
+
+  // Colonne Drop séparée
+  const dropColumn = {
+    id: 'drop',
+    title: 'Drop',
+    status: 'DROP' as const,
+    investments: investments.filter(inv => inv.type === type && inv.status === 'DROP'),
+    color: 'bg-red-50 border-red-200'
+  };
 
   const handleDragStart = (e: React.DragEvent, investmentId: string) => {
     setDraggedItem(investmentId);
@@ -99,8 +101,8 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
         </p>
       </div>
 
-      {/* Grid des 5 colonnes */}
-      <div className="grid gap-6 xl:grid-cols-5 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
+      {/* Grid des 4 colonnes principales */}
+      <div className="grid gap-6 lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1">
         {columns.map((column) => (
           <Card 
             key={column.id} 
@@ -136,6 +138,42 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
           </Card>
         ))}
       </div>
+
+      {/* Colonne Drop en bas sur toute la largeur */}
+      <Card 
+        className={`${dropColumn.color} min-h-[200px]`}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, dropColumn.status)}
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium text-foreground">
+              {dropColumn.title}
+            </CardTitle>
+            <Badge variant="secondary" className="text-xs">
+              {dropColumn.investments.length}
+            </Badge>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          {dropColumn.investments.length > 0 ? (
+            <div className="grid gap-3 lg:grid-cols-6 md:grid-cols-4 sm:grid-cols-2">
+              {dropColumn.investments.map((investment) => (
+                <InvestmentCard 
+                  key={investment.id} 
+                  investment={investment}
+                  onDragStart={handleDragStart}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-muted-foreground text-sm py-8">
+              Aucun investissement
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
