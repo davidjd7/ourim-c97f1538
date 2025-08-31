@@ -259,6 +259,13 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
               </div>
 
               <div>
+                <Label htmlFor="investAllIn">Invest All in</Label>
+                <p className="font-medium financial-value text-primary">
+                  {formatCurrency((isEditMode ? editData.investmentAmount : data.investmentAmount) + (isEditMode ? editData.notaryFees : data.notaryFees))}
+                </p>
+              </div>
+
+              <div>
                 <Label htmlFor="company">Société</Label>
                 {isEditMode ? (
                   <Input
