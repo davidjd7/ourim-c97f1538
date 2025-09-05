@@ -14,7 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      investments: {
+        Row: {
+          address: string | null
+          agent: number | null
+          bail_activite: string | null
+          bail_anciennete: number | null
+          bail_cnr: number | null
+          bail_gmap_link: string | null
+          bail_gmap_note: string | null
+          bail_loyer_ht: number | null
+          bail_next_break: string | null
+          bail_prise_effet: string | null
+          company: string | null
+          created_at: string
+          date_acquisition: string | null
+          date_entree: string | null
+          duree_bail: number | null
+          hono_notaire: number | null
+          id: string
+          investment_amount: number | null
+          investment_date: string | null
+          last_value: number | null
+          locataire: string | null
+          name: string
+          net_vendeur: number | null
+          notary_fees: number | null
+          notes: string | null
+          price: number | null
+          status: string
+          surface: number | null
+          tri: number | null
+          type: string
+          type_bail: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          agent?: number | null
+          bail_activite?: string | null
+          bail_anciennete?: number | null
+          bail_cnr?: number | null
+          bail_gmap_link?: string | null
+          bail_gmap_note?: string | null
+          bail_loyer_ht?: number | null
+          bail_next_break?: string | null
+          bail_prise_effet?: string | null
+          company?: string | null
+          created_at?: string
+          date_acquisition?: string | null
+          date_entree?: string | null
+          duree_bail?: number | null
+          hono_notaire?: number | null
+          id?: string
+          investment_amount?: number | null
+          investment_date?: string | null
+          last_value?: number | null
+          locataire?: string | null
+          name: string
+          net_vendeur?: number | null
+          notary_fees?: number | null
+          notes?: string | null
+          price?: number | null
+          status: string
+          surface?: number | null
+          tri?: number | null
+          type: string
+          type_bail?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          agent?: number | null
+          bail_activite?: string | null
+          bail_anciennete?: number | null
+          bail_cnr?: number | null
+          bail_gmap_link?: string | null
+          bail_gmap_note?: string | null
+          bail_loyer_ht?: number | null
+          bail_next_break?: string | null
+          bail_prise_effet?: string | null
+          company?: string | null
+          created_at?: string
+          date_acquisition?: string | null
+          date_entree?: string | null
+          duree_bail?: number | null
+          hono_notaire?: number | null
+          id?: string
+          investment_amount?: number | null
+          investment_date?: string | null
+          last_value?: number | null
+          locataire?: string | null
+          name?: string
+          net_vendeur?: number | null
+          notary_fees?: number | null
+          notes?: string | null
+          price?: number | null
+          status?: string
+          surface?: number | null
+          tri?: number | null
+          type?: string
+          type_bail?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

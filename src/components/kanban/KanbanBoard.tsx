@@ -75,14 +75,18 @@ export function KanbanBoard({ title, type }: KanbanBoardProps) {
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent, targetStatus: string) => {
+  const handleDrop = async (e: React.DragEvent, targetStatus: string) => {
     e.preventDefault();
     const investmentId = e.dataTransfer.getData('text/plain');
     
     if (investmentId && targetStatus) {
-      updateInvestment(investmentId, {
-        status: targetStatus as 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP'
-      });
+      try {
+        await updateInvestment(investmentId, {
+          status: targetStatus as 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP'
+        });
+      } catch (error) {
+        console.error('Error updating investment status:', error);
+      }
     }
     
     setDraggedItem(null);

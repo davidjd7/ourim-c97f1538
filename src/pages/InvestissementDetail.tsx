@@ -86,57 +86,79 @@ export default function InvestissementDetail() {
     });
   }, [investment]);
 
-  const handleStatusChange = (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
+  const handleStatusChange = async (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
     const updates: any = { status: newStatus };
     
     // Si on passe au statut INVESTI, mettre à jour les données financières
     if (newStatus === 'INVESTI' && data) {
-      updates.price = data.amount;
-      updates.dateInvestment = data.date;
-      updates.dateAcquisition = data.date;
+      updates.investmentAmount = data.amount;
+      updates.notaryFees = data.cost;
+      updates.dateInvestment = data.date?.toISOString()?.split('T')[0];
+      updates.company = data.company;
     }
     
-    updateInvestment(investment.id, updates);
+    try {
+      await updateInvestment(investment.id, updates);
+      toast({
+        title: "Statut mis à jour",
+        description: "Le statut a été mis à jour avec succès.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la mise à jour du statut.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDataChange = (updates: any) => {
     setTempEditData(prev => ({ ...prev, ...updates }));
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     console.log('Saving changes:', tempEditData);
     
-    // Update the investment in global context
-    updateInvestment(investment.id, {
-      name: tempEditData.name,
-      type: tempEditData.type,
-      address: tempEditData.address,
-      surface: tempEditData.surface,
-      price: tempEditData.price,
-      dateAcquisition: tempEditData.dateAcquisition,
-      // Bail fields
-      locataire: tempEditData.locataire,
-      dateEntree: tempEditData.dateEntree,
-      typeBail: tempEditData.typeBail,
-      dureeBail: tempEditData.dureeBail,
-      bailNextBreak: tempEditData.bailNextBreak,
-      bailGmapLink: tempEditData.bailGmapLink,
-      bailGmapNote: tempEditData.bailGmapNote,
-      bailLoyerHT: tempEditData.bailLoyerHT,
-      bailCNR: tempEditData.bailCNR,
-      bailPriseEffet: tempEditData.bailPriseEffet,
-      bailActivite: tempEditData.bailActivite,
-      bailAnciennete: tempEditData.bailAnciennete,
-      // Présentation Vente fields
-      netVendeur: tempEditData.netVendeur,
-      agent: tempEditData.agent,
-      honoNotaire: tempEditData.honoNotaire
-    });
-    setIsEditMode(false);
-    toast({
-      title: "Modifications sauvegardées",
-      description: "Les informations ont été mises à jour avec succès.",
-    });
+    try {
+      // Update the investment in global context
+      await updateInvestment(investment.id, {
+        name: tempEditData.name,
+        type: tempEditData.type,
+        address: tempEditData.address,
+        surface: tempEditData.surface,
+        price: tempEditData.price,
+        dateAcquisition: tempEditData.dateAcquisition,
+        // Bail fields
+        locataire: tempEditData.locataire,
+        dateEntree: tempEditData.dateEntree,
+        typeBail: tempEditData.typeBail,
+        dureeBail: tempEditData.dureeBail,
+        bailNextBreak: tempEditData.bailNextBreak,
+        bailGmapLink: tempEditData.bailGmapLink,
+        bailGmapNote: tempEditData.bailGmapNote,
+        bailLoyerHT: tempEditData.bailLoyerHT,
+        bailCNR: tempEditData.bailCNR,
+        bailPriseEffet: tempEditData.bailPriseEffet,
+        bailActivite: tempEditData.bailActivite,
+        bailAnciennete: tempEditData.bailAnciennete,
+        // Présentation Vente fields
+        netVendeur: tempEditData.netVendeur,
+        agent: tempEditData.agent,
+        honoNotaire: tempEditData.honoNotaire
+      });
+      
+      setIsEditMode(false);
+      toast({
+        title: "Modifications sauvegardées",
+        description: "Les informations ont été mises à jour avec succès.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde des modifications.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleCancelEdit = () => {

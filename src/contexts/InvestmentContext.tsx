@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface Investment {
   id: string;
@@ -44,12 +46,14 @@ export interface Investment {
   rentAmount?: number;
   priceNV?: number;
   tri?: number;
+  company?: string;
 }
 
 interface InvestmentContextType {
   investments: Investment[];
-  updateInvestment: (id: string, updates: Partial<Investment>) => void;
+  updateInvestment: (id: string, updates: Partial<Investment>) => Promise<void>;
   getInvestment: (id: string) => Investment | undefined;
+  loading: boolean;
 }
 
 const InvestmentContext = createContext<InvestmentContextType | undefined>(undefined);
@@ -180,16 +184,190 @@ const initialInvestments: Investment[] = [
 ];
 
 export function InvestmentProvider({ children }: { children: ReactNode }) {
-  const [investments, setInvestments] = useState<Investment[]>(initialInvestments);
+  const [investments, setInvestments] = useState<Investment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const updateInvestment = (id: string, updates: Partial<Investment>) => {
-    setInvestments(prev => 
-      prev.map(investment => 
-        investment.id === id 
-          ? { ...investment, ...updates }
-          : investment
-      )
-    );
+  // Convert database row to Investment interface
+  const convertDbToInvestment = (dbRow: any): Investment => {
+    return {
+      id: dbRow.id,
+      name: dbRow.name,
+      type: dbRow.type,
+      status: dbRow.status,
+      dateInvestment: dbRow.investment_date,
+      lastValue: dbRow.last_value || 0,
+      lastTRI: dbRow.tri || 0,
+      lastCashflow: 0, // Calculate based on other fields if needed
+      lastVariation: { value: 0, percentage: 0 }, // Calculate based on historical data if needed
+      address: dbRow.address,
+      surface: dbRow.surface,
+      price: dbRow.price,
+      investmentAmount: dbRow.investment_amount,
+      acquisitionDate: dbRow.date_acquisition,
+      dateAcquisition: dbRow.date_acquisition,
+      notaryFees: dbRow.notary_fees,
+      locataire: dbRow.locataire,
+      dateEntree: dbRow.date_entree,
+      typeBail: dbRow.type_bail,
+      dureeBail: dbRow.duree_bail,
+      bailNextBreak: dbRow.bail_next_break,
+      bailGmapLink: dbRow.bail_gmap_link,
+      bailGmapNote: dbRow.bail_gmap_note,
+      bailLoyerHT: dbRow.bail_loyer_ht,
+      bailCNR: dbRow.bail_cnr,
+      bailPriseEffet: dbRow.bail_prise_effet,
+      bailActivite: dbRow.bail_activite,
+      bailAnciennete: dbRow.bail_anciennete,
+      netVendeur: dbRow.net_vendeur,
+      agent: dbRow.agent,
+      honoNotaire: dbRow.hono_notaire,
+      company: dbRow.company,
+      tri: dbRow.tri || 0,
+      // Calculated fields for Kanban
+      rentAmount: dbRow.bail_loyer_ht * 12 || 0,
+      priceNV: dbRow.price || 0
+    };
+  };
+
+  // Convert Investment to database format
+  const convertInvestmentToDb = (investment: Partial<Investment>) => {
+    return {
+      name: investment.name,
+      type: investment.type,
+      status: investment.status,
+      address: investment.address,
+      surface: investment.surface,
+      price: investment.price,
+      date_acquisition: investment.dateAcquisition,
+      locataire: investment.locataire,
+      date_entree: investment.dateEntree,
+      type_bail: investment.typeBail,
+      duree_bail: investment.dureeBail,
+      bail_next_break: investment.bailNextBreak,
+      bail_gmap_link: investment.bailGmapLink,
+      bail_gmap_note: investment.bailGmapNote,
+      bail_loyer_ht: investment.bailLoyerHT,
+      bail_cnr: investment.bailCNR,
+      bail_prise_effet: investment.bailPriseEffet,
+      bail_activite: investment.bailActivite,
+      bail_anciennete: investment.bailAnciennete,
+      net_vendeur: investment.netVendeur,
+      agent: investment.agent,
+      hono_notaire: investment.honoNotaire,
+      last_value: investment.lastValue,
+      tri: investment.tri,
+      investment_date: investment.dateInvestment,
+      investment_amount: investment.investmentAmount,
+      notary_fees: investment.notaryFees,
+      company: investment.company
+    };
+  };
+
+  // Load investments from Supabase when user changes
+  useEffect(() => {
+    const loadInvestments = async () => {
+      if (!user) {
+        setInvestments([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('investments')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const convertedInvestments = data.map(convertDbToInvestment);
+          setInvestments(convertedInvestments);
+        } else {
+          // If no investments found, create initial sample data for the user
+          await createInitialInvestments();
+        }
+      } catch (error) {
+        console.error('Error loading investments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInvestments();
+  }, [user]);
+
+  // Create initial sample investments for new users
+  const createInitialInvestments = async () => {
+    if (!user) return;
+
+    const sampleInvestments = initialInvestments.map(inv => ({
+      ...convertInvestmentToDb(inv),
+      user_id: user.id
+    }));
+
+    try {
+      const { data, error } = await supabase
+        .from('investments')
+        .insert(sampleInvestments)
+        .select('*');
+
+      if (error) throw error;
+
+      if (data) {
+        const convertedInvestments = data.map(convertDbToInvestment);
+        setInvestments(convertedInvestments);
+      }
+    } catch (error) {
+      console.error('Error creating initial investments:', error);
+    }
+  };
+
+  const updateInvestment = async (id: string, updates: Partial<Investment>) => {
+    if (!user) return;
+
+    try {
+      console.info('Saving changes:', updates);
+      
+      // Update local state immediately for responsive UI
+      setInvestments(prev => 
+        prev.map(investment => 
+          investment.id === id 
+            ? { ...investment, ...updates }
+            : investment
+        )
+      );
+
+      // Convert updates to database format
+      const dbUpdates = convertInvestmentToDb(updates);
+      
+      // Update in Supabase
+      const { error } = await supabase
+        .from('investments')
+        .update(dbUpdates)
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error updating investment:', error);
+        // Reload data from database to revert optimistic updates
+        const { data: freshData } = await supabase
+          .from('investments')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (freshData) {
+          const convertedInvestments = freshData.map(convertDbToInvestment);
+          setInvestments(convertedInvestments);
+        }
+        throw error;
+      }
+    } catch (error) {
+      console.error('Failed to update investment:', error);
+      throw error;
+    }
   };
 
   const getInvestment = (id: string): Investment | undefined => {
@@ -200,7 +378,8 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     <InvestmentContext.Provider value={{
       investments,
       updateInvestment,
-      getInvestment
+      getInvestment,
+      loading
     }}>
       {children}
     </InvestmentContext.Provider>
