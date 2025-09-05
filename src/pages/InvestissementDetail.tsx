@@ -37,6 +37,7 @@ export default function InvestissementDetail() {
     surface: investment?.surface || 0,
     price: investment?.price || 0,
     dateAcquisition: investment?.dateAcquisition || '',
+    description: investment?.description || '',
     // Bail fields
     locataire: investment?.locataire || '',
     dateEntree: investment?.dateEntree || '',
@@ -66,6 +67,7 @@ export default function InvestissementDetail() {
         surface: investment.surface || 0,
         price: investment.price || 0,
         dateAcquisition: investment.dateAcquisition || '',
+        description: investment.description || '',
         // Bail fields
         locataire: investment.locataire || '',
         dateEntree: investment.dateEntree || '',
@@ -142,6 +144,7 @@ export default function InvestissementDetail() {
           surface: tempEditData.surface,
           price: tempEditData.price,
           dateAcquisition: tempEditData.dateAcquisition,
+          description: tempEditData.description,
           // Bail fields
           locataire: tempEditData.locataire,
           dateEntree: tempEditData.dateEntree,
@@ -182,6 +185,7 @@ export default function InvestissementDetail() {
         surface: tempEditData.surface,
         price: tempEditData.price,
         dateAcquisition: tempEditData.dateAcquisition,
+        description: tempEditData.description,
         // Bail fields
         locataire: tempEditData.locataire,
         dateEntree: tempEditData.dateEntree,
@@ -227,6 +231,7 @@ export default function InvestissementDetail() {
         surface: investment!.surface || 0,
         price: investment!.price || 0,
         dateAcquisition: investment!.dateAcquisition || '',
+        description: investment!.description || '',
         // Bail fields
         locataire: investment!.locataire || '',
         dateEntree: investment!.dateEntree || '',
