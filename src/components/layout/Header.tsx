@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Building2, User, Menu, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,11 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAddInvestment = (type: 'IMMO' | 'PE') => {
+    navigate('/ajouter-investissement', { state: { type } });
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -52,11 +58,11 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
             <DropdownMenuContent align="start" className="w-48">
               <DropdownMenuLabel>Nouvel investissement</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleAddInvestment('IMMO')}>
                 <Building2 className="mr-2 h-4 w-4" />
                 Actif Immobilier
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleAddInvestment('PE')}>
                 <Building2 className="mr-2 h-4 w-4" />
                 Actif Private Equity
               </DropdownMenuItem>

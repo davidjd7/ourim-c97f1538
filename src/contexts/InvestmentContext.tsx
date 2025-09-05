@@ -52,6 +52,7 @@ export interface Investment {
 interface InvestmentContextType {
   investments: Investment[];
   updateInvestment: (id: string, updates: Partial<Investment>) => Promise<void>;
+  addInvestment: (investment: Omit<Investment, 'id'>) => Promise<Investment>;
   getInvestment: (id: string) => Investment | undefined;
   loading: boolean;
 }
@@ -325,6 +326,43 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addInvestment = async (investmentData: Omit<Investment, 'id'>): Promise<Investment> => {
+    if (!user) throw new Error('User not authenticated');
+
+    try {
+      console.info('Adding new investment:', investmentData);
+      
+      // Convert to database format
+      const dbData = {
+        ...convertInvestmentToDb(investmentData),
+        user_id: user.id
+      };
+      
+      // Insert into Supabase
+      const { data, error } = await supabase
+        .from('investments')
+        .insert([dbData])
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const newInvestment = convertDbToInvestment(data);
+        
+        // Update local state
+        setInvestments(prev => [...prev, newInvestment]);
+        
+        return newInvestment;
+      }
+      
+      throw new Error('No data returned from insert');
+    } catch (error) {
+      console.error('Failed to add investment:', error);
+      throw error;
+    }
+  };
+
   const updateInvestment = async (id: string, updates: Partial<Investment>) => {
     if (!user) return;
 
@@ -378,6 +416,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     <InvestmentContext.Provider value={{
       investments,
       updateInvestment,
+      addInvestment,
       getInvestment,
       loading
     }}>
