@@ -192,15 +192,15 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { selectedCompanyId } = useCompanies();
+  const { selectedCompanyIds } = useCompanies();
   
-  // Filter investments based on selected company
+  // Filter investments based on selected companies
   const filteredInvestments = React.useMemo(() => {
-    if (!selectedCompanyId) {
+    if (selectedCompanyIds.length === 0) {
       return investments;
     }
-    return investments.filter(inv => inv.companyId === selectedCompanyId);
-  }, [investments, selectedCompanyId]);
+    return investments.filter(inv => inv.companyId && selectedCompanyIds.includes(inv.companyId));
+  }, [investments, selectedCompanyIds]);
 
   // Convert database row to Investment interface
   const convertDbToInvestment = (dbRow: any): Investment => {

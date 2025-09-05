@@ -11,8 +11,9 @@ export interface Company {
 
 interface CompanyContextType {
   companies: Company[];
-  selectedCompanyId: string | null;
-  setSelectedCompanyId: (id: string | null) => void;
+  selectedCompanyIds: string[];
+  setSelectedCompanyIds: (ids: string[]) => void;
+  toggleCompanySelection: (id: string) => void;
   addCompany: (name: string) => Promise<Company>;
   updateCompany: (id: string, name: string) => Promise<void>;
   deleteCompany: (id: string) => Promise<void>;
@@ -23,9 +24,17 @@ const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 
 export function CompanyProvider({ children }: { children: ReactNode }) {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+
+  const toggleCompanySelection = (id: string) => {
+    setSelectedCompanyIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(companyId => companyId !== id)
+        : [...prev, id]
+    );
+  };
 
   // Load companies from Supabase
   useEffect(() => {
@@ -115,10 +124,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
       setCompanies(prev => prev.filter(company => company.id !== id));
       
-      // Clear selection if deleted company was selected
-      if (selectedCompanyId === id) {
-        setSelectedCompanyId(null);
-      }
+      // Remove from selection if deleted company was selected
+      setSelectedCompanyIds(prev => prev.filter(companyId => companyId !== id));
     } catch (error) {
       console.error('Failed to delete company:', error);
       throw error;
@@ -128,8 +135,9 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   return (
     <CompanyContext.Provider value={{
       companies,
-      selectedCompanyId,
-      setSelectedCompanyId,
+      selectedCompanyIds,
+      setSelectedCompanyIds,
+      toggleCompanySelection,
       addCompany,
       updateCompany,
       deleteCompany,
