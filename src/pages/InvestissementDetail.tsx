@@ -406,10 +406,9 @@ export default function InvestissementDetail() {
         {(() => {
           // Determine if Performance and Dette tabs should be shown
           const showAdvancedTabs = !isNewInvestment && investment!.status !== 'RECU' && investment!.status !== 'DUE_DIL';
-          const totalTabs = showAdvancedTabs ? 6 : 4;
           
           return (
-            <TabsList className={`grid w-full grid-cols-${totalTabs}`}>
+            <TabsList className={`grid w-full ${showAdvancedTabs ? 'grid-cols-6' : 'grid-cols-4'}`}>
               <TabsTrigger value="general">Général</TabsTrigger>
               {showAdvancedTabs && <TabsTrigger value="performance">Performance</TabsTrigger>}
               <TabsTrigger value="documents">Documents</TabsTrigger>
