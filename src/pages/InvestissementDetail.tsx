@@ -50,6 +50,37 @@ export default function InvestissementDetail() {
     honoNotaire: investment?.honoNotaire || 0.08
   });
 
+  // Update tempEditData when investment changes - must be before conditional return
+  useEffect(() => {
+    if (investment) {
+      setTempEditData({
+        name: investment.name,
+        type: investment.type,
+        address: investment.address || '',
+        surface: investment.surface || 0,
+        price: investment.price || 0,
+        dateAcquisition: investment.dateAcquisition || '',
+        // Bail fields
+        locataire: investment.locataire || '',
+        dateEntree: investment.dateEntree || '',
+        typeBail: investment.typeBail || '',
+        dureeBail: investment.dureeBail || 0,
+        bailNextBreak: investment.bailNextBreak || '',
+        bailGmapLink: investment.bailGmapLink || '',
+        bailGmapNote: investment.bailGmapNote || '',
+        bailLoyerHT: investment.bailLoyerHT || 0,
+        bailCNR: investment.bailCNR || 0,
+        bailPriseEffet: investment.bailPriseEffet || '',
+        bailActivite: investment.bailActivite || '',
+        bailAnciennete: investment.bailAnciennete || 0,
+        // Présentation Vente fields
+        netVendeur: investment.netVendeur || 0,
+        agent: investment.agent || 0,
+        honoNotaire: investment.honoNotaire || 0.08
+      });
+    }
+  }, [investment]);
+
   if (!investment) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -57,35 +88,6 @@ export default function InvestissementDetail() {
       </div>
     );
   }
-
-  // Update tempEditData when investment changes
-  useEffect(() => {
-    setTempEditData({
-      name: investment.name,
-      type: investment.type,
-      address: investment.address || '',
-      surface: investment.surface || 0,
-      price: investment.price || 0,
-      dateAcquisition: investment.dateAcquisition || '',
-      // Bail fields
-      locataire: investment.locataire || '',
-      dateEntree: investment.dateEntree || '',
-      typeBail: investment.typeBail || '',
-      dureeBail: investment.dureeBail || 0,
-      bailNextBreak: investment.bailNextBreak || '',
-      bailGmapLink: investment.bailGmapLink || '',
-      bailGmapNote: investment.bailGmapNote || '',
-      bailLoyerHT: investment.bailLoyerHT || 0,
-      bailCNR: investment.bailCNR || 0,
-      bailPriseEffet: investment.bailPriseEffet || '',
-      bailActivite: investment.bailActivite || '',
-      bailAnciennete: investment.bailAnciennete || 0,
-      // Présentation Vente fields
-      netVendeur: investment.netVendeur || 0,
-      agent: investment.agent || 0,
-      honoNotaire: investment.honoNotaire || 0.08
-    });
-  }, [investment]);
 
   const handleStatusChange = async (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
     const updates: any = { status: newStatus };
