@@ -398,14 +398,22 @@ export default function InvestissementDetail() {
 
       {/* Tabs */}
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="general">Général</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="dette">Dette</TabsTrigger>
-          <TabsTrigger value="historique">Historique</TabsTrigger>
-        </TabsList>
+        {(() => {
+          // Determine if Performance and Dette tabs should be shown
+          const showAdvancedTabs = !isNewInvestment && investment!.status !== 'RECU' && investment!.status !== 'DUE_DIL';
+          const totalTabs = showAdvancedTabs ? 6 : 4;
+          
+          return (
+            <TabsList className={`grid w-full grid-cols-${totalTabs}`}>
+              <TabsTrigger value="general">Général</TabsTrigger>
+              {showAdvancedTabs && <TabsTrigger value="performance">Performance</TabsTrigger>}
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+              {showAdvancedTabs && <TabsTrigger value="dette">Dette</TabsTrigger>}
+              <TabsTrigger value="historique">Historique</TabsTrigger>
+            </TabsList>
+          );
+        })()}
 
         <TabsContent value="general" className="mt-6">
           <GeneralTab 
@@ -436,9 +444,11 @@ export default function InvestissementDetail() {
           />
         </TabsContent>
 
-        <TabsContent value="performance" className="mt-6">
-          <PerformanceTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
-        </TabsContent>
+        {!isNewInvestment && investment!.status !== 'RECU' && investment!.status !== 'DUE_DIL' && (
+          <TabsContent value="performance" className="mt-6">
+            <PerformanceTab investmentId={investment!.id} isEditMode={isEditMode} />
+          </TabsContent>
+        )}
 
         <TabsContent value="documents" className="mt-6">
           <DocumentsTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
@@ -448,9 +458,11 @@ export default function InvestissementDetail() {
           <NotesTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
         </TabsContent>
 
-        <TabsContent value="dette" className="mt-6">
-          <DetteTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
-        </TabsContent>
+        {!isNewInvestment && investment!.status !== 'RECU' && investment!.status !== 'DUE_DIL' && (
+          <TabsContent value="dette" className="mt-6">
+            <DetteTab investmentId={investment!.id} isEditMode={isEditMode} />
+          </TabsContent>
+        )}
 
         <TabsContent value="historique" className="mt-6">
           <HistoriqueTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
