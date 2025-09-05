@@ -31,7 +31,7 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
   const navigate = useNavigate();
 
   const handleAddInvestment = (type: 'IMMO' | 'PE') => {
-    navigate('/ajouter-investissement', { state: { type } });
+    navigate('/investissement/nouveau', { state: { type } });
   };
 
   return (

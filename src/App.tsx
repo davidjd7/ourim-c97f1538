@@ -10,7 +10,6 @@ import PipelineImmo from "./pages/PipelineImmo";
 import PipelinePE from "./pages/PipelinePE";
 import Investissements from "./pages/Investissements";
 import InvestissementDetail from "./pages/InvestissementDetail";
-import AjouterInvestissement from "./pages/AjouterInvestissement";
 import Dettes from "./pages/Dettes";
 import Parametres from "./pages/Parametres";
 import NotFound from "./pages/NotFound";
@@ -58,13 +57,6 @@ const App = () => (
             <ProtectedRoute>
               <MainLayout>
                 <InvestissementDetail />
-              </MainLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/ajouter-investissement" element={
-            <ProtectedRoute>
-              <MainLayout>
-                <AjouterInvestissement />
               </MainLayout>
             </ProtectedRoute>
           } />

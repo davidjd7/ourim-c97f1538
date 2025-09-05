@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -16,17 +16,23 @@ import { useInvestments } from '@/contexts/InvestmentContext';
 export default function InvestissementDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [isEditMode, setIsEditMode] = useState(false);
-  const { investments, updateInvestment, getInvestment } = useInvestments();
+  
+  // Check if this is a new investment
+  const isNewInvestment = id === 'nouveau';
+  const investmentType = location.state?.type || 'IMMO';
+  
+  const [isEditMode, setIsEditMode] = useState(isNewInvestment);
+  const { investments, updateInvestment, getInvestment, addInvestment } = useInvestments();
 
-  // Get investment from global context
-  const investment = getInvestment(id || '');
+  // Get investment from global context (null for new investments)
+  const investment = isNewInvestment ? null : getInvestment(id || '');
 
   // Initialize state before any conditional returns
   const [tempEditData, setTempEditData] = useState({
-    name: investment?.name || '',
-    type: investment?.type || 'IMMO',
+    name: investment?.name || (isNewInvestment ? '' : ''),
+    type: investment?.type || investmentType,
     address: investment?.address || '',
     surface: investment?.surface || 0,
     price: investment?.price || 0,
@@ -52,7 +58,7 @@ export default function InvestissementDetail() {
 
   // Update tempEditData when investment changes - must be before conditional return
   useEffect(() => {
-    if (investment) {
+    if (investment && !isNewInvestment) {
       setTempEditData({
         name: investment.name,
         type: investment.type,
@@ -79,9 +85,9 @@ export default function InvestissementDetail() {
         honoNotaire: investment.honoNotaire || 0.08
       });
     }
-  }, [investment]);
+  }, [investment, isNewInvestment]);
 
-  if (!investment) {
+  if (!isNewInvestment && !investment) {
     return (
       <div className="flex items-center justify-center h-64">
         <p>Investissement introuvable</p>
@@ -126,8 +132,50 @@ export default function InvestissementDetail() {
       // Prevent duplicate saves
       setIsEditMode(false);
       
-      // Update the investment in global context
-      await updateInvestment(investment.id, {
+      if (isNewInvestment) {
+        // Create new investment
+        const newInvestment = await addInvestment({
+          name: tempEditData.name,
+          type: tempEditData.type,
+          status: 'RECU',
+          address: tempEditData.address,
+          surface: tempEditData.surface,
+          price: tempEditData.price,
+          dateAcquisition: tempEditData.dateAcquisition,
+          // Bail fields
+          locataire: tempEditData.locataire,
+          dateEntree: tempEditData.dateEntree,
+          typeBail: tempEditData.typeBail,
+          dureeBail: tempEditData.dureeBail,
+          bailNextBreak: tempEditData.bailNextBreak,
+          bailGmapLink: tempEditData.bailGmapLink,
+          bailGmapNote: tempEditData.bailGmapNote,
+          bailLoyerHT: tempEditData.bailLoyerHT,
+          bailCNR: tempEditData.bailCNR,
+          bailPriseEffet: tempEditData.bailPriseEffet,
+          bailActivite: tempEditData.bailActivite,
+          bailAnciennete: tempEditData.bailAnciennete,
+          // Présentation Vente fields
+          netVendeur: tempEditData.netVendeur,
+          agent: tempEditData.agent,
+          honoNotaire: tempEditData.honoNotaire,
+          // Default values
+          lastValue: 0,
+          lastTRI: 0,
+          lastCashflow: 0,
+          lastVariation: { value: 0, percentage: 0 }
+        });
+        
+        toast({
+          title: "Investissement créé",
+          description: "Le nouvel investissement a été créé avec succès.",
+        });
+        
+        // Navigate to the created investment
+        navigate(`/investissement/${newInvestment.id}`);
+      } else {
+        // Update existing investment
+        await updateInvestment(investment!.id, {
         name: tempEditData.name,
         type: tempEditData.type,
         address: tempEditData.address,
@@ -150,13 +198,14 @@ export default function InvestissementDetail() {
         // Présentation Vente fields
         netVendeur: tempEditData.netVendeur,
         agent: tempEditData.agent,
-        honoNotaire: tempEditData.honoNotaire
-      });
-      
-      toast({
-        title: "Modifications sauvegardées",
-        description: "Les informations ont été mises à jour avec succès.",
-      });
+          honoNotaire: tempEditData.honoNotaire
+        });
+        
+        toast({
+          title: "Modifications sauvegardées",
+          description: "Les informations ont été mises à jour avec succès.",
+        });
+      }
     } catch (error) {
       toast({
         title: "Erreur",
@@ -167,32 +216,37 @@ export default function InvestissementDetail() {
   };
 
   const handleCancelEdit = () => {
-    setTempEditData({
-      name: investment.name,
-      type: investment.type,
-      address: investment.address || '',
-      surface: investment.surface || 0,
-      price: investment.price || 0,
-      dateAcquisition: investment.dateAcquisition || '',
-      // Bail fields
-      locataire: investment.locataire || '',
-      dateEntree: investment.dateEntree || '',
-      typeBail: investment.typeBail || '',
-      dureeBail: investment.dureeBail || 0,
-      bailNextBreak: investment.bailNextBreak || '',
-      bailGmapLink: investment.bailGmapLink || '',
-      bailGmapNote: investment.bailGmapNote || '',
-      bailLoyerHT: investment.bailLoyerHT || 0,
-      bailCNR: investment.bailCNR || 0,
-      bailPriseEffet: investment.bailPriseEffet || '',
-      bailActivite: investment.bailActivite || '',
-      bailAnciennete: investment.bailAnciennete || 0,
-      // Présentation Vente fields
-      netVendeur: investment.netVendeur || 0,
-      agent: investment.agent || 0,
-      honoNotaire: investment.honoNotaire || 0.08
-    });
-    setIsEditMode(false);
+    if (isNewInvestment) {
+      // Go back to previous page
+      navigate(-1);
+    } else {
+      setTempEditData({
+        name: investment!.name,
+        type: investment!.type,
+        address: investment!.address || '',
+        surface: investment!.surface || 0,
+        price: investment!.price || 0,
+        dateAcquisition: investment!.dateAcquisition || '',
+        // Bail fields
+        locataire: investment!.locataire || '',
+        dateEntree: investment!.dateEntree || '',
+        typeBail: investment!.typeBail || '',
+        dureeBail: investment!.dureeBail || 0,
+        bailNextBreak: investment!.bailNextBreak || '',
+        bailGmapLink: investment!.bailGmapLink || '',
+        bailGmapNote: investment!.bailGmapNote || '',
+        bailLoyerHT: investment!.bailLoyerHT || 0,
+        bailCNR: investment!.bailCNR || 0,
+        bailPriseEffet: investment!.bailPriseEffet || '',
+        bailActivite: investment!.bailActivite || '',
+        bailAnciennete: investment!.bailAnciennete || 0,
+        // Présentation Vente fields
+        netVendeur: investment!.netVendeur || 0,
+        agent: investment!.agent || 0,
+        honoNotaire: investment!.honoNotaire || 0.08
+      });
+      setIsEditMode(false);
+    }
   };
 
   const statusConfig = {
@@ -216,9 +270,13 @@ export default function InvestissementDetail() {
   };
 
   const getBackPath = () => {
-    if (investment.status === 'RECU' || investment.status === 'DUE_DIL') {
-      return investment.type === 'IMMO' ? '/pipeline-immo' : '/pipeline-pe';
-    } else if (investment.status === 'INVESTI') {
+    if (isNewInvestment) {
+      return '/'; // Go to dashboard for new investments
+    }
+    
+    if (investment!.status === 'RECU' || investment!.status === 'DUE_DIL') {
+      return investment!.type === 'IMMO' ? '/pipeline-immo' : '/pipeline-pe';
+    } else if (investment!.status === 'INVESTI') {
       return '/investissements';
     }
     // Pour les autres statuts (VENDU, DROP), retour à la page d'accueil
@@ -265,9 +323,11 @@ export default function InvestissementDetail() {
               </div>
             ) : (
               <>
-                <h1 className="text-3xl font-bold text-foreground">{investment.name}</h1>
+                <h1 className="text-3xl font-bold text-foreground">
+                  {isNewInvestment ? 'Nouvel Investissement' : investment!.name}
+                </h1>
                 <p className="text-lg text-muted-foreground">
-                  {investment.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+                  {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
                 </p>
               </>
             )}
@@ -286,51 +346,55 @@ export default function InvestissementDetail() {
                 Annuler
               </Button>
             </>
-          ) : (
-            <Button onClick={() => setIsEditMode(true)} variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />
-              Modifier
-            </Button>
-          )}
+           ) : (
+             <Button onClick={() => setIsEditMode(true)} variant="outline" size="sm">
+               <Edit className="h-4 w-4 mr-2" />
+               {isNewInvestment ? 'Créer' : 'Modifier'}
+             </Button>
+           )}
         </div>
       </div>
 
       {/* Status Progress */}
-      <StatusProgress 
-        currentStatus={investment.status}
-        onStatusChange={handleStatusChange}
-      />
+      {!isNewInvestment && (
+        <StatusProgress 
+          currentStatus={investment!.status}
+          onStatusChange={handleStatusChange}
+        />
+      )}
 
       {/* Performance Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="card-financial">
-          <div className="p-4">
-            <label className="text-sm text-muted-foreground">Dernière valeur</label>
-            <p className="font-medium financial-value text-xl">
-              {formatCurrency(investment.lastValue)}
-            </p>
+      {!isNewInvestment && (
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="card-financial">
+            <div className="p-4">
+              <label className="text-sm text-muted-foreground">Dernière valeur</label>
+              <p className="font-medium financial-value text-xl">
+                {formatCurrency(investment!.lastValue)}
+              </p>
+            </div>
+          </div>
+          <div className="card-financial">
+            <div className="p-4">
+              <label className="text-sm text-muted-foreground">TRI</label>
+              <p className="font-medium financial-value text-xl">
+                {formatPercentage(investment!.lastTRI)}
+              </p>
+            </div>
+          </div>
+          <div className="card-financial">
+            <div className="p-4">
+              <label className="text-sm text-muted-foreground">Variation</label>
+              <p className={`font-medium financial-value text-xl ${
+                investment!.lastVariation.percentage >= 0 ? 'text-success' : 'text-destructive'
+              }`}>
+                {investment!.lastVariation.percentage >= 0 ? '+' : ''}
+                {formatPercentage(investment!.lastVariation.percentage)}
+              </p>
+            </div>
           </div>
         </div>
-        <div className="card-financial">
-          <div className="p-4">
-            <label className="text-sm text-muted-foreground">TRI</label>
-            <p className="font-medium financial-value text-xl">
-              {formatPercentage(investment.lastTRI)}
-            </p>
-          </div>
-        </div>
-        <div className="card-financial">
-          <div className="p-4">
-            <label className="text-sm text-muted-foreground">Variation</label>
-            <p className={`font-medium financial-value text-xl ${
-              investment.lastVariation.percentage >= 0 ? 'text-success' : 'text-destructive'
-            }`}>
-              {investment.lastVariation.percentage >= 0 ? '+' : ''}
-              {formatPercentage(investment.lastVariation.percentage)}
-            </p>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Tabs */}
       <Tabs defaultValue="general" className="w-full">
@@ -345,18 +409,27 @@ export default function InvestissementDetail() {
 
         <TabsContent value="general" className="mt-6">
           <GeneralTab 
-            investmentId={investment.id}
+            investmentId={isNewInvestment ? '' : investment!.id}
             isEditMode={isEditMode}
             investmentData={{
-              ...investment,
-              dateInvestment: investment.dateInvestment || '',
-              address: investment.address || '',
-              surface: investment.surface || 0,
-              description: investment.description || '',
-              investmentAmount: investment.investmentAmount || 0,
-              acquisitionDate: investment.acquisitionDate || '',
-              notaryFees: investment.notaryFees || 0,
-              renovationBudget: investment.renovationBudget || 0
+              ...(isNewInvestment ? {
+                id: '',
+                name: tempEditData.name,
+                type: tempEditData.type,
+                status: 'RECU',
+                lastValue: 0,
+                lastTRI: 0,
+                lastCashflow: 0,
+                lastVariation: { value: 0, percentage: 0 }
+              } : investment!),
+              dateInvestment: (isNewInvestment ? '' : investment?.dateInvestment) || '',
+              address: tempEditData.address || '',
+              surface: tempEditData.surface || 0,
+              description: (isNewInvestment ? '' : investment?.description) || '',
+              investmentAmount: (isNewInvestment ? 0 : investment?.investmentAmount) || 0,
+              acquisitionDate: (isNewInvestment ? '' : investment?.acquisitionDate) || '',
+              notaryFees: (isNewInvestment ? 0 : investment?.notaryFees) || 0,
+              renovationBudget: (isNewInvestment ? 0 : investment?.renovationBudget) || 0
             }}
             tempEditData={tempEditData}
             onDataChange={handleDataChange}
@@ -364,23 +437,23 @@ export default function InvestissementDetail() {
         </TabsContent>
 
         <TabsContent value="performance" className="mt-6">
-          <PerformanceTab investmentId={investment.id} isEditMode={isEditMode} />
+          <PerformanceTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-6">
-          <DocumentsTab investmentId={investment.id} isEditMode={isEditMode} />
+          <DocumentsTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-6">
-          <NotesTab investmentId={investment.id} isEditMode={isEditMode} />
+          <NotesTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="dette" className="mt-6">
-          <DetteTab investmentId={investment.id} isEditMode={isEditMode} />
+          <DetteTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
         </TabsContent>
 
         <TabsContent value="historique" className="mt-6">
-          <HistoriqueTab investmentId={investment.id} isEditMode={isEditMode} />
+          <HistoriqueTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
         </TabsContent>
       </Tabs>
     </div>
