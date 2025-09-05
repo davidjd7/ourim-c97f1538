@@ -4,6 +4,7 @@ import { Search, Plus, Building2, User, Menu, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CompanyFilter } from '@/components/filters/CompanyFilter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,7 +76,7 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
         </div>
 
         {/* Center section - Search and Filters */}
-        <div className="flex-1 flex items-center justify-center px-6">
+        <div className="flex-1 flex items-center justify-center px-6 gap-4">
           <div className="w-full max-w-lg relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -83,32 +84,11 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
               className="pl-10 w-full"
             />
           </div>
+          <CompanyFilter />
         </div>
 
-        {/* Right section - View switches and Profile */}
+        {/* Right section - Profile */}
         <div className="flex items-center gap-4">
-          {/* Société Filter */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Building2 className="h-4 w-4" />
-                Sociétés
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Filtrer par Société</SheetTitle>
-                <SheetDescription>
-                  Sélectionnez les sociétés à afficher dans les données
-                </SheetDescription>
-              </SheetHeader>
-              <div className="mt-6">
-                <p className="text-sm text-muted-foreground">
-                  Fonctionnalité à implémenter
-                </p>
-              </div>
-            </SheetContent>
-          </Sheet>
 
           {/* Profile Menu */}
           <DropdownMenu>

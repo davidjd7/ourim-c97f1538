@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Settings, Users, Building2, Tags, Bot, Map } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { CompanyManagement } from '@/components/companies/CompanyManagement';
 
 export default function Parametres() {
   const { toast } = useToast();
@@ -254,23 +255,7 @@ export default function Parametres() {
         </TabsContent>
 
         <TabsContent value="societes" className="space-y-6">
-          <Card className="card-financial">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
-                Gestion des Sociétés
-              </CardTitle>
-              <CardDescription>
-                Configuration des entités de portefeuille (ADMIN uniquement)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Fonctionnalité réservée aux administrateurs</p>
-              </div>
-            </CardContent>
-          </Card>
+          <CompanyManagement />
         </TabsContent>
       </Tabs>
 

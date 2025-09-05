@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
@@ -99,6 +123,7 @@ export type Database = {
           bail_next_break: string | null
           bail_prise_effet: string | null
           company: string | null
+          company_id: string | null
           created_at: string
           currency: string | null
           date_acquisition: string | null
@@ -136,6 +161,7 @@ export type Database = {
           bail_next_break?: string | null
           bail_prise_effet?: string | null
           company?: string | null
+          company_id?: string | null
           created_at?: string
           currency?: string | null
           date_acquisition?: string | null
@@ -173,6 +199,7 @@ export type Database = {
           bail_next_break?: string | null
           bail_prise_effet?: string | null
           company?: string | null
+          company_id?: string | null
           created_at?: string
           currency?: string | null
           date_acquisition?: string | null
@@ -198,7 +225,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "investments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notes: {
         Row: {

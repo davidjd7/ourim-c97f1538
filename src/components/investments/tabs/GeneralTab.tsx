@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building, MapPin, Calendar, FileText, Link, Calculator, Settings } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useSettings } from '@/hooks/useSettings';
+import { useCompanies } from '@/contexts/CompanyContext';
 
 interface GeneralData {
   name: string;
@@ -21,6 +22,7 @@ interface GeneralData {
   acquisitionDate: string;
   notaryFees: number;
   renovationBudget: number;
+  companyId?: string;
   company?: string;
   currency: 'EUR' | 'USD';
   // Bail fields
@@ -113,6 +115,7 @@ const statusConfig = {
 export function GeneralTab({ investmentId, isEditMode = false, investmentData, tempEditData, onDataChange }: GeneralTabProps) {
   const { canEdit } = useUserRole();
   const settings = useSettings();
+  const { companies } = useCompanies();
   
   // Utiliser les données passées en prop ou les données mock par défaut
   const initialData = investmentData ? {
@@ -273,15 +276,25 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
               <div>
                 <Label htmlFor="company">Société</Label>
                 {isEditMode ? (
-                  <Input
-                    id="company"
-                    value={editData.company || ''}
-                    onChange={(e) => handleDataChange({ ...editData, company: e.target.value })}
-                    placeholder="Ex: Ma SCI"
-                  />
+                  <Select 
+                    value={editData.companyId || ''} 
+                    onValueChange={(value) => handleDataChange({ ...editData, companyId: value || undefined })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez une société" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Aucune société</SelectItem>
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
                   <p className="font-medium">
-                    {data.company || 'Non défini'}
+                    {companies.find(c => c.id === data.companyId)?.name || 'Non défini'}
                   </p>
                 )}
               </div>

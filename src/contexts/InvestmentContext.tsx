@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useCompanies } from '@/contexts/CompanyContext';
 
 export interface Investment {
   id: string;
@@ -15,6 +16,8 @@ export interface Investment {
     value: number;
     percentage: number;
   };
+  companyId?: string;
+  companyName?: string;
   // General tab fields
   address?: string;
   surface?: number;
@@ -51,6 +54,7 @@ export interface Investment {
 
 interface InvestmentContextType {
   investments: Investment[];
+  filteredInvestments: Investment[];
   updateInvestment: (id: string, updates: Partial<Investment>) => Promise<void>;
   addInvestment: (investment: Omit<Investment, 'id'>) => Promise<Investment>;
   getInvestment: (id: string) => Investment | undefined;
@@ -188,6 +192,15 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { selectedCompanyId } = useCompanies();
+  
+  // Filter investments based on selected company
+  const filteredInvestments = React.useMemo(() => {
+    if (!selectedCompanyId) {
+      return investments;
+    }
+    return investments.filter(inv => inv.companyId === selectedCompanyId);
+  }, [investments, selectedCompanyId]);
 
   // Convert database row to Investment interface
   const convertDbToInvestment = (dbRow: any): Investment => {
@@ -201,6 +214,8 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       lastTRI: dbRow.tri || 0,
       lastCashflow: 0, // Calculate based on other fields if needed
       lastVariation: { value: 0, percentage: 0 }, // Calculate based on historical data if needed
+      companyId: dbRow.company_id,
+      companyName: '', // We'll populate this with a join later
       address: dbRow.address,
       surface: dbRow.surface,
       price: dbRow.price,
@@ -242,6 +257,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       surface: investment.surface,
       price: investment.price,
       description: investment.description || null,
+      company_id: investment.companyId || null,
       date_acquisition: investment.dateAcquisition || null,
       locataire: investment.locataire || null,
       date_entree: investment.dateEntree || null,
@@ -516,6 +532,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
   return (
     <InvestmentContext.Provider value={{
       investments,
+      filteredInvestments,
       updateInvestment,
       addInvestment,
       getInvestment,
