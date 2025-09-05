@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { FileText, Upload, Download, Trash2, MessageSquare } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useToast } from '@/hooks/use-toast';
 
 interface Document {
   id: string;
@@ -47,7 +49,65 @@ const documentTypeConfig = {
 
 export function DocumentsTab({ investmentId }: DocumentsTabProps) {
   const { canEdit } = useUserRole();
-  const [documents] = useState<Document[]>(mockDocuments);
+  const { toast } = useToast();
+  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
+
+  const handleAddDocument = () => {
+    // Create a hidden file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.txt';
+    input.multiple = true;
+    
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files) {
+        // Convert FileList to array and process each file
+        Array.from(files).forEach((file) => {
+          const newDoc: Document = {
+            id: Date.now().toString() + Math.random().toString(),
+            name: file.name,
+            type: 'other', // Default type, could be determined by file extension
+            uploadedAt: new Date().toISOString().split('T')[0],
+            size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+            url: URL.createObjectURL(file) // Temporary URL for demo
+          };
+          
+          setDocuments(prev => [...prev, newDoc]);
+        });
+        
+        toast({
+          title: "Documents ajoutés",
+          description: `${files.length} document(s) ajouté(s) avec succès.`,
+        });
+      }
+    };
+    
+    input.click();
+  };
+
+  const handleDownloadDocument = (doc: Document) => {
+    // In a real app, this would download from the server
+    // For now, we'll just show a toast
+    toast({
+      title: "Téléchargement",
+      description: `Téléchargement de ${doc.name} en cours...`,
+    });
+    
+    // If there's a real URL, we could do:
+    // const link = document.createElement('a');
+    // link.href = doc.url;
+    // link.download = doc.name;
+    // link.click();
+  };
+
+  const handleDeleteDocument = (docId: string) => {
+    setDocuments(prev => prev.filter(doc => doc.id !== docId));
+    toast({
+      title: "Document supprimé",
+      description: "Le document a été supprimé avec succès.",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -59,7 +119,7 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
             Documents
           </CardTitle>
           {canEdit && (
-            <Button size="sm" className="flex items-center gap-2">
+            <Button size="sm" className="flex items-center gap-2" onClick={handleAddDocument}>
               <Upload className="h-4 w-4" />
               Ajouter
             </Button>
@@ -85,11 +145,16 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(doc)}>
                     <Download className="h-4 w-4" />
                   </Button>
                   {canEdit && (
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteDocument(doc.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
