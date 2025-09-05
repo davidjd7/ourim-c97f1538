@@ -98,7 +98,12 @@ export default function InvestissementDetail() {
   }
 
   const handleStatusChange = async (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
-    const updates: any = { status: newStatus };
+    // Préserver toutes les données existantes
+    const currentData = tempEditData || investment;
+    const updates: any = { 
+      ...currentData,
+      status: newStatus 
+    };
     
     // Si on passe au statut INVESTI, mettre à jour les données financières
     if (newStatus === 'INVESTI' && data) {
@@ -110,6 +115,8 @@ export default function InvestissementDetail() {
     
     try {
       await updateInvestment(investment.id, updates);
+      // Mettre à jour tempEditData pour refléter les changements
+      setTempEditData(updates);
       toast({
         title: "Statut mis à jour",
         description: "Le statut a été mis à jour avec succès.",
