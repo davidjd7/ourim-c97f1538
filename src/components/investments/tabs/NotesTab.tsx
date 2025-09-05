@@ -72,6 +72,42 @@ export function NotesTab({ investmentId }: NotesTabProps) {
     }
   };
 
+  const handleEditNote = (noteId: string) => {
+    const noteToEdit = notes.find(note => note.id === noteId);
+    if (noteToEdit) {
+      setNewNote({
+        title: noteToEdit.title,
+        content: noteToEdit.content,
+        isPrivate: noteToEdit.isPrivate
+      });
+      setEditingNote(noteId);
+      setIsAdding(true);
+    }
+  };
+
+  const handleUpdateNote = () => {
+    if (editingNote && newNote.title.trim() && newNote.content.trim()) {
+      setNotes(notes.map(note => 
+        note.id === editingNote 
+          ? { ...note, ...newNote, updatedAt: new Date().toISOString() }
+          : note
+      ));
+      setNewNote({ title: '', content: '', isPrivate: false });
+      setEditingNote(null);
+      setIsAdding(false);
+    }
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    setNotes(notes.filter(note => note.id !== noteId));
+  };
+
+  const handleCancelEdit = () => {
+    setIsAdding(false);
+    setEditingNote(null);
+    setNewNote({ title: '', content: '', isPrivate: false });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -118,21 +154,18 @@ export function NotesTab({ investmentId }: NotesTabProps) {
                     Note privée (visible uniquement par les admins)
                   </label>
                 )}
-                <div className="flex gap-2">
-                  <Button onClick={handleAddNote} size="sm">
-                    Enregistrer
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      setIsAdding(false);
-                      setNewNote({ title: '', content: '', isPrivate: false });
-                    }}
-                  >
-                    Annuler
-                  </Button>
-                </div>
+                 <div className="flex gap-2">
+                   <Button onClick={editingNote ? handleUpdateNote : handleAddNote} size="sm">
+                     {editingNote ? 'Modifier' : 'Enregistrer'}
+                   </Button>
+                   <Button 
+                     variant="outline" 
+                     size="sm" 
+                     onClick={handleCancelEdit}
+                   >
+                     Annuler
+                   </Button>
+                 </div>
               </div>
             </div>
           )}
@@ -150,16 +183,21 @@ export function NotesTab({ investmentId }: NotesTabProps) {
                       </Badge>
                     )}
                   </div>
-                  {canEdit && (
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm">
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                   {canEdit && (
+                     <div className="flex gap-1">
+                       <Button variant="ghost" size="sm" onClick={() => handleEditNote(note.id)}>
+                         <Edit2 className="h-4 w-4" />
+                       </Button>
+                       <Button 
+                         variant="ghost" 
+                         size="sm" 
+                         className="text-destructive hover:text-destructive"
+                         onClick={() => handleDeleteNote(note.id)}
+                       >
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   )}
                 </div>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap mb-3">
                   {note.content}
