@@ -261,18 +261,15 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
                   key={doc.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{doc.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(doc.created_at).toLocaleDateString('fr-FR')} • {formatFileSize(doc.file_size)}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className={documentTypeConfig[doc.type].className}>
-                      {documentTypeConfig[doc.type].label}
-                    </Badge>
-                  </div>
+                   <div className="flex items-center gap-3">
+                     <FileText className="h-4 w-4 text-muted-foreground" />
+                     <div>
+                       <p className="font-medium">{doc.name}</p>
+                       <p className="text-sm text-muted-foreground">
+                         {new Date(doc.created_at).toLocaleDateString('fr-FR')} • {formatFileSize(doc.file_size)}
+                       </p>
+                     </div>
+                   </div>
                   <div className="flex items-center gap-2">
                     <Button 
                       variant="ghost" 
