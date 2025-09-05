@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,15 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { StickyNote, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Note {
   id: string;
+  investment_id: string;
+  user_id: string;
   title: string;
   content: string;
-  createdAt: string;
-  updatedAt: string;
+  is_private: boolean;
   author: string;
-  isPrivate: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface NotesTabProps {
@@ -22,53 +26,74 @@ interface NotesTabProps {
   isEditMode?: boolean;
 }
 
-const mockNotes: Note[] = [
-  {
-    id: '1',
-    title: 'Due Diligence - Points d\'attention',
-    content: 'Points importants relevés lors de la due diligence:\n- Vérifier les permis de construire\n- Analyser les charges de copropriété\n- Confirmer la rentabilité locative',
-    createdAt: '2024-01-15T10:30:00Z',
-    updatedAt: '2024-01-15T10:30:00Z',
-    author: 'A. Dahan',
-    isPrivate: false
-  },
-  {
-    id: '2',
-    title: 'Note privée - Négociation',
-    content: 'Stratégie de négociation confidentielle...',
-    createdAt: '2024-01-10T14:20:00Z',
-    updatedAt: '2024-01-12T09:15:00Z',
-    author: 'D. Dahan',
-    isPrivate: true
-  }
-];
-
 export function NotesTab({ investmentId }: NotesTabProps) {
   const { canEdit, userRole } = useUserRole();
-  const [notes, setNotes] = useState<Note[]>(mockNotes);
+  const { user } = useAuth();
+  const [notes, setNotes] = useState<Note[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [newNote, setNewNote] = useState({ title: '', content: '', isPrivate: false });
+  const [loading, setLoading] = useState(true);
+
+  // Load notes from Supabase
+  useEffect(() => {
+    const loadNotes = async () => {
+      if (!user || !investmentId) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('notes')
+          .select('*')
+          .eq('investment_id', investmentId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setNotes(data || []);
+      } catch (error) {
+        console.error('Error loading notes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNotes();
+  }, [user, investmentId]);
 
   const filteredNotes = notes.filter(note => {
-    if (note.isPrivate && userRole !== 'admin') {
+    if (note.is_private && userRole !== 'admin') {
       return false;
     }
     return true;
   });
 
-  const handleAddNote = () => {
-    if (newNote.title.trim() && newNote.content.trim()) {
-      const note: Note = {
-        id: Date.now().toString(),
-        ...newNote,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+  const handleAddNote = async () => {
+    if (!user || !newNote.title.trim() || !newNote.content.trim()) return;
+
+    try {
+      const noteData = {
+        investment_id: investmentId,
+        user_id: user.id,
+        title: newNote.title.trim(),
+        content: newNote.content.trim(),
+        is_private: newNote.isPrivate,
         author: userRole === 'admin' ? 'D. Dahan' : 'A. Dahan'
       };
-      setNotes([note, ...notes]);
-      setNewNote({ title: '', content: '', isPrivate: false });
-      setIsAdding(false);
+
+      const { data, error } = await supabase
+        .from('notes')
+        .insert([noteData])
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setNotes([data, ...notes]);
+        setNewNote({ title: '', content: '', isPrivate: false });
+        setIsAdding(false);
+      }
+    } catch (error) {
+      console.error('Error adding note:', error);
     }
   };
 
@@ -78,28 +103,62 @@ export function NotesTab({ investmentId }: NotesTabProps) {
       setNewNote({
         title: noteToEdit.title,
         content: noteToEdit.content,
-        isPrivate: noteToEdit.isPrivate
+        isPrivate: noteToEdit.is_private
       });
       setEditingNote(noteId);
       setIsAdding(true);
     }
   };
 
-  const handleUpdateNote = () => {
-    if (editingNote && newNote.title.trim() && newNote.content.trim()) {
-      setNotes(notes.map(note => 
-        note.id === editingNote 
-          ? { ...note, ...newNote, updatedAt: new Date().toISOString() }
-          : note
-      ));
-      setNewNote({ title: '', content: '', isPrivate: false });
-      setEditingNote(null);
-      setIsAdding(false);
+  const handleUpdateNote = async () => {
+    if (!user || !editingNote || !newNote.title.trim() || !newNote.content.trim()) return;
+
+    try {
+      const updateData = {
+        title: newNote.title.trim(),
+        content: newNote.content.trim(),
+        is_private: newNote.isPrivate
+      };
+
+      const { data, error } = await supabase
+        .from('notes')
+        .update(updateData)
+        .eq('id', editingNote)
+        .eq('user_id', user.id)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setNotes(notes.map(note => 
+          note.id === editingNote ? data : note
+        ));
+        setNewNote({ title: '', content: '', isPrivate: false });
+        setEditingNote(null);
+        setIsAdding(false);
+      }
+    } catch (error) {
+      console.error('Error updating note:', error);
     }
   };
 
-  const handleDeleteNote = (noteId: string) => {
-    setNotes(notes.filter(note => note.id !== noteId));
+  const handleDeleteNote = async (noteId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', noteId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setNotes(notes.filter(note => note.id !== noteId));
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -107,6 +166,20 @@ export function NotesTab({ investmentId }: NotesTabProps) {
     setEditingNote(null);
     setNewNote({ title: '', content: '', isPrivate: false });
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center text-muted-foreground">
+              Chargement des notes...
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -177,7 +250,7 @@ export function NotesTab({ investmentId }: NotesTabProps) {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium">{note.title}</h3>
-                    {note.isPrivate && (
+                    {note.is_private && (
                       <Badge variant="secondary" className="text-xs">
                         Privée
                       </Badge>
@@ -205,8 +278,8 @@ export function NotesTab({ investmentId }: NotesTabProps) {
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Par {note.author}</span>
                   <span>
-                    {new Date(note.updatedAt).toLocaleDateString('fr-FR')} à {' '}
-                    {new Date(note.updatedAt).toLocaleTimeString('fr-FR', { 
+                    {new Date(note.updated_at).toLocaleDateString('fr-FR')} à {' '}
+                    {new Date(note.updated_at).toLocaleTimeString('fr-FR', { 
                       hour: '2-digit', 
                       minute: '2-digit' 
                     })}

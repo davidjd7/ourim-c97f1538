@@ -194,6 +194,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notes: {
+        Row: {
+          author: string
+          content: string
+          created_at: string
+          id: string
+          investment_id: string
+          is_private: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author: string
+          content: string
+          created_at?: string
+          id?: string
+          investment_id: string
+          is_private?: boolean
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author?: string
+          content?: string
+          created_at?: string
+          id?: string
+          investment_id?: string
+          is_private?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
