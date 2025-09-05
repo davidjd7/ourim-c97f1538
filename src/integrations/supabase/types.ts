@@ -53,6 +53,39 @@ export type Database = {
         }
         Relationships: []
       }
+      investment_history: {
+        Row: {
+          action_type: string
+          created_at: string
+          field_name: string
+          id: string
+          investment_id: string
+          new_value: string | null
+          old_value: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          field_name: string
+          id?: string
+          investment_id: string
+          new_value?: string | null
+          old_value?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          field_name?: string
+          id?: string
+          investment_id?: string
+          new_value?: string | null
+          old_value?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       investments: {
         Row: {
           address: string | null

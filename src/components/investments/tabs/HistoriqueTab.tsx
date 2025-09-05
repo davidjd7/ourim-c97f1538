@@ -1,21 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Clock, Filter, User, FileText, DollarSign, Edit, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface HistoryEvent {
   id: string;
-  type: 'status_change' | 'value_update' | 'document_added' | 'note_added' | 'payment' | 'edit';
-  title: string;
-  description: string;
-  timestamp: string;
-  user: string;
-  oldValue?: string;
-  newValue?: string;
-  amount?: number;
+  investment_id: string;
+  field_name: string;
+  old_value?: string;
+  new_value?: string;
+  action_type: 'create' | 'update' | 'delete';
+  created_at: string;
+  user_id: string;
 }
 
 interface HistoriqueTabProps {
@@ -23,112 +24,143 @@ interface HistoriqueTabProps {
   isEditMode?: boolean;
 }
 
-const mockHistory: HistoryEvent[] = [
-  {
-    id: '1',
-    type: 'status_change',
-    title: 'Statut modifié',
-    description: 'Statut changé de "Due Dil" à "Investi"',
-    timestamp: '2024-01-15T14:30:00Z',
-    user: 'D. Dahan',
-    oldValue: 'Due Dil',
-    newValue: 'Investi'
-  },
-  {
-    id: '2',
-    type: 'value_update',
-    title: 'Valeur mise à jour',
-    description: 'Réévaluation trimestrielle de la valeur',
-    timestamp: '2024-01-10T09:15:00Z',
-    user: 'A. Dahan',
-    oldValue: '2,120,000 €',
-    newValue: '2,170,000 €'
-  },
-  {
-    id: '3',
-    type: 'document_added',
-    title: 'Document ajouté',
-    description: 'Ajout du rapport financier Q4',
-    timestamp: '2024-01-05T16:45:00Z',
-    user: 'A. Dahan'
-  },
-  {
-    id: '4',
-    type: 'payment',
-    title: 'Versement reçu',
-    description: 'Loyers du 4ème trimestre',
-    timestamp: '2023-12-15T08:00:00Z',
-    user: 'System',
-    amount: 16000
-  },
-  {
-    id: '5',
-    type: 'note_added',
-    title: 'Note ajoutée',
-    description: 'Note de due diligence créée',
-    timestamp: '2023-12-01T11:20:00Z',
-    user: 'A. Dahan'
-  },
-  {
-    id: '6',
-    type: 'edit',
-    title: 'Informations modifiées',
-    description: 'Mise à jour de l\'adresse et de la surface',
-    timestamp: '2023-11-20T13:10:00Z',
-    user: 'D. Dahan'
-  }
-];
-
-const eventTypeConfig = {
-  status_change: {
-    label: 'Changement de statut',
-    icon: AlertCircle,
-    className: 'bg-blue-50 text-blue-700 border-blue-200'
-  },
-  value_update: {
-    label: 'Mise à jour valeur',
-    icon: DollarSign,
-    className: 'bg-green-50 text-green-700 border-green-200'
-  },
-  document_added: {
-    label: 'Document ajouté',
-    icon: FileText,
-    className: 'bg-purple-50 text-purple-700 border-purple-200'
-  },
-  note_added: {
-    label: 'Note ajoutée',
-    icon: FileText,
-    className: 'bg-orange-50 text-orange-700 border-orange-200'
-  },
-  payment: {
-    label: 'Paiement',
-    icon: DollarSign,
-    className: 'bg-success-lighter text-success border-success-light'
-  },
-  edit: {
-    label: 'Modification',
-    icon: Edit,
-    className: 'bg-gray-50 text-gray-700 border-gray-200'
-  }
-};
-
 export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
-  const [history, setHistory] = useState<HistoryEvent[]>(mockHistory);
+  const { user } = useAuth();
+  const [history, setHistory] = useState<HistoryEvent[]>([]);
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-    }).format(amount);
+  // Load history from Supabase
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (!user || !investmentId) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('investment_history')
+          .select('*')
+          .eq('investment_id', investmentId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setHistory((data || []).map(item => ({
+          ...item,
+          action_type: item.action_type as 'create' | 'update' | 'delete'
+        })));
+      } catch (error) {
+        console.error('Error loading investment history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, [user, investmentId]);
+
+  // Helper functions to display history events
+  const getEventTitle = (event: HistoryEvent): string => {
+    switch (event.action_type) {
+      case 'create':
+        return 'Investissement créé';
+      case 'update':
+        return `${getFieldDisplayName(event.field_name)} modifié`;
+      case 'delete':
+        return 'Investissement supprimé';
+      default:
+        return 'Modification';
+    }
+  };
+
+  const getEventDescription = (event: HistoryEvent): string => {
+    switch (event.action_type) {
+      case 'create':
+        return 'Nouvel investissement ajouté au portefeuille';
+      case 'update':
+        if (event.old_value && event.new_value) {
+          return `Valeur changée de "${event.old_value}" à "${event.new_value}"`;
+        }
+        return `${getFieldDisplayName(event.field_name)} mis à jour`;
+      case 'delete':
+        return 'Investissement retiré du portefeuille';
+      default:
+        return 'Modification apportée';
+    }
+  };
+
+  const getFieldDisplayName = (fieldName: string): string => {
+    const fieldMap: { [key: string]: string } = {
+      name: 'Nom',
+      status: 'Statut',
+      price: 'Prix',
+      address: 'Adresse',
+      surface: 'Surface',
+      date_acquisition: 'Date d\'acquisition',
+      locataire: 'Locataire',
+      bail_loyer_ht: 'Loyer HT',
+      last_value: 'Dernière valeur',
+      tri: 'TRI',
+      investment_amount: 'Montant d\'investissement',
+      notary_fees: 'Frais de notaire'
+    };
+    return fieldMap[fieldName] || fieldName;
+  };
+
+  const getEventType = (event: HistoryEvent): string => {
+    if (event.action_type === 'create') return 'creation';
+    if (event.field_name === 'status') return 'status_change';
+    if (event.field_name === 'last_value' || event.field_name === 'tri') return 'value_update';
+    return 'edit';
+  };
+
+  const getEventIcon = (eventType: string) => {
+    switch (eventType) {
+      case 'creation':
+        return AlertCircle;
+      case 'status_change':
+        return AlertCircle;
+      case 'value_update':
+        return DollarSign;
+      default:
+        return Edit;
+    }
+  };
+
+  const getEventBadgeClass = (eventType: string): string => {
+    switch (eventType) {
+      case 'creation':
+        return 'bg-green-50 text-green-700 border-green-200';
+      case 'status_change':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'value_update':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getEventBadgeLabel = (eventType: string): string => {
+    switch (eventType) {
+      case 'creation':
+        return 'Création';
+      case 'status_change':
+        return 'Changement de statut';
+      case 'value_update':
+        return 'Mise à jour valeur';
+      default:
+        return 'Modification';
+    }
   };
 
   const filteredHistory = history.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || event.type === filterType;
+    const eventType = getEventType(event);
+    const title = getEventTitle(event);
+    const description = getEventDescription(event);
+    
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.field_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === 'all' || eventType === filterType;
     return matchesSearch && matchesType;
   });
 
@@ -145,6 +177,20 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
       return date.toLocaleDateString('fr-FR');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center text-muted-foreground">
+              Chargement de l'historique...
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -172,11 +218,9 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les événements</SelectItem>
+                  <SelectItem value="creation">Créations</SelectItem>
                   <SelectItem value="status_change">Changements de statut</SelectItem>
                   <SelectItem value="value_update">Mises à jour valeur</SelectItem>
-                  <SelectItem value="document_added">Documents ajoutés</SelectItem>
-                  <SelectItem value="note_added">Notes ajoutées</SelectItem>
-                  <SelectItem value="payment">Paiements</SelectItem>
                   <SelectItem value="edit">Modifications</SelectItem>
                 </SelectContent>
               </Select>
@@ -196,7 +240,10 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
         <CardContent>
           <div className="space-y-4">
             {filteredHistory.map((event, index) => {
-              const IconComponent = eventTypeConfig[event.type].icon;
+              const eventType = getEventType(event);
+              const IconComponent = getEventIcon(eventType);
+              const title = getEventTitle(event);
+              const description = getEventDescription(event);
               
               return (
                 <div key={event.id} className="relative flex gap-4 pb-4">
@@ -214,42 +261,36 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{event.title}</h3>
-                        <Badge variant="outline" className={eventTypeConfig[event.type].className}>
-                          {eventTypeConfig[event.type].label}
+                        <h3 className="font-medium">{title}</h3>
+                        <Badge variant="outline" className={getEventBadgeClass(eventType)}>
+                          {getEventBadgeLabel(eventType)}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <User className="h-3 w-3" />
-                        <span>{event.user}</span>
+                        <span>Système</span>
                         <span>•</span>
-                        <span>{formatRelativeTime(event.timestamp)}</span>
+                        <span>{formatRelativeTime(event.created_at)}</span>
                       </div>
                     </div>
                     
-                    <p className="text-muted-foreground mb-2">{event.description}</p>
+                    <p className="text-muted-foreground mb-2">{description}</p>
                     
                     {/* Additional details based on event type */}
-                    {event.oldValue && event.newValue && (
+                    {event.old_value && event.new_value && (
                       <div className="flex items-center gap-2 text-sm">
                         <span className="bg-destructive/10 text-destructive px-2 py-1 rounded">
-                          {event.oldValue}
+                          {event.old_value}
                         </span>
                         <span>→</span>
                         <span className="bg-success/10 text-success px-2 py-1 rounded">
-                          {event.newValue}
+                          {event.new_value}
                         </span>
-                      </div>
-                    )}
-                    
-                    {event.amount && (
-                      <div className="text-sm font-medium text-success">
-                        + {formatCurrency(event.amount)}
                       </div>
                     )}
                     
                     <div className="text-xs text-muted-foreground mt-2">
-                      {new Date(event.timestamp).toLocaleDateString('fr-FR', {
+                      {new Date(event.created_at).toLocaleDateString('fr-FR', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -264,7 +305,10 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
             
             {filteredHistory.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                Aucun événement trouvé pour les critères sélectionnés
+                {searchTerm || filterType !== 'all' 
+                  ? 'Aucun événement trouvé pour les critères sélectionnés'
+                  : 'Aucun historique disponible pour cet investissement'
+                }
               </div>
             )}
           </div>

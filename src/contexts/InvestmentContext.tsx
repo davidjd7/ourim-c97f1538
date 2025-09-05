@@ -353,6 +353,22 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
         // Update local state
         setInvestments(prev => [...prev, newInvestment]);
         
+        // Record creation in history
+        try {
+          await supabase
+            .from('investment_history')
+            .insert({
+              investment_id: data.id,
+              user_id: user.id,
+              field_name: 'creation',
+              old_value: null,
+              new_value: investmentData.name,
+              action_type: 'create'
+            });
+        } catch (historyError) {
+          console.error('Error recording investment creation history:', historyError);
+        }
+        
         return newInvestment;
       }
       
@@ -368,6 +384,12 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
 
     try {
       console.info('Saving changes:', updates);
+      
+      // Get current investment to compare changes
+      const currentInvestment = investments.find(inv => inv.id === id);
+      if (!currentInvestment) {
+        throw new Error('Investment not found');
+      }
       
       // Update local state immediately for responsive UI
       setInvestments(prev => 
@@ -402,10 +424,87 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
         }
         throw error;
       }
+
+      // Record history for each changed field
+      await recordInvestmentChanges(id, currentInvestment, updates);
     } catch (error) {
       console.error('Failed to update investment:', error);
       throw error;
     }
+  };
+
+  // Helper function to record changes in history
+  const recordInvestmentChanges = async (
+    investmentId: string, 
+    currentInvestment: Investment, 
+    updates: Partial<Investment>
+  ) => {
+    if (!user) return;
+
+    const historyEntries = [];
+
+    // Check each field for changes
+    for (const [key, newValue] of Object.entries(updates)) {
+      const oldValue = currentInvestment[key as keyof Investment];
+      
+      // Skip if values are the same or both are empty/null/undefined
+      if (oldValue === newValue || 
+          ((!oldValue || oldValue === '') && (!newValue || newValue === ''))) {
+        continue;
+      }
+
+      // Convert field name to database column name
+      const dbFieldName = getDbFieldName(key);
+      
+      historyEntries.push({
+        investment_id: investmentId,
+        user_id: user.id,
+        field_name: dbFieldName,
+        old_value: oldValue ? String(oldValue) : null,
+        new_value: newValue ? String(newValue) : null,
+        action_type: 'update'
+      });
+    }
+
+    // Insert history entries if there are any changes
+    if (historyEntries.length > 0) {
+      try {
+        const { error } = await supabase
+          .from('investment_history')
+          .insert(historyEntries);
+
+        if (error) {
+          console.error('Error recording investment history:', error);
+        }
+      } catch (error) {
+        console.error('Failed to record investment history:', error);
+      }
+    }
+  };
+
+  // Helper function to convert frontend field names to database field names
+  const getDbFieldName = (frontendField: string): string => {
+    const fieldMap: { [key: string]: string } = {
+      dateAcquisition: 'date_acquisition',
+      dateEntree: 'date_entree',
+      dureeBail: 'duree_bail',
+      bailNextBreak: 'bail_next_break',
+      bailGmapLink: 'bail_gmap_link',
+      bailGmapNote: 'bail_gmap_note',
+      bailLoyerHT: 'bail_loyer_ht',
+      bailCNR: 'bail_cnr',
+      bailPriseEffet: 'bail_prise_effet',
+      bailActivite: 'bail_activite',
+      bailAnciennete: 'bail_anciennete',
+      typeBail: 'type_bail',
+      netVendeur: 'net_vendeur',
+      honoNotaire: 'hono_notaire',
+      lastValue: 'last_value',
+      investmentAmount: 'investment_amount',
+      notaryFees: 'notary_fees',
+      dateInvestment: 'investment_date'
+    };
+    return fieldMap[frontendField] || frontendField;
   };
 
   const getInvestment = (id: string): Investment | undefined => {
