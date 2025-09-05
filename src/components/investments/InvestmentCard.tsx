@@ -13,6 +13,8 @@ interface InvestmentCardProps {
     bailLoyerHT?: number;
     lastValue?: number;
     price?: number;
+    investmentAmount?: number;
+    notaryFees?: number;
   };
   onDragStart?: (e: React.DragEvent, investmentId: string) => void;
 }
@@ -28,6 +30,33 @@ export function InvestmentCard({ investment, onDragStart }: InvestmentCardProps)
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
+  };
+
+  const calculateRendementAllIn = () => {
+    // Pour calculer le rendement All In, on a besoin du loyer annuel et du montant investi total
+    const loyerAnnuel = investment.bailLoyerHT ? investment.bailLoyerHT * 12 : 0;
+    
+    // Montant total investi = prix d'achat + frais de notaire (si disponibles)
+    // Sinon on utilise investmentAmount + notaryFees pour les investissements confirmés
+    let montantTotal = 0;
+    
+    if (investment.investmentAmount && investment.notaryFees) {
+      // Pour les investissements confirmés (statut INVESTI)
+      montantTotal = investment.investmentAmount + investment.notaryFees;
+    } else if (investment.price) {
+      // Pour les opportunités en pipeline, on estime avec 8% de frais
+      montantTotal = investment.price * 1.08;
+    }
+    
+    if (loyerAnnuel > 0 && montantTotal > 0) {
+      return (loyerAnnuel / montantTotal) * 100;
+    }
+    
+    return null;
   };
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -89,6 +118,18 @@ export function InvestmentCard({ investment, onDragStart }: InvestmentCardProps)
             </span>
           </div>
         )}
+        
+        {(() => {
+          const rendement = calculateRendementAllIn();
+          return rendement !== null && (
+            <div className="text-xs text-muted-foreground">
+              <span className="font-medium">Rdmt All in: </span>
+              <span className={`font-semibold ${rendement >= 5 ? 'text-success' : rendement >= 3 ? 'text-warning' : 'text-muted-foreground'}`}>
+                {formatPercentage(rendement)}
+              </span>
+            </div>
+          );
+        })()}
         
         {investment.surface && investment.surface > 0 && (
           <div className="text-xs text-muted-foreground">
