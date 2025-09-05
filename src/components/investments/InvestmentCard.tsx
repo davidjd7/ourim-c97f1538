@@ -11,10 +11,14 @@ interface InvestmentCardProps {
     status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
     surface?: number;
     bailLoyerHT?: number;
+    bailCNR?: number;
     lastValue?: number;
     price?: number;
     investmentAmount?: number;
     notaryFees?: number;
+    netVendeur?: number;
+    agent?: number;
+    honoNotaire?: number;
   };
   onDragStart?: (e: React.DragEvent, investmentId: string) => void;
 }
@@ -37,23 +41,18 @@ export function InvestmentCard({ investment, onDragStart }: InvestmentCardProps)
   };
 
   const calculateRendementAllIn = () => {
-    // Pour calculer le rendement All In, on a besoin du loyer annuel et du montant investi total
-    const loyerAnnuel = investment.bailLoyerHT ? investment.bailLoyerHT * 12 : 0;
-    
-    // Montant total investi = prix d'achat + frais de notaire (si disponibles)
-    // Sinon on utilise investmentAmount + notaryFees pour les investissements confirmés
-    let montantTotal = 0;
-    
-    if (investment.investmentAmount && investment.notaryFees) {
-      // Pour les investissements confirmés (statut INVESTI)
-      montantTotal = investment.investmentAmount + investment.notaryFees;
-    } else if (investment.price) {
-      // Pour les opportunités en pipeline, on estime avec 8% de frais
-      montantTotal = investment.price * 1.08;
-    }
-    
-    if (loyerAnnuel > 0 && montantTotal > 0) {
-      return (loyerAnnuel / montantTotal) * 100;
+    // Utiliser la même formule que dans la section Présentation Vente
+    if (investment.bailLoyerHT && investment.netVendeur && 
+        investment.netVendeur > 0 &&
+        (investment.agent !== undefined) && 
+        (investment.honoNotaire !== undefined)) {
+      
+      const loyerNet = investment.bailLoyerHT - (investment.bailCNR || 0);
+      const prixAllIn = investment.netVendeur * (1 + investment.agent + investment.honoNotaire);
+      
+      if (prixAllIn > 0) {
+        return (loyerNet / prixAllIn) * 100;
+      }
     }
     
     return null;
