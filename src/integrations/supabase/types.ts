@@ -103,6 +103,7 @@ export type Database = {
           currency: string | null
           date_acquisition: string | null
           date_entree: string | null
+          description: string | null
           duree_bail: number | null
           hono_notaire: number | null
           id: string
@@ -139,6 +140,7 @@ export type Database = {
           currency?: string | null
           date_acquisition?: string | null
           date_entree?: string | null
+          description?: string | null
           duree_bail?: number | null
           hono_notaire?: number | null
           id?: string
@@ -175,6 +177,7 @@ export type Database = {
           currency?: string | null
           date_acquisition?: string | null
           date_entree?: string | null
+          description?: string | null
           duree_bail?: number | null
           hono_notaire?: number | null
           id?: string
