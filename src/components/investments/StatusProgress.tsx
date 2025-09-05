@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -13,6 +14,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useCompanies } from '@/contexts/CompanyContext';
 
 type InvestmentStatus = 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
 
@@ -35,6 +37,7 @@ const statusOrder: InvestmentStatus[] = ['RECU', 'DUE_DIL', 'INVESTI', 'VENDU'];
 export function StatusProgress({ currentStatus, className, onStatusChange }: StatusProgressProps) {
   const currentStep = statusConfig[currentStatus].step;
   const { toast } = useToast();
+  const { companies } = useCompanies();
   
   // États pour les dialogs
   const [dropDialogOpen, setDropDialogOpen] = useState(false);
@@ -186,13 +189,23 @@ export function StatusProgress({ currentStatus, className, onStatusChange }: Sta
                   
                   <div>
                     <Label htmlFor="company">Société</Label>
-                    <Input
-                      id="company"
-                      type="text"
-                      value={company}
-                      onChange={(e) => setCompany(e.target.value)}
-                      placeholder="Ex: Ma SCI"
-                    />
+                    <Select value={company} onValueChange={setCompany}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Sélectionnez une société" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-md z-50">
+                        {companies.map((comp) => (
+                          <SelectItem key={comp.id} value={comp.id}>
+                            {comp.name}
+                          </SelectItem>
+                        ))}
+                        {companies.length === 0 && (
+                          <SelectItem value="" disabled>
+                            Aucune société disponible
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   <div className="flex justify-end gap-2">
