@@ -23,6 +23,33 @@ export default function InvestissementDetail() {
   // Get investment from global context
   const investment = getInvestment(id || '');
 
+  // Initialize state before any conditional returns
+  const [tempEditData, setTempEditData] = useState({
+    name: investment?.name || '',
+    type: investment?.type || 'IMMO',
+    address: investment?.address || '',
+    surface: investment?.surface || 0,
+    price: investment?.price || 0,
+    dateAcquisition: investment?.dateAcquisition || '',
+    // Bail fields
+    locataire: investment?.locataire || '',
+    dateEntree: investment?.dateEntree || '',
+    typeBail: investment?.typeBail || '',
+    dureeBail: investment?.dureeBail || 0,
+    bailNextBreak: investment?.bailNextBreak || '',
+    bailGmapLink: investment?.bailGmapLink || '',
+    bailGmapNote: investment?.bailGmapNote || '',
+    bailLoyerHT: investment?.bailLoyerHT || 0,
+    bailCNR: investment?.bailCNR || 0,
+    bailPriseEffet: investment?.bailPriseEffet || '',
+    bailActivite: investment?.bailActivite || '',
+    bailAnciennete: investment?.bailAnciennete || 0,
+    // Présentation Vente fields
+    netVendeur: investment?.netVendeur || 0,
+    agent: investment?.agent || 0,
+    honoNotaire: investment?.honoNotaire || 0.08
+  });
+
   if (!investment) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -30,32 +57,6 @@ export default function InvestissementDetail() {
       </div>
     );
   }
-
-  const [tempEditData, setTempEditData] = useState({
-    name: investment.name,
-    type: investment.type,
-    address: investment.address || '',
-    surface: investment.surface || 0,
-    price: investment.price || 0,
-    dateAcquisition: investment.dateAcquisition || '',
-    // Bail fields
-    locataire: investment.locataire || '',
-    dateEntree: investment.dateEntree || '',
-    typeBail: investment.typeBail || '',
-    dureeBail: investment.dureeBail || 0,
-    bailNextBreak: investment.bailNextBreak || '',
-    bailGmapLink: investment.bailGmapLink || '',
-    bailGmapNote: investment.bailGmapNote || '',
-    bailLoyerHT: investment.bailLoyerHT || 0,
-    bailCNR: investment.bailCNR || 0,
-    bailPriseEffet: investment.bailPriseEffet || '',
-    bailActivite: investment.bailActivite || '',
-    bailAnciennete: investment.bailAnciennete || 0,
-    // Présentation Vente fields
-    netVendeur: investment.netVendeur || 0,
-    agent: investment.agent || 0,
-    honoNotaire: investment.honoNotaire || 0.08
-  });
 
   // Update tempEditData when investment changes
   useEffect(() => {
