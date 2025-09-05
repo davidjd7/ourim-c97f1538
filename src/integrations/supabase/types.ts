@@ -100,6 +100,7 @@ export type Database = {
           bail_prise_effet: string | null
           company: string | null
           created_at: string
+          currency: string | null
           date_acquisition: string | null
           date_entree: string | null
           duree_bail: number | null
@@ -135,6 +136,7 @@ export type Database = {
           bail_prise_effet?: string | null
           company?: string | null
           created_at?: string
+          currency?: string | null
           date_acquisition?: string | null
           date_entree?: string | null
           duree_bail?: number | null
@@ -170,6 +172,7 @@ export type Database = {
           bail_prise_effet?: string | null
           company?: string | null
           created_at?: string
+          currency?: string | null
           date_acquisition?: string | null
           date_entree?: string | null
           duree_bail?: number | null

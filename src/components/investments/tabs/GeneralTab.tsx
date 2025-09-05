@@ -22,6 +22,7 @@ interface GeneralData {
   notaryFees: number;
   renovationBudget: number;
   company?: string;
+  currency: 'EUR' | 'USD';
   // Bail fields
   bailPriseEffet: string;
   bailActivite: string;
@@ -54,6 +55,7 @@ interface GeneralTabProps {
     notaryFees: number;
     renovationBudget: number;
     company?: string;
+    currency?: 'EUR' | 'USD';
     // Bail fields
     bailPriseEffet?: string;
     bailActivite?: string;
@@ -84,6 +86,7 @@ const mockGeneralData: GeneralData = {
   acquisitionDate: '2023-03-15',
   notaryFees: 168000,
   renovationBudget: 50000,
+  currency: 'EUR',
   // Bail mock data
   bailPriseEffet: '2023-01-01',
   bailActivite: 'Bureau',
@@ -125,6 +128,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     notaryFees: investmentData.notaryFees,
     renovationBudget: investmentData.renovationBudget,
     company: investmentData.company,
+    currency: investmentData.currency || 'EUR',
     // Bail fields avec valeurs par défaut
     bailPriseEffet: investmentData.bailPriseEffet || '',
     bailActivite: investmentData.bailActivite || '',
@@ -170,6 +174,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
         notaryFees: investmentData.notaryFees,
         renovationBudget: investmentData.renovationBudget,
         company: investmentData.company,
+        currency: investmentData.currency || 'EUR',
         // Bail fields avec valeurs par défaut
         bailPriseEffet: investmentData.bailPriseEffet || '',
         bailActivite: investmentData.bailActivite || '',
@@ -326,6 +331,26 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                   />
                 ) : (
                   <p className="font-medium">{data.surface} m²</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="currency">Devise</Label>
+                {isEditMode ? (
+                  <Select
+                    value={editData.currency}
+                    onValueChange={(value) => handleDataChange({ ...editData, currency: value as 'EUR' | 'USD' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner une devise" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="font-medium">{data.currency}</p>
                 )}
               </div>
             </div>
