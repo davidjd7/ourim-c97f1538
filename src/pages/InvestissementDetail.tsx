@@ -98,11 +98,11 @@ export default function InvestissementDetail() {
   }
 
   const handleStatusChange = async (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
-    // Préserver toutes les données existantes
-    const currentData = tempEditData || investment;
+    // Préserver TOUTES les données existantes en commençant par l'investissement complet
     const updates: any = { 
-      ...currentData,
-      status: newStatus 
+      ...investment, // Commencer par toutes les données de l'investissement
+      ...tempEditData, // Appliquer les modifications en cours
+      status: newStatus // Puis le nouveau statut
     };
     
     // Si on passe au statut INVESTI, mettre à jour les données financières
@@ -110,13 +110,16 @@ export default function InvestissementDetail() {
       updates.investmentAmount = data.amount;
       updates.notaryFees = data.cost;
       updates.dateInvestment = data.date?.toISOString()?.split('T')[0];
-      updates.company = data.company;
+      updates.companyId = data.company; // Utiliser companyId plutôt que company
     }
     
     try {
       await updateInvestment(investment.id, updates);
       // Mettre à jour tempEditData pour refléter les changements
-      setTempEditData(updates);
+      setTempEditData({
+        ...tempEditData,
+        ...updates
+      });
       toast({
         title: "Statut mis à jour",
         description: "Le statut a été mis à jour avec succès.",
