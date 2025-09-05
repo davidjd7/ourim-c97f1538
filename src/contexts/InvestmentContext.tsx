@@ -237,21 +237,21 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       name: investment.name,
       type: investment.type,
       status: investment.status,
-      address: investment.address,
+      address: investment.address || null,
       surface: investment.surface,
       price: investment.price,
       date_acquisition: investment.dateAcquisition || null,
-      locataire: investment.locataire,
+      locataire: investment.locataire || null,
       date_entree: investment.dateEntree || null,
-      type_bail: investment.typeBail,
+      type_bail: investment.typeBail || null,
       duree_bail: investment.dureeBail,
       bail_next_break: investment.bailNextBreak || null,
-      bail_gmap_link: investment.bailGmapLink,
-      bail_gmap_note: investment.bailGmapNote,
+      bail_gmap_link: investment.bailGmapLink || null,
+      bail_gmap_note: investment.bailGmapNote || null,
       bail_loyer_ht: investment.bailLoyerHT,
       bail_cnr: investment.bailCNR,
       bail_prise_effet: investment.bailPriseEffet || null,
-      bail_activite: investment.bailActivite,
+      bail_activite: investment.bailActivite || null,
       bail_anciennete: investment.bailAnciennete,
       net_vendeur: investment.netVendeur,
       agent: investment.agent,
@@ -261,7 +261,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       investment_date: investment.dateInvestment || null,
       investment_amount: investment.investmentAmount,
       notary_fees: investment.notaryFees,
-      company: investment.company
+      company: investment.company || null
     };
   };
 

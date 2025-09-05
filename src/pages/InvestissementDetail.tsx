@@ -123,6 +123,9 @@ export default function InvestissementDetail() {
     console.log('Saving changes:', tempEditData);
     
     try {
+      // Prevent duplicate saves
+      setIsEditMode(false);
+      
       // Update the investment in global context
       await updateInvestment(investment.id, {
         name: tempEditData.name,
@@ -150,7 +153,6 @@ export default function InvestissementDetail() {
         honoNotaire: tempEditData.honoNotaire
       });
       
-      setIsEditMode(false);
       toast({
         title: "Modifications sauvegardées",
         description: "Les informations ont été mises à jour avec succès.",
