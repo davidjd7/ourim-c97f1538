@@ -119,7 +119,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     dateInvestment: investmentData.dateInvestment,
     address: investmentData.address,
     surface: investmentData.surface,
-    description: investmentData.description || 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris. Situé au 3ème étage avec ascenseur, vue dégagée sur jardins privatifs.',
+    description: investmentData.description || '',
     investmentAmount: investmentData.investmentAmount,
     acquisitionDate: investmentData.acquisitionDate,
     notaryFees: investmentData.notaryFees,
@@ -164,7 +164,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
         dateInvestment: investmentData.dateInvestment,
         address: investmentData.address,
         surface: investmentData.surface,
-        description: investmentData.description || 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris. Situé au 3ème étage avec ascenseur, vue dégagée sur jardins privatifs.',
+        description: investmentData.description || '',
         investmentAmount: investmentData.investmentAmount,
         acquisitionDate: investmentData.acquisitionDate,
         notaryFees: investmentData.notaryFees,
@@ -311,7 +311,10 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                   </p>
                 )}
               </div>
+            </div>
 
+            {/* Surface next to address */}
+            <div className="space-y-4">
               <div>
                 <Label htmlFor="surface">Surface Utile Pondérée (m2.UP)</Label>
                 {isEditMode ? (
@@ -326,12 +329,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                 )}
               </div>
             </div>
-
-            {/* Financial Data */}
-            <div className="space-y-4">
-              {/* Placeholder pour équilibrer la grille */}
-              <div></div>
-            </div>
           </div>
 
           <div className="mt-6">
@@ -341,6 +338,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                 id="description"
                 value={editData.description}
                 onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
+                placeholder="Décrivez l'investissement"
                 rows={4}
               />
             ) : (
