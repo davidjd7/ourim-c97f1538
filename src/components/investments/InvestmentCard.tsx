@@ -126,7 +126,7 @@ export function InvestmentCard({ investment, onDragStart }: InvestmentCardProps)
           
           return displayValue && displayValue > 0 && (
             <div className="text-xs text-muted-foreground">
-              <span className="font-medium">Valeur: </span>
+              <span className="font-medium">Prix All In: </span>
               <span className="financial-value">
                 {formatCurrency(displayValue)}
               </span>
