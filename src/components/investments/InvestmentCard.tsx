@@ -109,14 +109,30 @@ export function InvestmentCard({ investment, onDragStart }: InvestmentCardProps)
           </div>
         )}
         
-        {((investment.lastValue && investment.lastValue > 0) || (investment.price && investment.price > 0)) && (
-          <div className="text-xs text-muted-foreground">
-            <span className="font-medium">Valeur: </span>
-            <span className="financial-value">
-              {formatCurrency(investment.lastValue || investment.price || 0)}
-            </span>
-          </div>
-        )}
+        {(() => {
+          // Calculer le prix all-in si les données sont disponibles
+          let displayValue = investment.lastValue;
+          
+          if (!displayValue && investment.netVendeur && 
+              investment.netVendeur > 0 &&
+              (investment.agent !== undefined) && 
+              (investment.honoNotaire !== undefined)) {
+            displayValue = investment.netVendeur * (1 + investment.agent + investment.honoNotaire);
+          }
+          
+          if (!displayValue && investment.price && investment.price > 0) {
+            displayValue = investment.price;
+          }
+          
+          return displayValue && displayValue > 0 && (
+            <div className="text-xs text-muted-foreground">
+              <span className="font-medium">Valeur: </span>
+              <span className="financial-value">
+                {formatCurrency(displayValue)}
+              </span>
+            </div>
+          );
+        })()}
         
         {(() => {
           const rendement = calculateRendementAllIn();
