@@ -29,6 +29,7 @@ interface GeneralData {
   bailActivite: string;
   bailAnciennete: number;
   bailNextBreak: string;
+  bailFinBail: string;
   bailGmapLink: string;
   bailGmapNote: string;
   bailLoyerHT: number;
@@ -61,6 +62,7 @@ interface GeneralTabProps {
     bailActivite?: string;
     bailAnciennete?: number;
     bailNextBreak?: string;
+    bailFinBail?: string;
     bailGmapLink?: string;
     bailGmapNote?: string;
     bailLoyerHT?: number;
@@ -91,6 +93,7 @@ const mockGeneralData: GeneralData = {
   bailActivite: 'Bureau',
   bailAnciennete: 5,
   bailNextBreak: '2028-01-01',
+  bailFinBail: '2032-01-01',
   bailGmapLink: 'https://maps.google.com/?q=12+rue+de+la+Faisanderie+75016+Paris',
   bailGmapNote: 'Proche métro Trocadéro',
   bailLoyerHT: 12500,
@@ -133,6 +136,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     bailActivite: investmentData.bailActivite || '',
     bailAnciennete: investmentData.bailAnciennete || 0,
     bailNextBreak: investmentData.bailNextBreak || '',
+    bailFinBail: investmentData.bailFinBail || '',
     bailGmapLink: investmentData.bailGmapLink || '',
     bailGmapNote: investmentData.bailGmapNote || '',
     bailLoyerHT: investmentData.bailLoyerHT || 0,
@@ -178,6 +182,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
         bailActivite: investmentData.bailActivite || '',
         bailAnciennete: investmentData.bailAnciennete || 0,
         bailNextBreak: investmentData.bailNextBreak || '',
+        bailFinBail: investmentData.bailFinBail || '',
         bailGmapLink: investmentData.bailGmapLink || '',
         bailGmapNote: investmentData.bailGmapNote || '',
         bailLoyerHT: investmentData.bailLoyerHT || 0,
@@ -370,24 +375,8 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <Label htmlFor="bailPriseEffet">Date de prise d'Effet</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailPriseEffet"
-                  type="date"
-                  value={editData.bailPriseEffet}
-                  onChange={(e) => handleDataChange({ ...editData, bailPriseEffet: e.target.value })}
-                />
-              ) : (
-                <p className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {data.bailPriseEffet ? new Date(data.bailPriseEffet).toLocaleDateString('fr-FR') : 'Non défini'}
-                </p>
-              )}
-            </div>
-
+          {/* Première ligne: Activité - Ancienneté - Loyer HT.HC/m² */}
+          <div className="grid gap-6 md:grid-cols-3 mb-6">
             <div>
               <Label htmlFor="bailActivite">Activité</Label>
               {isEditMode ? (
@@ -416,6 +405,33 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             </div>
 
             <div>
+              <Label>Loyer HT.HC/m²</Label>
+              <p className="font-medium financial-value">
+                {data.surface > 0 ? formatCurrency(data.bailLoyerHT / data.surface) : 'N/A'}
+              </p>
+            </div>
+          </div>
+
+          {/* Deuxième ligne: Date de prise d'effet - Next Break - Fin Bail */}
+          <div className="grid gap-6 md:grid-cols-3 mb-6">
+            <div>
+              <Label htmlFor="bailPriseEffet">Date de prise d'effet</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailPriseEffet"
+                  type="date"
+                  value={editData.bailPriseEffet}
+                  onChange={(e) => handleDataChange({ ...editData, bailPriseEffet: e.target.value })}
+                />
+              ) : (
+                <p className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {data.bailPriseEffet ? new Date(data.bailPriseEffet).toLocaleDateString('fr-FR') : 'Non défini'}
+                </p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="bailNextBreak">Next Break</Label>
               {isEditMode ? (
                 <Input
@@ -433,7 +449,71 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             </div>
 
             <div>
-              <Label htmlFor="bailGmapLink">Lien Gmap</Label>
+              <Label htmlFor="bailFinBail">Fin Bail</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailFinBail"
+                  type="date"
+                  value={editData.bailFinBail}
+                  onChange={(e) => handleDataChange({ ...editData, bailFinBail: e.target.value })}
+                />
+              ) : (
+                <p className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {data.bailFinBail ? new Date(data.bailFinBail).toLocaleDateString('fr-FR') : 'Non défini'}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Troisième ligne: Loyer HT.HC (annuel) - Charge Non récupérable - Loyer net */}
+          <div className="grid gap-6 md:grid-cols-3">
+            <div>
+              <Label htmlFor="bailLoyerHT">Loyer HT.HC (annuel)</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailLoyerHT"
+                  type="number"
+                  step="0.01"
+                  value={editData.bailLoyerHT}
+                  onChange={(e) => handleDataChange({ ...editData, bailLoyerHT: Number(e.target.value) })}
+                />
+              ) : (
+                <p className="font-medium financial-value">
+                  {formatCurrency(data.bailLoyerHT)}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="bailCNR">Charge Non Récupérable (CNR)</Label>
+              {isEditMode ? (
+                <Input
+                  id="bailCNR"
+                  type="number"
+                  step="0.01"
+                  value={editData.bailCNR}
+                  onChange={(e) => handleDataChange({ ...editData, bailCNR: Number(e.target.value) })}
+                />
+              ) : (
+                <p className="font-medium financial-value">
+                  {formatCurrency(data.bailCNR)}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label>Loyer net HT.HC (annuel)</Label>
+              <p className="font-medium financial-value text-primary">
+                {formatCurrency(data.bailLoyerHT - data.bailCNR)}
+              </p>
+            </div>
+          </div>
+
+          {/* Section additionnelle pour les liens Google Maps */}
+          <div className="grid gap-6 md:grid-cols-2 mt-6 pt-6 border-t">
+            <div>
+              <Label htmlFor="bailGmapLink">Lien Google Maps</Label>
               {isEditMode ? (
                 <Input
                   id="bailGmapLink"
@@ -461,7 +541,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             </div>
 
             <div>
-              <Label htmlFor="bailGmapNote">Note Gmap</Label>
+              <Label htmlFor="bailGmapNote">Note Google Maps</Label>
               {isEditMode ? (
                 <Input
                   id="bailGmapNote"
@@ -470,47 +550,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                 />
               ) : (
                 <p className="font-medium">{data.bailGmapNote || 'Aucune note'}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="bailLoyerHT">Loyer HT.HC (annuel)</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailLoyerHT"
-                  type="number"
-                  step="0.01"
-                  value={editData.bailLoyerHT}
-                  onChange={(e) => handleDataChange({ ...editData, bailLoyerHT: Number(e.target.value) })}
-                />
-              ) : (
-                <p className="font-medium financial-value">
-                  {formatCurrency(data.bailLoyerHT)}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label>Loyer HT.HC/ m2</Label>
-              <p className="font-medium financial-value">
-                {data.surface > 0 ? formatCurrency(data.bailLoyerHT / data.surface) : 'N/A'}
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="bailCNR">Charge Non Récupérable (CNR)</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailCNR"
-                  type="number"
-                  step="0.01"
-                  value={editData.bailCNR}
-                  onChange={(e) => handleDataChange({ ...editData, bailCNR: Number(e.target.value) })}
-                />
-              ) : (
-                <p className="font-medium financial-value">
-                  {formatCurrency(data.bailCNR)}
-                </p>
               )}
             </div>
           </div>
