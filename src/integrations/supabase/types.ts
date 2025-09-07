@@ -125,7 +125,6 @@ export type Database = {
           company: string | null
           company_id: string | null
           created_at: string
-          currency: string | null
           date_acquisition: string | null
           date_entree: string | null
           description: string | null
@@ -163,7 +162,6 @@ export type Database = {
           company?: string | null
           company_id?: string | null
           created_at?: string
-          currency?: string | null
           date_acquisition?: string | null
           date_entree?: string | null
           description?: string | null
@@ -201,7 +199,6 @@ export type Database = {
           company?: string | null
           company_id?: string | null
           created_at?: string
-          currency?: string | null
           date_acquisition?: string | null
           date_entree?: string | null
           description?: string | null
