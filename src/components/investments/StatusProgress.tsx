@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,9 @@ interface StatusProgressProps {
   currentStatus: InvestmentStatus;
   className?: string;
   onStatusChange?: (newStatus: InvestmentStatus, data?: any) => void;
+  netVendeur?: number;
+  agent?: number;
+  honoNotaire?: number;
 }
 
 const statusConfig = {
@@ -34,10 +37,14 @@ const statusConfig = {
 
 const statusOrder: InvestmentStatus[] = ['RECU', 'DUE_DIL', 'INVESTI', 'VENDU'];
 
-export function StatusProgress({ currentStatus, className, onStatusChange }: StatusProgressProps) {
+export function StatusProgress({ currentStatus, className, onStatusChange, netVendeur = 0, agent = 0, honoNotaire = 0 }: StatusProgressProps) {
   const currentStep = statusConfig[currentStatus].step;
   const { toast } = useToast();
   const { companies } = useCompanies();
+  
+  // Calcul des valeurs par défaut
+  const defaultInvestedAmount = netVendeur;
+  const defaultInvestmentCost = netVendeur * (agent + honoNotaire);
   
   // États pour les dialogs
   const [dropDialogOpen, setDropDialogOpen] = useState(false);
@@ -49,6 +56,14 @@ export function StatusProgress({ currentStatus, className, onStatusChange }: Sta
   const [investedAmount, setInvestedAmount] = useState('');
   const [investmentCost, setInvestmentCost] = useState('');
   const [company, setCompany] = useState('');
+
+  // Mettre à jour les valeurs par défaut quand le dialog d'investissement s'ouvre
+  useEffect(() => {
+    if (investDialogOpen) {
+      setInvestedAmount(defaultInvestedAmount ? defaultInvestedAmount.toString() : '');
+      setInvestmentCost(defaultInvestmentCost ? defaultInvestmentCost.toString() : '');
+    }
+  }, [investDialogOpen, defaultInvestedAmount, defaultInvestmentCost]);
 
   const handleStatusChange = (newStatus: InvestmentStatus, data?: any) => {
     // Appeler le callback si fourni

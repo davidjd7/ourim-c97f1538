@@ -375,6 +375,9 @@ export default function InvestissementDetail() {
         <StatusProgress 
           currentStatus={investment!.status}
           onStatusChange={handleStatusChange}
+          netVendeur={investment!.netVendeur}
+          agent={investment!.agent}
+          honoNotaire={investment!.honoNotaire}
         />
       )}
 
