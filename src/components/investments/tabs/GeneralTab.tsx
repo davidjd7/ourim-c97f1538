@@ -207,7 +207,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
   return (
     <div className="space-y-6">
       {/* Section Informations d'Investissement - uniquement si status = INVESTI */}
-      {data.status === 'INVESTI' && (
+      {(isEditMode ? editData.status : data.status) === 'INVESTI' && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
