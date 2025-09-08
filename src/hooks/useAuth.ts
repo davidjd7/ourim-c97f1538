@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -6,7 +6,6 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -22,33 +21,23 @@ export function useAuth() {
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
-          setInitialized(true);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
           setLoading(false);
-          setInitialized(true);
         }
       }
     };
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
-        
-        // Éviter les mises à jour si on n'est pas encore initialisé et que c'est le même état
-        if (!initialized && event === 'INITIAL_SESSION') {
-          return;
-        }
         
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (initialized) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     );
 
@@ -60,7 +49,7 @@ export function useAuth() {
     };
   }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       await supabase.auth.signOut({ scope: 'global' });
       setUser(null);
@@ -69,7 +58,7 @@ export function useAuth() {
     } catch (error) {
       console.error('Error signing out:', error);
     }
-  };
+  }, []);
 
   return {
     user,

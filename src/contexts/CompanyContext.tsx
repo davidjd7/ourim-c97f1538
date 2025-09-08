@@ -28,11 +28,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
 
-  // Don't render children until auth is resolved
-  if (authLoading) {
-    return null;
-  }
-
   const toggleCompanySelection = (id: string) => {
     setSelectedCompanyIds(prev => 
       prev.includes(id) 

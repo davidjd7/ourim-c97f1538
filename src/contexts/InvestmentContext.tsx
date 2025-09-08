@@ -195,11 +195,6 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
   const companiesContext = useCompanies();
   const { selectedCompanyIds } = companiesContext || { selectedCompanyIds: [] };
   
-  // Don't render children until auth is resolved
-  if (authLoading) {
-    return null;
-  }
-  
   // Filter investments based on selected companies
   const filteredInvestments = React.useMemo(() => {
     if (selectedCompanyIds.length === 0) {
