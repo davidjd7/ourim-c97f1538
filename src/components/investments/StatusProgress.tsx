@@ -215,7 +215,7 @@ export function StatusProgress({ currentStatus, className, onStatusChange, netVe
                           </SelectItem>
                         ))}
                         {companies.length === 0 && (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="no-company" disabled>
                             Aucune société disponible
                           </SelectItem>
                         )}

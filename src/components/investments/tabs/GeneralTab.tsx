@@ -277,19 +277,28 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                 <Label htmlFor="company">Société</Label>
                 {isEditMode ? (
                   <Select 
-                    value={editData.companyId || ''} 
-                    onValueChange={(value) => handleDataChange({ ...editData, companyId: value || undefined })}
+                    value={editData.companyId || undefined} 
+                    onValueChange={(value) => handleDataChange({ ...editData, companyId: value === 'clear' ? undefined : value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionnez une société" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucune société</SelectItem>
+                      {editData.companyId && (
+                        <SelectItem value="clear">
+                          <span className="text-muted-foreground">Aucune société</span>
+                        </SelectItem>
+                      )}
                       {companies.map((company) => (
                         <SelectItem key={company.id} value={company.id}>
                           {company.name}
                         </SelectItem>
                       ))}
+                      {companies.length === 0 && (
+                        <SelectItem value="no-company" disabled>
+                          Aucune société disponible
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 ) : (
