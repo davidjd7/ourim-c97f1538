@@ -191,8 +191,14 @@ const initialInvestments: Investment[] = [
 export function InvestmentProvider({ children }: { children: ReactNode }) {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
-  const { selectedCompanyIds } = useCompanies();
+  const { user, loading: authLoading } = useAuth();
+  const companiesContext = useCompanies();
+  const { selectedCompanyIds } = companiesContext || { selectedCompanyIds: [] };
+  
+  // Don't render children until auth is resolved
+  if (authLoading) {
+    return null;
+  }
   
   // Filter investments based on selected companies
   const filteredInvestments = React.useMemo(() => {
