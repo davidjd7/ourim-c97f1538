@@ -286,13 +286,18 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
   // Load investments from Supabase when user changes
   useEffect(() => {
     const loadInvestments = async () => {
+      console.log('InvestmentContext: loadInvestments called, user:', user ? 'exists' : 'null');
+      
       if (!user) {
+        console.log('InvestmentContext: No user, clearing investments');
         setInvestments([]);
         setLoading(false);
         return;
       }
 
       setLoading(true);
+      console.log('InvestmentContext: Loading investments for user:', user.id);
+      
       try {
         const { data, error } = await supabase
           .from('investments')
@@ -301,10 +306,14 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
 
         if (error) throw error;
 
+        console.log('InvestmentContext: Loaded data from Supabase:', data?.length || 0, 'investments');
+
         if (data && data.length > 0) {
           const convertedInvestments = data.map(convertDbToInvestment);
+          console.log('InvestmentContext: Setting converted investments:', convertedInvestments.length);
           setInvestments(convertedInvestments);
         } else {
+          console.log('InvestmentContext: No investments found, creating initial data');
           // If no investments found, create initial sample data for the user
           await createInitialInvestments();
         }
