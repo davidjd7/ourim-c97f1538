@@ -38,14 +38,21 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
   // Load companies from Supabase
   useEffect(() => {
+    let mounted = true;
+    
     const loadCompanies = async () => {
       if (!user) {
-        setCompanies([]);
-        setLoading(false);
+        if (mounted) {
+          setCompanies([]);
+          setLoading(false);
+        }
         return;
       }
 
-      setLoading(true);
+      if (mounted) {
+        setLoading(true);
+      }
+      
       try {
         const { data, error } = await supabase
           .from('companies')
@@ -55,15 +62,26 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
         if (error) throw error;
 
-        setCompanies(data || []);
+        if (mounted) {
+          setCompanies(data || []);
+        }
       } catch (error) {
         console.error('Error loading companies:', error);
+        if (mounted) {
+          setCompanies([]);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadCompanies();
+    
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
   const addCompany = async (name: string): Promise<Company> => {
