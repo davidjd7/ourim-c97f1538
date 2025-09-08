@@ -54,7 +54,9 @@ export default function InvestissementDetail() {
     // Présentation Vente fields
     netVendeur: investment?.netVendeur || 0,
     agent: investment?.agent || 0,
-    honoNotaire: investment?.honoNotaire || 0.08
+    honoNotaire: investment?.honoNotaire || 0.08,
+    // Company field
+    companyId: investment?.companyId || undefined
   });
 
   // Update tempEditData when investment changes - must be before conditional return
@@ -84,7 +86,9 @@ export default function InvestissementDetail() {
         // Présentation Vente fields
         netVendeur: investment.netVendeur || 0,
         agent: investment.agent || 0,
-        honoNotaire: investment.honoNotaire || 0.08
+        honoNotaire: investment.honoNotaire || 0.08,
+        // Company field
+        companyId: investment.companyId || undefined
       });
     }
   }, [investment, isNewInvestment]);
@@ -115,13 +119,17 @@ export default function InvestissementDetail() {
     
     try {
       await updateInvestment(investment.id, updates);
-      // Mettre à jour tempEditData pour refléter les changements
-      setTempEditData({
-        ...tempEditData,
-        ...updates
-      });
+      
+      // Forcer la mise à jour complète de tempEditData avec toutes les nouvelles données
+      setTempEditData(prev => ({
+        ...prev,
+        ...updates,
+        // S'assurer que companyId est bien propagé
+        companyId: updates.companyId || prev.companyId
+      }));
+      
       toast({
-        title: "Statut mis à jour",
+        title: "Statut mis à jour", 
         description: "Le statut a été mis à jour avec succès.",
       });
     } catch (error) {
@@ -258,7 +266,9 @@ export default function InvestissementDetail() {
         // Présentation Vente fields
         netVendeur: investment!.netVendeur || 0,
         agent: investment!.agent || 0,
-        honoNotaire: investment!.honoNotaire || 0.08
+        honoNotaire: investment!.honoNotaire || 0.08,
+        // Company field
+        companyId: investment!.companyId || undefined
       });
       setIsEditMode(false);
     }
