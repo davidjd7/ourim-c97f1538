@@ -33,11 +33,16 @@ export default function InvestissementDetail() {
   const [tempEditData, setTempEditData] = useState({
     name: investment?.name || (isNewInvestment ? '' : ''),
     type: investment?.type || investmentType,
+    status: investment?.status || 'RECU',
     address: investment?.address || '',
     surface: investment?.surface || 0,
     price: investment?.price || 0,
     dateAcquisition: investment?.dateAcquisition || '',
     description: investment?.description || '',
+    // Investment fields
+    dateInvestment: investment?.dateInvestment || '',
+    investmentAmount: investment?.investmentAmount || 0,
+    notaryFees: investment?.notaryFees || 0,
     // Bail fields
     locataire: investment?.locataire || '',
     dateEntree: investment?.dateEntree || '',
@@ -65,11 +70,16 @@ export default function InvestissementDetail() {
       setTempEditData({
         name: investment.name,
         type: investment.type,
+        status: investment.status,
         address: investment.address || '',
         surface: investment.surface || 0,
         price: investment.price || 0,
         dateAcquisition: investment.dateAcquisition || '',
         description: investment.description || '',
+        // Investment fields
+        dateInvestment: investment.dateInvestment || '',
+        investmentAmount: investment.investmentAmount || 0,
+        notaryFees: investment.notaryFees || 0,
         // Bail fields
         locataire: investment.locataire || '',
         dateEntree: investment.dateEntree || '',
@@ -267,6 +277,11 @@ export default function InvestissementDetail() {
         netVendeur: investment!.netVendeur || 0,
         agent: investment!.agent || 0,
         honoNotaire: investment!.honoNotaire || 0.08,
+        // Investment fields
+        status: investment!.status,
+        dateInvestment: investment!.dateInvestment || '',
+        investmentAmount: investment!.investmentAmount || 0,
+        notaryFees: investment!.notaryFees || 0,
         // Company field
         companyId: investment!.companyId || undefined
       });
