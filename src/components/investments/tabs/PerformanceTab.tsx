@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus, Trash2, Edit, Save } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface CashflowRow {
+  id?: string;
   date: string;
   rex: number;
   retraitAmort: number;
@@ -14,12 +18,12 @@ interface CashflowRow {
 }
 
 interface PerformanceData {
+  id?: string;
   currentValue: number;
   initialValue: number;
   totalReturn: number;
   returnPercentage: number;
   tri: number;
-  cashflows: CashflowRow[];
 }
 
 interface PerformanceTabProps {
@@ -27,45 +31,147 @@ interface PerformanceTabProps {
   isEditMode?: boolean;
 }
 
-const mockPerformanceData: PerformanceData = {
-  currentValue: 2170000,
-  initialValue: 2100000,
-  totalReturn: 70000,
-  returnPercentage: 3.33,
-  tri: 6.8,
-  cashflows: [
-    {
-      date: '2023-03-15',
-      rex: 0,
-      retraitAmort: 0,
-      retraitAutres: 2100000
-    },
-    {
-      date: '2023-06-15',
-      rex: 15000,
-      retraitAmort: 0,
-      retraitAutres: 0
-    },
-    {
-      date: '2023-09-15',
-      rex: 15500,
-      retraitAmort: 0,
-      retraitAutres: 0
-    },
-    {
-      date: '2023-12-15',
-      rex: 16000,
-      retraitAmort: 0,
-      retraitAutres: 0
-    }
-  ]
-};
-
 export function PerformanceTab({ investmentId }: PerformanceTabProps) {
-  const [data] = useState<PerformanceData>(mockPerformanceData);
-  const [cashflows, setCashflows] = useState<CashflowRow[]>(data.cashflows);
+  const { user } = useAuth();
+  const [data, setData] = useState<PerformanceData>({
+    currentValue: 0,
+    initialValue: 0,
+    totalReturn: 0,
+    returnPercentage: 0,
+    tri: 0
+  });
+  const [cashflows, setCashflows] = useState<CashflowRow[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingRow, setEditingRow] = useState<CashflowRow | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user && investmentId) {
+      loadPerformanceData();
+      loadCashflows();
+    }
+  }, [user, investmentId]);
+
+  const loadPerformanceData = async () => {
+    try {
+      const { data: performanceData, error } = await supabase
+        .from('investment_performance')
+        .select('*')
+        .eq('investment_id', investmentId)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading performance data:', error);
+        return;
+      }
+
+      if (performanceData) {
+        setData({
+          id: performanceData.id,
+          currentValue: performanceData.current_value || 0,
+          initialValue: performanceData.initial_value || 0,
+          totalReturn: performanceData.total_return || 0,
+          returnPercentage: performanceData.return_percentage || 0,
+          tri: performanceData.tri || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error loading performance data:', error);
+      toast.error('Erreur lors du chargement des données de performance');
+    }
+  };
+
+  const loadCashflows = async () => {
+    try {
+      setLoading(true);
+      const { data: cashflowData, error } = await supabase
+        .from('investment_cashflows')
+        .select('*')
+        .eq('investment_id', investmentId)
+        .eq('user_id', user?.id)
+        .order('date', { ascending: true });
+
+      if (error) {
+        console.error('Error loading cashflows:', error);
+        toast.error('Erreur lors du chargement des flux de trésorerie');
+        return;
+      }
+
+      const formattedCashflows = cashflowData?.map(cf => ({
+        id: cf.id,
+        date: cf.date,
+        rex: cf.rex || 0,
+        retraitAmort: cf.retrait_amort || 0,
+        retraitAutres: cf.retrait_autres || 0
+      })) || [];
+
+      setCashflows(formattedCashflows);
+    } catch (error) {
+      console.error('Error loading cashflows:', error);
+      toast.error('Erreur lors du chargement des flux de trésorerie');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveCashflow = async (cashflow: CashflowRow) => {
+    try {
+      if (cashflow.id) {
+        // Update existing cashflow
+        const { error } = await supabase
+          .from('investment_cashflows')
+          .update({
+            date: cashflow.date,
+            rex: cashflow.rex,
+            retrait_amort: cashflow.retraitAmort,
+            retrait_autres: cashflow.retraitAutres
+          })
+          .eq('id', cashflow.id)
+          .eq('user_id', user?.id);
+
+        if (error) throw error;
+      } else {
+        // Create new cashflow
+        const { error } = await supabase
+          .from('investment_cashflows')
+          .insert({
+            investment_id: investmentId,
+            user_id: user?.id,
+            date: cashflow.date,
+            rex: cashflow.rex,
+            retrait_amort: cashflow.retraitAmort,
+            retrait_autres: cashflow.retraitAutres
+          });
+
+        if (error) throw error;
+      }
+
+      await loadCashflows(); // Reload data
+      toast.success('Flux de trésorerie sauvegardé');
+    } catch (error) {
+      console.error('Error saving cashflow:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
+  const deleteCashflowFromDB = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('investment_cashflows')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      await loadCashflows(); // Reload data
+      toast.success('Flux de trésorerie supprimé');
+    } catch (error) {
+      console.error('Error deleting cashflow:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -83,24 +189,34 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     return cashflow.rex - cashflow.retraitAmort - cashflow.retraitAutres;
   };
 
-  const addCashflowRow = () => {
+  const addCashflowRow = async () => {
     const newRow: CashflowRow = {
       date: new Date().toISOString().split('T')[0],
       rex: 0,
       retraitAmort: 0,
       retraitAutres: 0
     };
+    
+    // Add to local state immediately for editing
     const newCashflows = [...cashflows, newRow];
     setCashflows(newCashflows);
-    // Mettre la nouvelle ligne en mode édition
+    
+    // Set editing mode for the new row
     setEditingIndex(newCashflows.length - 1);
     setEditingRow(newRow);
   };
 
-  const deleteCashflowRow = (index: number) => {
-    const newCashflows = cashflows.filter((_, i) => i !== index);
-    setCashflows(newCashflows);
-    // Si on supprime la ligne en cours d'édition, sortir du mode édition
+  const deleteCashflowRow = async (index: number) => {
+    const cashflow = cashflows[index];
+    if (cashflow.id) {
+      await deleteCashflowFromDB(cashflow.id);
+    } else {
+      // If it's a new row without ID, just remove from local state
+      const newCashflows = cashflows.filter((_, i) => i !== index);
+      setCashflows(newCashflows);
+    }
+    
+    // Exit editing mode if we're deleting the row being edited
     if (editingIndex === index) {
       setEditingIndex(null);
       setEditingRow(null);
@@ -112,11 +228,9 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     setEditingRow({ ...cashflows[index] });
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingIndex !== null && editingRow) {
-      const newCashflows = [...cashflows];
-      newCashflows[editingIndex] = editingRow;
-      setCashflows(newCashflows);
+      await saveCashflow(editingRow);
       setEditingIndex(null);
       setEditingRow(null);
     }
@@ -135,6 +249,16 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Chargement des données de performance...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

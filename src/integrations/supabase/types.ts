@@ -77,6 +77,42 @@ export type Database = {
         }
         Relationships: []
       }
+      investment_cashflows: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          investment_id: string
+          retrait_amort: number | null
+          retrait_autres: number | null
+          rex: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          investment_id: string
+          retrait_amort?: number | null
+          retrait_autres?: number | null
+          rex?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          investment_id?: string
+          retrait_amort?: number | null
+          retrait_autres?: number | null
+          rex?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       investment_history: {
         Row: {
           action_type: string
@@ -110,6 +146,45 @@ export type Database = {
         }
         Relationships: []
       }
+      investment_performance: {
+        Row: {
+          created_at: string
+          current_value: number | null
+          id: string
+          initial_value: number | null
+          investment_id: string
+          return_percentage: number | null
+          total_return: number | null
+          tri: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          initial_value?: number | null
+          investment_id: string
+          return_percentage?: number | null
+          total_return?: number | null
+          tri?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          initial_value?: number | null
+          investment_id?: string
+          return_percentage?: number | null
+          total_return?: number | null
+          tri?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       investments: {
         Row: {
           address: string | null
@@ -117,6 +192,7 @@ export type Database = {
           bail_activite: string | null
           bail_anciennete: number | null
           bail_cnr: number | null
+          bail_fin_bail: string | null
           bail_gmap_link: string | null
           bail_gmap_note: string | null
           bail_loyer_ht: number | null
@@ -154,6 +230,7 @@ export type Database = {
           bail_activite?: string | null
           bail_anciennete?: number | null
           bail_cnr?: number | null
+          bail_fin_bail?: string | null
           bail_gmap_link?: string | null
           bail_gmap_note?: string | null
           bail_loyer_ht?: number | null
@@ -191,6 +268,7 @@ export type Database = {
           bail_activite?: string | null
           bail_anciennete?: number | null
           bail_cnr?: number | null
+          bail_fin_bail?: string | null
           bail_gmap_link?: string | null
           bail_gmap_note?: string | null
           bail_loyer_ht?: number | null
