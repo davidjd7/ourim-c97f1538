@@ -1407,18 +1407,6 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Performance Chart Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Évolution de la performance</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 bg-accent/20 rounded-lg flex items-center justify-center">
-            <p className="text-muted-foreground">Graphique de performance (à implémenter)</p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
