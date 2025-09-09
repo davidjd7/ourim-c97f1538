@@ -167,12 +167,16 @@ export default function InvestissementDetail() {
         const newInvestment = await addInvestment({
           name: tempEditData.name,
           type: tempEditData.type,
-          status: 'RECU',
+          status: tempEditData.status || 'RECU',
           address: tempEditData.address,
           surface: tempEditData.surface,
           price: tempEditData.price,
           dateAcquisition: tempEditData.dateAcquisition,
           description: tempEditData.description,
+          // Investment fields
+          dateInvestment: tempEditData.dateInvestment,
+          investmentAmount: tempEditData.investmentAmount,
+          notaryFees: tempEditData.notaryFees,
           // Bail fields
           locataire: tempEditData.locataire,
           dateEntree: tempEditData.dateEntree,
@@ -209,11 +213,16 @@ export default function InvestissementDetail() {
         await updateInvestment(investment!.id, {
         name: tempEditData.name,
         type: tempEditData.type,
+        status: tempEditData.status,
         address: tempEditData.address,
         surface: tempEditData.surface,
         price: tempEditData.price,
         dateAcquisition: tempEditData.dateAcquisition,
         description: tempEditData.description,
+        // Investment fields
+        dateInvestment: tempEditData.dateInvestment,
+        investmentAmount: tempEditData.investmentAmount,
+        notaryFees: tempEditData.notaryFees,
         // Bail fields
         locataire: tempEditData.locataire,
         dateEntree: tempEditData.dateEntree,
