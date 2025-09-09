@@ -324,19 +324,19 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
       }
     });
 
-    // Add immobilisation amounts
+    // Add immobilisation amounts (subtract)
     immobilisations.forEach(immo => {
       const existing = dateMap.get(immo.date);
       if (existing) {
-        existing.flux += immo.montant;
+        existing.flux -= immo.montant;
       }
     });
 
-    // Add debt flows and CRD
+    // Add debt flows and CRD (subtract debt flows)
     debtFlows.forEach(df => {
       const existing = dateMap.get(df.date);
       if (existing) {
-        existing.flux += calculateFlux(df);
+        existing.flux -= calculateFlux(df);
         existing.crd = calculateCapitalFin(df);
       }
     });
