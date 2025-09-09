@@ -15,10 +15,6 @@ interface PerformanceData {
     type: 'in' | 'out';
     description: string;
   }>;
-  benchmarks: {
-    market: number;
-    sector: number;
-  }
 }
 
 interface PerformanceTabProps {
@@ -57,11 +53,7 @@ const mockPerformanceData: PerformanceData = {
       type: 'in',
       description: 'Loyers T4 2023'
     }
-  ],
-  benchmarks: {
-    market: 4.2,
-    sector: 5.1
-  }
+  ]
 };
 
 export function PerformanceTab({ investmentId }: PerformanceTabProps) {
@@ -149,35 +141,6 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Benchmarks Comparison */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Comparaison avec les benchmarks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-accent/20 rounded-lg">
-              <span className="font-medium">Performance de l'investissement</span>
-              <Badge variant="default" className="bg-primary">
-                {formatPercentage(data.tri)}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <span className="text-muted-foreground">Marché immobilier Paris</span>
-              <Badge variant="outline">
-                {formatPercentage(data.benchmarks.market)}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <span className="text-muted-foreground">Secteur 16ème arrondissement</span>
-              <Badge variant="outline">
-                {formatPercentage(data.benchmarks.sector)}
-              </Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Cashflows History */}
       <Card>
