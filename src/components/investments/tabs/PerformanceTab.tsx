@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus } from 'lucide-react';
+
+interface CashflowRow {
+  date: string;
+  rex: number;
+  retraitAmort: number;
+  retraitImmo: number;
+  retraitAutres: number;
+}
 
 interface PerformanceData {
   currentValue: number;
@@ -9,12 +19,7 @@ interface PerformanceData {
   totalReturn: number;
   returnPercentage: number;
   tri: number;
-  cashflows: Array<{
-    date: string;
-    amount: number;
-    type: 'in' | 'out';
-    description: string;
-  }>;
+  cashflows: CashflowRow[];
 }
 
 interface PerformanceTabProps {
@@ -31,33 +36,38 @@ const mockPerformanceData: PerformanceData = {
   cashflows: [
     {
       date: '2023-03-15',
-      amount: -2100000,
-      type: 'out',
-      description: 'Acquisition initiale'
+      rex: 0,
+      retraitAmort: 0,
+      retraitImmo: 2100000,
+      retraitAutres: 0
     },
     {
       date: '2023-06-15',
-      amount: 15000,
-      type: 'in',
-      description: 'Loyers T2 2023'
+      rex: 15000,
+      retraitAmort: 0,
+      retraitImmo: 0,
+      retraitAutres: 0
     },
     {
       date: '2023-09-15',
-      amount: 15500,
-      type: 'in',
-      description: 'Loyers T3 2023'
+      rex: 15500,
+      retraitAmort: 0,
+      retraitImmo: 0,
+      retraitAutres: 0
     },
     {
       date: '2023-12-15',
-      amount: 16000,
-      type: 'in',
-      description: 'Loyers T4 2023'
+      rex: 16000,
+      retraitAmort: 0,
+      retraitImmo: 0,
+      retraitAutres: 0
     }
   ]
 };
 
 export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   const [data] = useState<PerformanceData>(mockPerformanceData);
+  const [cashflows, setCashflows] = useState<CashflowRow[]>(data.cashflows);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -69,6 +79,21 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
+  };
+
+  const calculateCashIn = (cashflow: CashflowRow) => {
+    return cashflow.rex - cashflow.retraitAmort - cashflow.retraitImmo - cashflow.retraitAutres;
+  };
+
+  const addCashflowRow = () => {
+    const newRow: CashflowRow = {
+      date: new Date().toISOString().split('T')[0],
+      rex: 0,
+      retraitAmort: 0,
+      retraitImmo: 0,
+      retraitAutres: 0
+    };
+    setCashflows([...cashflows, newRow]);
   };
 
   return (
@@ -151,33 +176,54 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {data.cashflows.map((cashflow, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/20 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${
-                    cashflow.type === 'in' ? 'bg-success' : 'bg-destructive'
-                  }`} />
-                  <div>
-                    <p className="font-medium">{cashflow.description}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(cashflow.date).toLocaleDateString('fr-FR')}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className={`font-medium financial-value ${
-                    cashflow.type === 'in' ? 'text-success' : 'text-destructive'
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>REX</TableHead>
+                <TableHead>Retrait Amort</TableHead>
+                <TableHead>Retrait Immo</TableHead>
+                <TableHead>Retrait Autres</TableHead>
+                <TableHead>Cash In avant Levier</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {cashflows.map((cashflow, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    {new Date(cashflow.date).toLocaleDateString('fr-FR')}
+                  </TableCell>
+                  <TableCell className="financial-value">
+                    {formatCurrency(cashflow.rex)}
+                  </TableCell>
+                  <TableCell className="financial-value">
+                    {formatCurrency(cashflow.retraitAmort)}
+                  </TableCell>
+                  <TableCell className="financial-value">
+                    {formatCurrency(cashflow.retraitImmo)}
+                  </TableCell>
+                  <TableCell className="financial-value">
+                    {formatCurrency(cashflow.retraitAutres)}
+                  </TableCell>
+                  <TableCell className={`financial-value font-medium ${
+                    calculateCashIn(cashflow) >= 0 ? 'text-success' : 'text-destructive'
                   }`}>
-                    {cashflow.type === 'in' ? '+' : ''}
-                    {formatCurrency(cashflow.amount)}
-                  </p>
-                </div>
-              </div>
-            ))}
+                    {calculateCashIn(cashflow) >= 0 ? '+' : ''}
+                    {formatCurrency(calculateCashIn(cashflow))}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <div className="mt-4 flex justify-center">
+            <Button 
+              onClick={addCashflowRow}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter une ligne
+            </Button>
           </div>
         </CardContent>
       </Card>
