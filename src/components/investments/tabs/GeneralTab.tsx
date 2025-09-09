@@ -229,7 +229,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                 ) : (
                   <p className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    {new Date(data.dateInvestment).toLocaleDateString('fr-FR')}
+                    {data.dateInvestment ? new Date(data.dateInvestment).toLocaleDateString('fr-FR') : 'Non défini'}
                   </p>
                 )}
               </div>
@@ -245,7 +245,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                   />
                 ) : (
                   <p className="font-medium financial-value">
-                    {formatCurrency(data.investmentAmount)}
+                    {data.investmentAmount ? formatCurrency(data.investmentAmount) : 'Non défini'}
                   </p>
                 )}
               </div>
@@ -261,7 +261,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                   />
                 ) : (
                   <p className="font-medium financial-value">
-                    {formatCurrency(data.notaryFees)}
+                    {data.notaryFees ? formatCurrency(data.notaryFees) : 'Non défini'}
                   </p>
                 )}
               </div>
