@@ -754,6 +754,59 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
         </Card>
       </div>
 
+      {/* Synthesis Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Synthèse
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Flux</TableHead>
+                  <TableHead>Valeur</TableHead>
+                  <TableHead>CRD</TableHead>
+                  <TableHead>FP</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {getSyntheseData().map((row, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">
+                      {new Date(row.date).toLocaleDateString('fr-FR')}
+                    </TableCell>
+                    <TableCell className="financial-value">
+                      {formatCurrency(row.flux)}
+                    </TableCell>
+                    <TableCell className="financial-value">
+                      {formatCurrency(row.valeur)}
+                    </TableCell>
+                    <TableCell className="financial-value">
+                      {formatCurrency(row.crd)}
+                    </TableCell>
+                    <TableCell className="financial-value font-medium">
+                      {formatCurrency(row.fp)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {getSyntheseData().length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      Aucune donnée disponible pour la synthèse
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Historique Performance */}
       <Card>
         <CardHeader>
@@ -1351,59 +1404,6 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                 Ajouter une ligne
               </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Synthesis Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Synthèse
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Flux</TableHead>
-                  <TableHead>Valeur</TableHead>
-                  <TableHead>CRD</TableHead>
-                  <TableHead>FP</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getSyntheseData().map((row, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">
-                      {new Date(row.date).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    <TableCell className="financial-value">
-                      {formatCurrency(row.flux)}
-                    </TableCell>
-                    <TableCell className="financial-value">
-                      {formatCurrency(row.valeur)}
-                    </TableCell>
-                    <TableCell className="financial-value">
-                      {formatCurrency(row.crd)}
-                    </TableCell>
-                    <TableCell className="financial-value font-medium">
-                      {formatCurrency(row.fp)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {getSyntheseData().length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      Aucune donnée disponible pour la synthèse
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
           </div>
         </CardContent>
       </Card>
