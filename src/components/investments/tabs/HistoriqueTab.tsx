@@ -76,12 +76,16 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
 
   // Helper function to format values for display
   const formatValueForDisplay = (fieldName: string, value: string | null): string => {
+    console.log('formatValueForDisplay called:', { fieldName, value, companiesCount: companies.length });
+    
     if (!value) return 'Non défini';
     
     // Convert company_id to company name
     if (fieldName === 'company_id') {
+      console.log('Looking for company with ID:', value);
       const company = companies.find(c => c.id === value);
-      return company ? company.name : 'Société inconnue';
+      console.log('Found company:', company);
+      return company ? company.name : `Société inconnue (${value.substring(0, 8)}...)`;
     }
     
     return value;
