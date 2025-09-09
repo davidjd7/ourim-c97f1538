@@ -924,82 +924,157 @@ export function PerformanceTab({
       </Card>
 
       {/* Chart Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Evolution Valeur
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
-                data={getChartData()}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <XAxis 
-                  dataKey="year" 
-                  tick={{ fontSize: 12 }}
-                  tickLine={{ stroke: 'hsl(var(--border))' }}
-                  tickFormatter={(value) => `01/01/${value}`}
-                />
-                 <YAxis 
-                   yAxisId="bars"
-                   orientation="left"
-                   tick={{ fontSize: 12 }}
-                   tickLine={{ stroke: 'hsl(var(--border))' }}
-                   tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                 />
-                 <YAxis 
-                   yAxisId="gain"
-                   orientation="right"
-                   tick={{ fontSize: 12 }}
-                   tickLine={{ stroke: 'hsl(var(--border))' }}
-                   tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                 />
-                 <ChartTooltip 
-                   content={
-                     <ChartTooltipContent 
-                       formatter={(value, name) => [
-                         `${formatCurrency(Number(value))}`,
-                         name === 'flux' ? 'Flux' : name === 'varValeur' ? 'Var Valeur' : 'Gain'
-                       ]}
-                       labelFormatter={(label) => `Année ${label}`}
-                     />
-                   }
-                 />
-                 <Bar 
-                   yAxisId="bars"
-                   dataKey="flux" 
-                   fill="#2563eb"
-                   name="Flux"
-                 />
-                 <Bar 
-                   yAxisId="bars"
-                   dataKey="varValeur" 
-                   fill="#ea580c"
-                   name="Var Valeur"
-                 />
-                 <Line 
-                   yAxisId="gain"
-                   type="monotone" 
-                   dataKey="gain" 
-                   stroke="#06b6d4"
-                   strokeWidth={3}
-                   dot={{ fill: "#06b6d4", strokeWidth: 2, r: 5 }}
-                   name="Gain"
-                 />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Premier graphique - Evolution Valeur */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Evolution Valeur
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={getChartData()}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <XAxis 
+                    dataKey="year" 
+                    tick={{ fontSize: 12 }}
+                    tickLine={{ stroke: 'hsl(var(--border))' }}
+                    tickFormatter={(value) => `01/01/${value}`}
+                  />
+                  <YAxis 
+                    yAxisId="flux"
+                    orientation="left"
+                    tick={{ fontSize: 12 }}
+                    tickLine={{ stroke: 'hsl(var(--border))' }}
+                    tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                  />
+                  <YAxis 
+                    yAxisId="valeur"
+                    orientation="right"
+                    tick={{ fontSize: 12 }}
+                    tickLine={{ stroke: 'hsl(var(--border))' }}
+                    tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                  />
+                  <ChartTooltip 
+                    content={
+                      <ChartTooltipContent 
+                        formatter={(value, name) => [
+                          `${formatCurrency(Number(value))}`,
+                          name === 'flux' ? 'Flux' : 'Valeur'
+                        ]}
+                        labelFormatter={(label) => `Année ${label}`}
+                      />
+                    }
+                  />
+                  <Bar 
+                    yAxisId="flux"
+                    dataKey="flux" 
+                    fill="#2563eb"
+                    name="Flux"
+                  />
+                  <Line 
+                    yAxisId="valeur"
+                    type="monotone" 
+                    dataKey="valeur" 
+                    stroke="#ea580c"
+                    strokeWidth={2}
+                    dot={{ fill: "#ea580c", strokeWidth: 2, r: 4 }}
+                    name="Valeur"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Deuxième graphique - Synthèse avec Var Valeur */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Synthèse Annuelle
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={getChartData()}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <XAxis 
+                    dataKey="year" 
+                    tick={{ fontSize: 12 }}
+                    tickLine={{ stroke: 'hsl(var(--border))' }}
+                    tickFormatter={(value) => `01/01/${value}`}
+                  />
+                  <YAxis 
+                    yAxisId="bars"
+                    orientation="left"
+                    tick={{ fontSize: 12 }}
+                    tickLine={{ stroke: 'hsl(var(--border))' }}
+                    tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                  />
+                  <YAxis 
+                    yAxisId="gain"
+                    orientation="right"
+                    tick={{ fontSize: 12 }}
+                    tickLine={{ stroke: 'hsl(var(--border))' }}
+                    tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                  />
+                  <ChartTooltip 
+                    content={
+                      <ChartTooltipContent 
+                        formatter={(value, name) => [
+                          `${formatCurrency(Number(value))}`,
+                          name === 'flux' ? 'Flux' : name === 'varValeur' ? 'Var Valeur' : 'Gain'
+                        ]}
+                        labelFormatter={(label) => `Année ${label}`}
+                      />
+                    }
+                  />
+                  <Bar 
+                    yAxisId="bars"
+                    dataKey="flux" 
+                    fill="#2563eb"
+                    name="Flux"
+                  />
+                  <Bar 
+                    yAxisId="bars"
+                    dataKey="varValeur" 
+                    fill="#ea580c"
+                    name="Var Valeur"
+                  />
+                  <Line 
+                    yAxisId="gain"
+                    type="monotone" 
+                    dataKey="gain" 
+                    stroke="#06b6d4"
+                    strokeWidth={3}
+                    dot={{ fill: "#06b6d4", strokeWidth: 2, r: 5 }}
+                    name="Gain"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Synthesis Section */}
       <Card>
