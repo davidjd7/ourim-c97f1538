@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Clock, Filter, User, FileText, DollarSign, Edit, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useCompanies } from '@/contexts/CompanyContext';
 
 interface HistoryEvent {
   id: string;
@@ -26,6 +27,7 @@ interface HistoriqueTabProps {
 
 export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
   const { user } = useAuth();
+  const { companies } = useCompanies();
   const [history, setHistory] = useState<HistoryEvent[]>([]);
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -72,13 +74,28 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
     }
   };
 
+  // Helper function to format values for display
+  const formatValueForDisplay = (fieldName: string, value: string | null): string => {
+    if (!value) return 'Non défini';
+    
+    // Convert company_id to company name
+    if (fieldName === 'company_id') {
+      const company = companies.find(c => c.id === value);
+      return company ? company.name : 'Société inconnue';
+    }
+    
+    return value;
+  };
+
   const getEventDescription = (event: HistoryEvent): string => {
     switch (event.action_type) {
       case 'create':
         return 'Nouvel investissement ajouté au portefeuille';
       case 'update':
         if (event.old_value && event.new_value) {
-          return `Valeur changée de "${event.old_value}" à "${event.new_value}"`;
+          const oldValueFormatted = formatValueForDisplay(event.field_name, event.old_value);
+          const newValueFormatted = formatValueForDisplay(event.field_name, event.new_value);
+          return `Valeur changée de "${oldValueFormatted}" à "${newValueFormatted}"`;
         }
         return `${getFieldDisplayName(event.field_name)} mis à jour`;
       case 'delete':
@@ -101,7 +118,8 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
       last_value: 'Dernière valeur',
       tri: 'TRI',
       investment_amount: 'Montant d\'investissement',
-      notary_fees: 'Frais de notaire'
+      notary_fees: 'Frais de notaire',
+      company_id: 'Société' // ← AJOUT IMPORTANT
     };
     return fieldMap[fieldName] || fieldName;
   };
@@ -280,11 +298,11 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
                     {event.old_value && event.new_value && (
                       <div className="flex items-center gap-2 text-sm">
                         <span className="bg-destructive/10 text-destructive px-2 py-1 rounded">
-                          {event.old_value}
+                          {formatValueForDisplay(event.field_name, event.old_value)}
                         </span>
                         <span>→</span>
                         <span className="bg-success/10 text-success px-2 py-1 rounded">
-                          {event.new_value}
+                          {formatValueForDisplay(event.field_name, event.new_value)}
                         </span>
                       </div>
                     )}
