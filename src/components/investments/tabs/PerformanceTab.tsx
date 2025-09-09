@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
 import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus, Trash2, Edit, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +16,20 @@ interface CashflowRow {
   rex: number;
   retraitAmort: number;
   retraitAutres: number;
+}
+
+interface ImmobilisationRow {
+  id?: string;
+  date: string;
+  montant: number;
+  note: string;
+}
+
+interface ValorisationRow {
+  id?: string;
+  date: string;
+  valeur: number;
+  note: string;
 }
 
 interface PerformanceData {
@@ -33,6 +48,8 @@ interface PerformanceTabProps {
 
 export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   const { user } = useAuth();
+  
+  // Performance data
   const [data, setData] = useState<PerformanceData>({
     currentValue: 0,
     initialValue: 0,
@@ -40,18 +57,31 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     returnPercentage: 0,
     tri: 0
   });
+  
+  // Data arrays
   const [cashflows, setCashflows] = useState<CashflowRow[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editingRow, setEditingRow] = useState<CashflowRow | null>(null);
+  const [immobilisations, setImmobilisations] = useState<ImmobilisationRow[]>([]);
+  const [valorisations, setValorisations] = useState<ValorisationRow[]>([]);
+  
+  // Editing states
+  const [editingCashflow, setEditingCashflow] = useState<{ index: number; row: CashflowRow } | null>(null);
+  const [editingImmo, setEditingImmo] = useState<{ index: number; row: ImmobilisationRow } | null>(null);
+  const [editingValo, setEditingValo] = useState<{ index: number; row: ValorisationRow } | null>(null);
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user && investmentId) {
-      loadPerformanceData();
-      loadCashflows();
+      Promise.all([
+        loadPerformanceData(),
+        loadCashflows(),
+        loadImmobilisations(),
+        loadValorisations()
+      ]).finally(() => setLoading(false));
     }
   }, [user, investmentId]);
 
+  // Load functions
   const loadPerformanceData = async () => {
     try {
       const { data: performanceData, error } = await supabase
@@ -61,10 +91,7 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
         .eq('user_id', user?.id)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error loading performance data:', error);
-        return;
-      }
+      if (error) throw error;
 
       if (performanceData) {
         setData({
@@ -78,13 +105,11 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
       }
     } catch (error) {
       console.error('Error loading performance data:', error);
-      toast.error('Erreur lors du chargement des données de performance');
     }
   };
 
   const loadCashflows = async () => {
     try {
-      setLoading(true);
       const { data: cashflowData, error } = await supabase
         .from('investment_cashflows')
         .select('*')
@@ -92,11 +117,7 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
         .eq('user_id', user?.id)
         .order('date', { ascending: true });
 
-      if (error) {
-        console.error('Error loading cashflows:', error);
-        toast.error('Erreur lors du chargement des flux de trésorerie');
-        return;
-      }
+      if (error) throw error;
 
       const formattedCashflows = cashflowData?.map(cf => ({
         id: cf.id,
@@ -109,70 +130,58 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
       setCashflows(formattedCashflows);
     } catch (error) {
       console.error('Error loading cashflows:', error);
-      toast.error('Erreur lors du chargement des flux de trésorerie');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const saveCashflow = async (cashflow: CashflowRow) => {
+  const loadImmobilisations = async () => {
     try {
-      if (cashflow.id) {
-        // Update existing cashflow
-        const { error } = await supabase
-          .from('investment_cashflows')
-          .update({
-            date: cashflow.date,
-            rex: cashflow.rex,
-            retrait_amort: cashflow.retraitAmort,
-            retrait_autres: cashflow.retraitAutres
-          })
-          .eq('id', cashflow.id)
-          .eq('user_id', user?.id);
-
-        if (error) throw error;
-      } else {
-        // Create new cashflow
-        const { error } = await supabase
-          .from('investment_cashflows')
-          .insert({
-            investment_id: investmentId,
-            user_id: user?.id,
-            date: cashflow.date,
-            rex: cashflow.rex,
-            retrait_amort: cashflow.retraitAmort,
-            retrait_autres: cashflow.retraitAutres
-          });
-
-        if (error) throw error;
-      }
-
-      await loadCashflows(); // Reload data
-      toast.success('Flux de trésorerie sauvegardé');
-    } catch (error) {
-      console.error('Error saving cashflow:', error);
-      toast.error('Erreur lors de la sauvegarde');
-    }
-  };
-
-  const deleteCashflowFromDB = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('investment_cashflows')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user?.id);
+      const { data: immoData, error } = await supabase
+        .from('investment_immobilisations')
+        .select('*')
+        .eq('investment_id', investmentId)
+        .eq('user_id', user?.id)
+        .order('date', { ascending: true });
 
       if (error) throw error;
 
-      await loadCashflows(); // Reload data
-      toast.success('Flux de trésorerie supprimé');
+      const formattedImmos = immoData?.map(immo => ({
+        id: immo.id,
+        date: immo.date,
+        montant: immo.montant || 0,
+        note: immo.note || ''
+      })) || [];
+
+      setImmobilisations(formattedImmos);
     } catch (error) {
-      console.error('Error deleting cashflow:', error);
-      toast.error('Erreur lors de la suppression');
+      console.error('Error loading immobilisations:', error);
     }
   };
 
+  const loadValorisations = async () => {
+    try {
+      const { data: valoData, error } = await supabase
+        .from('investment_valorisations')
+        .select('*')
+        .eq('investment_id', investmentId)
+        .eq('user_id', user?.id)
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedValos = valoData?.map(valo => ({
+        id: valo.id,
+        date: valo.date,
+        valeur: valo.valeur || 0,
+        note: valo.note || ''
+      })) || [];
+
+      setValorisations(formattedValos);
+    } catch (error) {
+      console.error('Error loading valorisations:', error);
+    }
+  };
+
+  // Utility functions
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -189,64 +198,210 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     return cashflow.rex - cashflow.retraitAmort - cashflow.retraitAutres;
   };
 
-  const addCashflowRow = async () => {
+  // CRUD functions for cashflows
+  const addCashflow = () => {
     const newRow: CashflowRow = {
       date: new Date().toISOString().split('T')[0],
       rex: 0,
       retraitAmort: 0,
       retraitAutres: 0
     };
-    
-    // Add to local state immediately for editing
-    const newCashflows = [...cashflows, newRow];
-    setCashflows(newCashflows);
-    
-    // Set editing mode for the new row
-    setEditingIndex(newCashflows.length - 1);
-    setEditingRow(newRow);
+    const newIndex = cashflows.length;
+    setCashflows([...cashflows, newRow]);
+    setEditingCashflow({ index: newIndex, row: newRow });
   };
 
-  const deleteCashflowRow = async (index: number) => {
-    const cashflow = cashflows[index];
-    if (cashflow.id) {
-      await deleteCashflowFromDB(cashflow.id);
+  const saveCashflow = async (row: CashflowRow) => {
+    try {
+      if (row.id) {
+        const { error } = await supabase
+          .from('investment_cashflows')
+          .update({
+            date: row.date,
+            rex: row.rex,
+            retrait_amort: row.retraitAmort,
+            retrait_autres: row.retraitAutres
+          })
+          .eq('id', row.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('investment_cashflows')
+          .insert({
+            investment_id: investmentId,
+            user_id: user?.id,
+            date: row.date,
+            rex: row.rex,
+            retrait_amort: row.retraitAmort,
+            retrait_autres: row.retraitAutres
+          });
+        if (error) throw error;
+      }
+      await loadCashflows();
+      setEditingCashflow(null);
+      toast.success('Flux sauvegardé');
+    } catch (error) {
+      console.error('Error saving cashflow:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
+  const deleteCashflow = async (index: number) => {
+    const row = cashflows[index];
+    if (row.id) {
+      try {
+        const { error } = await supabase
+          .from('investment_cashflows')
+          .delete()
+          .eq('id', row.id);
+        if (error) throw error;
+        await loadCashflows();
+        toast.success('Flux supprimé');
+      } catch (error) {
+        console.error('Error deleting cashflow:', error);
+        toast.error('Erreur lors de la suppression');
+      }
     } else {
-      // If it's a new row without ID, just remove from local state
-      const newCashflows = cashflows.filter((_, i) => i !== index);
-      setCashflows(newCashflows);
+      setCashflows(cashflows.filter((_, i) => i !== index));
     }
-    
-    // Exit editing mode if we're deleting the row being edited
-    if (editingIndex === index) {
-      setEditingIndex(null);
-      setEditingRow(null);
+    if (editingCashflow && editingCashflow.index === index) {
+      setEditingCashflow(null);
     }
   };
 
-  const startEdit = (index: number) => {
-    setEditingIndex(index);
-    setEditingRow({ ...cashflows[index] });
+  // CRUD functions for immobilisations
+  const addImmobilisation = () => {
+    const newRow: ImmobilisationRow = {
+      date: new Date().toISOString().split('T')[0],
+      montant: 0,
+      note: ''
+    };
+    const newIndex = immobilisations.length;
+    setImmobilisations([...immobilisations, newRow]);
+    setEditingImmo({ index: newIndex, row: newRow });
   };
 
-  const saveEdit = async () => {
-    if (editingIndex !== null && editingRow) {
-      await saveCashflow(editingRow);
-      setEditingIndex(null);
-      setEditingRow(null);
+  const saveImmobilisation = async (row: ImmobilisationRow) => {
+    try {
+      if (row.id) {
+        const { error } = await supabase
+          .from('investment_immobilisations')
+          .update({
+            date: row.date,
+            montant: row.montant,
+            note: row.note
+          })
+          .eq('id', row.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('investment_immobilisations')
+          .insert({
+            investment_id: investmentId,
+            user_id: user?.id,
+            date: row.date,
+            montant: row.montant,
+            note: row.note
+          });
+        if (error) throw error;
+      }
+      await loadImmobilisations();
+      setEditingImmo(null);
+      toast.success('Immobilisation sauvegardée');
+    } catch (error) {
+      console.error('Error saving immobilisation:', error);
+      toast.error('Erreur lors de la sauvegarde');
     }
   };
 
-  const cancelEdit = () => {
-    setEditingIndex(null);
-    setEditingRow(null);
+  const deleteImmobilisation = async (index: number) => {
+    const row = immobilisations[index];
+    if (row.id) {
+      try {
+        const { error } = await supabase
+          .from('investment_immobilisations')
+          .delete()
+          .eq('id', row.id);
+        if (error) throw error;
+        await loadImmobilisations();
+        toast.success('Immobilisation supprimée');
+      } catch (error) {
+        console.error('Error deleting immobilisation:', error);
+        toast.error('Erreur lors de la suppression');
+      }
+    } else {
+      setImmobilisations(immobilisations.filter((_, i) => i !== index));
+    }
+    if (editingImmo && editingImmo.index === index) {
+      setEditingImmo(null);
+    }
   };
 
-  const updateEditingField = (field: keyof CashflowRow, value: string | number) => {
-    if (editingRow) {
-      setEditingRow({
-        ...editingRow,
-        [field]: value
-      });
+  // CRUD functions for valorisations
+  const addValorisation = () => {
+    const newRow: ValorisationRow = {
+      date: new Date().toISOString().split('T')[0],
+      valeur: 0,
+      note: ''
+    };
+    const newIndex = valorisations.length;
+    setValorisations([...valorisations, newRow]);
+    setEditingValo({ index: newIndex, row: newRow });
+  };
+
+  const saveValorisation = async (row: ValorisationRow) => {
+    try {
+      if (row.id) {
+        const { error } = await supabase
+          .from('investment_valorisations')
+          .update({
+            date: row.date,
+            valeur: row.valeur,
+            note: row.note
+          })
+          .eq('id', row.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('investment_valorisations')
+          .insert({
+            investment_id: investmentId,
+            user_id: user?.id,
+            date: row.date,
+            valeur: row.valeur,
+            note: row.note
+          });
+        if (error) throw error;
+      }
+      await loadValorisations();
+      setEditingValo(null);
+      toast.success('Valorisation sauvegardée');
+    } catch (error) {
+      console.error('Error saving valorisation:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
+  const deleteValorisation = async (index: number) => {
+    const row = valorisations[index];
+    if (row.id) {
+      try {
+        const { error } = await supabase
+          .from('investment_valorisations')
+          .delete()
+          .eq('id', row.id);
+        if (error) throw error;
+        await loadValorisations();
+        toast.success('Valorisation supprimée');
+      } catch (error) {
+        console.error('Error deleting valorisation:', error);
+        toast.error('Erreur lors de la suppression');
+      }
+    } else {
+      setValorisations(valorisations.filter((_, i) => i !== index));
+    }
+    if (editingValo && editingValo.index === index) {
+      setEditingValo(null);
     }
   };
 
@@ -331,7 +486,7 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
         </Card>
       </div>
 
-      {/* Cashflows History */}
+      {/* Historique Performance */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -339,119 +494,332 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
             Historique Performance
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>REX</TableHead>
-                <TableHead>Retrait Amort</TableHead>
-                <TableHead>Retrait Autres</TableHead>
-                <TableHead>Cash In avant Levier</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {cashflows.map((cashflow, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    {editingIndex === index ? (
-                      <Input
-                        type="date"
-                        value={editingRow?.date || ''}
-                        onChange={(e) => updateEditingField('date', e.target.value)}
-                        className="w-full"
-                      />
-                    ) : (
-                      new Date(cashflow.date).toLocaleDateString('fr-FR')
-                    )}
-                  </TableCell>
-                  <TableCell className="financial-value">
-                    {editingIndex === index ? (
-                      <Input
-                        type="number"
-                        value={editingRow?.rex || 0}
-                        onChange={(e) => updateEditingField('rex', parseFloat(e.target.value) || 0)}
-                        className="w-full"
-                      />
-                    ) : (
-                      formatCurrency(cashflow.rex)
-                    )}
-                  </TableCell>
-                  <TableCell className="financial-value">
-                    {editingIndex === index ? (
-                      <Input
-                        type="number"
-                        value={editingRow?.retraitAmort || 0}
-                        onChange={(e) => updateEditingField('retraitAmort', parseFloat(e.target.value) || 0)}
-                        className="w-full"
-                      />
-                    ) : (
-                      formatCurrency(cashflow.retraitAmort)
-                    )}
-                  </TableCell>
-                  <TableCell className="financial-value">
-                    {editingIndex === index ? (
-                      <Input
-                        type="number"
-                        value={editingRow?.retraitAutres || 0}
-                        onChange={(e) => updateEditingField('retraitAutres', parseFloat(e.target.value) || 0)}
-                        className="w-full"
-                      />
-                    ) : (
-                      formatCurrency(cashflow.retraitAutres)
-                    )}
-                  </TableCell>
-                  <TableCell className={`financial-value font-medium ${
-                    calculateCashIn(editingIndex === index ? editingRow! : cashflow) >= 0 ? 'text-success' : 'text-destructive'
-                  }`}>
-                    {calculateCashIn(editingIndex === index ? editingRow! : cashflow) >= 0 ? '+' : ''}
-                    {formatCurrency(calculateCashIn(editingIndex === index ? editingRow! : cashflow))}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {editingIndex === index ? (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={saveEdit}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Save className="h-4 w-4 text-success" />
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => startEdit(index)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit className="h-4 w-4 text-primary" />
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => deleteCashflowRow(index)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <CardContent className="space-y-8">
+          
+          {/* Section 1: Compte de Résultat */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Compte de Résultat</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>REX</TableHead>
+                  <TableHead>Retrait Amort</TableHead>
+                  <TableHead>Retrait Autres</TableHead>
+                  <TableHead>Cash In avant Levier</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="mt-4 flex justify-center">
-            <Button 
-              onClick={addCashflowRow}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Ajouter une ligne
-            </Button>
+              </TableHeader>
+              <TableBody>
+                {cashflows.map((cashflow, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      {editingCashflow && editingCashflow.index === index ? (
+                        <Input
+                          type="date"
+                          value={editingCashflow.row.date}
+                          onChange={(e) => setEditingCashflow({
+                            ...editingCashflow,
+                            row: { ...editingCashflow.row, date: e.target.value }
+                          })}
+                        />
+                      ) : (
+                        new Date(cashflow.date).toLocaleDateString('fr-FR')
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingCashflow && editingCashflow.index === index ? (
+                        <Input
+                          type="number"
+                          value={editingCashflow.row.rex}
+                          onChange={(e) => setEditingCashflow({
+                            ...editingCashflow,
+                            row: { ...editingCashflow.row, rex: parseFloat(e.target.value) || 0 }
+                          })}
+                        />
+                      ) : (
+                        formatCurrency(cashflow.rex)
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingCashflow && editingCashflow.index === index ? (
+                        <Input
+                          type="number"
+                          value={editingCashflow.row.retraitAmort}
+                          onChange={(e) => setEditingCashflow({
+                            ...editingCashflow,
+                            row: { ...editingCashflow.row, retraitAmort: parseFloat(e.target.value) || 0 }
+                          })}
+                        />
+                      ) : (
+                        formatCurrency(cashflow.retraitAmort)
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingCashflow && editingCashflow.index === index ? (
+                        <Input
+                          type="number"
+                          value={editingCashflow.row.retraitAutres}
+                          onChange={(e) => setEditingCashflow({
+                            ...editingCashflow,
+                            row: { ...editingCashflow.row, retraitAutres: parseFloat(e.target.value) || 0 }
+                          })}
+                        />
+                      ) : (
+                        formatCurrency(cashflow.retraitAutres)
+                      )}
+                    </TableCell>
+                    <TableCell className={`financial-value font-medium ${
+                      calculateCashIn(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {calculateCashIn(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? '+' : ''}
+                      {formatCurrency(calculateCashIn(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow))}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {editingCashflow && editingCashflow.index === index ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => saveCashflow(editingCashflow.row)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Save className="h-4 w-4 text-success" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingCashflow({ index, row: { ...cashflow } })}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="h-4 w-4 text-primary" />
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => deleteCashflow(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-center">
+              <Button onClick={addCashflow} variant="outline" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Ajouter une ligne
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Section 2: Immobilisation */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Immobilisation</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Montant</TableHead>
+                  <TableHead>Note</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {immobilisations.map((immo, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      {editingImmo && editingImmo.index === index ? (
+                        <Input
+                          type="date"
+                          value={editingImmo.row.date}
+                          onChange={(e) => setEditingImmo({
+                            ...editingImmo,
+                            row: { ...editingImmo.row, date: e.target.value }
+                          })}
+                        />
+                      ) : (
+                        new Date(immo.date).toLocaleDateString('fr-FR')
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingImmo && editingImmo.index === index ? (
+                        <Input
+                          type="number"
+                          value={editingImmo.row.montant}
+                          onChange={(e) => setEditingImmo({
+                            ...editingImmo,
+                            row: { ...editingImmo.row, montant: parseFloat(e.target.value) || 0 }
+                          })}
+                        />
+                      ) : (
+                        formatCurrency(immo.montant)
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingImmo && editingImmo.index === index ? (
+                        <Textarea
+                          value={editingImmo.row.note}
+                          onChange={(e) => setEditingImmo({
+                            ...editingImmo,
+                            row: { ...editingImmo.row, note: e.target.value }
+                          })}
+                          className="min-h-[60px]"
+                        />
+                      ) : (
+                        <div className="max-w-xs truncate">{immo.note}</div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {editingImmo && editingImmo.index === index ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => saveImmobilisation(editingImmo.row)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Save className="h-4 w-4 text-success" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingImmo({ index, row: { ...immo } })}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="h-4 w-4 text-primary" />
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => deleteImmobilisation(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-center">
+              <Button onClick={addImmobilisation} variant="outline" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Ajouter une ligne
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Section 3: Valorisation */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Valorisation</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Valeur</TableHead>
+                  <TableHead>Note</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {valorisations.map((valo, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      {editingValo && editingValo.index === index ? (
+                        <Input
+                          type="date"
+                          value={editingValo.row.date}
+                          onChange={(e) => setEditingValo({
+                            ...editingValo,
+                            row: { ...editingValo.row, date: e.target.value }
+                          })}
+                        />
+                      ) : (
+                        new Date(valo.date).toLocaleDateString('fr-FR')
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingValo && editingValo.index === index ? (
+                        <Input
+                          type="number"
+                          value={editingValo.row.valeur}
+                          onChange={(e) => setEditingValo({
+                            ...editingValo,
+                            row: { ...editingValo.row, valeur: parseFloat(e.target.value) || 0 }
+                          })}
+                        />
+                      ) : (
+                        formatCurrency(valo.valeur)
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingValo && editingValo.index === index ? (
+                        <Textarea
+                          value={editingValo.row.note}
+                          onChange={(e) => setEditingValo({
+                            ...editingValo,
+                            row: { ...editingValo.row, note: e.target.value }
+                          })}
+                          className="min-h-[60px]"
+                        />
+                      ) : (
+                        <div className="max-w-xs truncate">{valo.note}</div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {editingValo && editingValo.index === index ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => saveValorisation(editingValo.row)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Save className="h-4 w-4 text-success" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingValo({ index, row: { ...valo } })}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="h-4 w-4 text-primary" />
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => deleteValorisation(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-center">
+              <Button onClick={addValorisation} variant="outline" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Ajouter une ligne
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
