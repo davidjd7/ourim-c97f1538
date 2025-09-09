@@ -303,7 +303,13 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                   </Select>
                 ) : (
                   <p className="font-medium">
-                    {companies.find(c => c.id === data.companyId)?.name || 'Non défini'}
+                    {(() => {
+                      console.log('Companies:', companies);
+                      console.log('Looking for companyId:', data.companyId);
+                      const foundCompany = companies.find(c => c.id === data.companyId);
+                      console.log('Found company:', foundCompany);
+                      return foundCompany?.name || (data.companyId ? 'Société inconnue' : 'Non défini');
+                    })()}
                   </p>
                 )}
               </div>
