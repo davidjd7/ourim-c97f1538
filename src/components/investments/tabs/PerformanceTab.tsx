@@ -194,8 +194,8 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     return `${value.toFixed(1)}%`;
   };
 
-  const calculateCashIn = (cashflow: CashflowRow) => {
-    return cashflow.rex - cashflow.retraitAmort - cashflow.retraitAutres;
+  const calculateEBITDA = (cashflow: CashflowRow) => {
+    return cashflow.rex + cashflow.retraitAmort + cashflow.retraitAutres;
   };
 
   // CRUD functions for cashflows
@@ -506,7 +506,7 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                   <TableHead>REX</TableHead>
                   <TableHead>Retrait Amort</TableHead>
                   <TableHead>Retrait Autres</TableHead>
-                  <TableHead>Cash In avant Levier</TableHead>
+                  <TableHead>EBITDA</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -570,10 +570,10 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                       )}
                     </TableCell>
                     <TableCell className={`financial-value font-medium ${
-                      calculateCashIn(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? 'text-success' : 'text-destructive'
+                      calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? 'text-success' : 'text-destructive'
                     }`}>
-                      {calculateCashIn(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? '+' : ''}
-                      {formatCurrency(calculateCashIn(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow))}
+                      {calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? '+' : ''}
+                      {formatCurrency(calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow))}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
