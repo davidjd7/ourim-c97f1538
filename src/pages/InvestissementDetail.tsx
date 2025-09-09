@@ -536,8 +536,8 @@ export default function InvestissementDetail() {
               acquisitionDate: (isNewInvestment ? '' : investment?.acquisitionDate) || '',
               notaryFees: (isNewInvestment ? 0 : investment?.notaryFees) || 0,
               renovationBudget: (isNewInvestment ? 0 : investment?.renovationBudget) || 0,
-              // Company field - CRITICAL for display
-              companyId: (isNewInvestment ? undefined : investment?.companyId) || tempEditData.companyId
+              // Company field - CRITICAL for display - Utiliser tempEditData comme source de vérité
+              companyId: tempEditData.companyId
             }}
             tempEditData={tempEditData}
             onDataChange={handleDataChange}

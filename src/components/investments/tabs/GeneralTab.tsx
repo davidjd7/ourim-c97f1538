@@ -304,22 +304,15 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                     </SelectContent>
                   </Select>
                 ) : (
-                  <div className="space-y-2">
-                    <p className="font-medium">
-                      {(() => {
-                        // Utiliser investmentData.companyId directement au lieu de data.companyId
-                        const companyId = investmentData?.companyId;
-                        return companies.find(c => c.id === companyId)?.name || (companyId ? 'Société inconnue' : 'Non défini');
-                      })()}
-                    </p>
-                    <div className="text-xs text-muted-foreground space-y-1 bg-gray-100 p-2 rounded">
-                      <p><strong>Debug Info:</strong></p>
-                      <p>data.companyId: {String(data.companyId)}</p>
-                      <p>investmentData?.companyId: {String(investmentData?.companyId)}</p>
-                      <p>tempEditData?.companyId: {String(tempEditData?.companyId)}</p>
-                      <p>Sociétés: [{companies.map(c => `${c.name}(${c.id})`).join(', ')}]</p>
-                    </div>
-                  </div>
+                  <p className="font-medium">
+                    {(() => {
+                      // Utiliser tempEditData.companyId comme source de vérité
+                      const companyId = tempEditData?.companyId;
+                      const foundCompany = companies.find(c => c.id === companyId);
+                      console.log('Affichage société - companyId:', companyId, 'foundCompany:', foundCompany);
+                      return foundCompany?.name || (companyId ? 'Société inconnue' : 'Non défini');
+                    })()}
+                  </p>
                 )}
               </div>
             </div>
