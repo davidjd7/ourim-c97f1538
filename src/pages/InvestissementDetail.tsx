@@ -194,6 +194,8 @@ export default function InvestissementDetail() {
           netVendeur: tempEditData.netVendeur,
           agent: tempEditData.agent,
           honoNotaire: tempEditData.honoNotaire,
+          // Company field
+          companyId: tempEditData.companyId,
           // Default values
           lastValue: 0,
           lastTRI: 0,
@@ -210,6 +212,8 @@ export default function InvestissementDetail() {
         navigate(`/investissement/${newInvestment.id}`);
       } else {
         // Update existing investment
+        console.log('Updating investment with companyId:', tempEditData.companyId);
+        
         await updateInvestment(investment!.id, {
         name: tempEditData.name,
         type: tempEditData.type,
@@ -223,6 +227,8 @@ export default function InvestissementDetail() {
         dateInvestment: tempEditData.dateInvestment,
         investmentAmount: tempEditData.investmentAmount,
         notaryFees: tempEditData.notaryFees,
+        // Company field - CRITICAL
+        companyId: tempEditData.companyId,
         // Bail fields
         locataire: tempEditData.locataire,
         dateEntree: tempEditData.dateEntree,
@@ -241,6 +247,11 @@ export default function InvestissementDetail() {
         agent: tempEditData.agent,
           honoNotaire: tempEditData.honoNotaire
         });
+        
+        console.log('Investment updated, reloading...');
+        
+        // Force reload the page to ensure data synchronization
+        window.location.reload();
         
         toast({
           title: "Modifications sauvegardées",
