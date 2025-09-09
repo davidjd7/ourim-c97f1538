@@ -6,8 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus, Trash2, Edit, Save, CreditCard } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus, Trash2, Edit, Save, CreditCard, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ComposedChart, Bar, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 interface CashflowRow {
@@ -286,6 +288,36 @@ export function PerformanceTab({
       row.fp = row.valeur - row.crd;
     });
     return Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
+
+  // Get chart data grouped by year
+  const getChartData = () => {
+    const syntheseData = getSyntheseData();
+    const yearMap = new Map<number, { year: number; flux: number; valeur: number; count: number }>();
+
+    syntheseData.forEach(row => {
+      const year = new Date(row.date).getFullYear();
+      if (!yearMap.has(year)) {
+        yearMap.set(year, { year, flux: 0, valeur: 0, count: 0 });
+      }
+      const yearData = yearMap.get(year)!;
+      yearData.flux += row.flux;
+      yearData.valeur = row.valeur; // Take the latest value for the year
+      yearData.count++;
+    });
+
+    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+  };
+
+  const chartConfig = {
+    flux: {
+      label: "Flux",
+      color: "hsl(var(--chart-1))",
+    },
+    valeur: {
+      label: "Valeur",
+      color: "hsl(var(--chart-2))",
+    },
   };
 
   // CRUD functions for cashflows
@@ -871,6 +903,78 @@ export function PerformanceTab({
               </CardContent>
             </Card>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Chart Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Évolution Annuelle
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={getChartData()}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <XAxis 
+                  dataKey="year" 
+                  tick={{ fontSize: 12 }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                />
+                <YAxis 
+                  yAxisId="flux"
+                  orientation="left"
+                  tick={{ fontSize: 12 }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k€`}
+                />
+                <YAxis 
+                  yAxisId="valeur"
+                  orientation="right"
+                  tick={{ fontSize: 12 }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k€`}
+                />
+                <ChartTooltip 
+                  content={
+                    <ChartTooltipContent 
+                      formatter={(value, name) => [
+                        `${formatCurrency(Number(value))}`,
+                        name === 'flux' ? 'Flux' : 'Valeur'
+                      ]}
+                      labelFormatter={(label) => `Année ${label}`}
+                    />
+                  }
+                />
+                <Bar 
+                  yAxisId="flux"
+                  dataKey="flux" 
+                  fill="var(--color-flux)"
+                  radius={[4, 4, 0, 0]}
+                  name="flux"
+                />
+                <Line 
+                  yAxisId="valeur"
+                  type="monotone" 
+                  dataKey="valeur" 
+                  stroke="var(--color-valeur)"
+                  strokeWidth={3}
+                  dot={{ fill: "var(--color-valeur)", strokeWidth: 2, r: 6 }}
+                  name="valeur"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
       </Card>
 
