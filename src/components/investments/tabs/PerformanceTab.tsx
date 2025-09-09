@@ -683,18 +683,36 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     );
   }
 
-  // XIRR calculation function
-  const calculateXIRR = (initialValue: number, flows: Array<{date: Date, value: number}>, finalValue: number, finalDate: Date) => {
-    // Simple IRR approximation using Newton-Raphson method
-    const cashFlows = [
-      { date: flows[0]?.date || new Date(), value: -initialValue }, // Initial investment (negative)
-      ...flows.map(f => ({ date: f.date, value: f.value })), // Annual flows
-      { date: finalDate, value: finalValue } // Final value
-    ];
-
-    // Sort by date
-    cashFlows.sort((a, b) => a.date.getTime() - b.date.getTime());
+  // XIRR calculation function - Following Excel TRI.PAIEMENT structure
+  const calculateXIRR = (syntheseData: SyntheseRow[]) => {
+    if (syntheseData.length < 2) return 0;
     
+    // Sort by date to ensure chronological order
+    const sortedData = [...syntheseData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    // Build cash flows following Excel TRI.PAIEMENT structure:
+    // 1. Initial value: -FP (negative for investment) for oldest date
+    // 2. Intermediate values: flux (cash flows)
+    // 3. Final value: last flux + last FP (final cash flow + final value)
+    const cashFlows: Array<{date: Date, value: number}> = [];
+    
+    for (let i = 0; i < sortedData.length; i++) {
+      const row = sortedData[i];
+      const date = new Date(row.date + 'T00:00:00');
+      
+      if (i === 0) {
+        // Initial investment: -FP (negative because it's an outflow)
+        cashFlows.push({ date, value: -row.fp });
+      } else if (i === sortedData.length - 1) {
+        // Final period: flux + FP (cash flow + final value)
+        cashFlows.push({ date, value: row.flux + row.fp });
+      } else {
+        // Intermediate periods: just the flux
+        cashFlows.push({ date, value: row.flux });
+      }
+    }
+
+    // Newton-Raphson method for IRR calculation
     let rate = 0.1; // Initial guess 10%
     const maxIterations = 100;
     const tolerance = 0.0001;
@@ -713,6 +731,10 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
 
       if (Math.abs(npv) < tolerance) {
         return rate * 100; // Return as percentage
+      }
+
+      if (Math.abs(dnpv) < tolerance) {
+        break; // Avoid division by zero
       }
 
       const newRate = rate - npv / dnpv;
@@ -735,20 +757,8 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   const coc = latestSynthese?.fp && latestSynthese.fp > 0 ? (latestSynthese.flux / latestSynthese.fp) * 100 : 0;
   const ltv = latestSynthese?.valeur && latestSynthese.valeur > 0 ? (latestSynthese.crd / latestSynthese.valeur) * 100 : 0;
 
-  let xirr = 0;
-  if (oldestSynthese && latestSynthese && syntheseData.length > 1) {
-    const initialValue = oldestSynthese.fp;
-    const flows = syntheseData.slice(1, -1).map(row => ({
-      date: new Date(row.date + 'T00:00:00'),
-      value: row.flux
-    }));
-    const finalValue = latestSynthese.fp;
-    const finalDate = new Date(latestSynthese.date + 'T00:00:00');
-    
-    if (initialValue > 0) {
-      xirr = calculateXIRR(initialValue, flows, finalValue, finalDate);
-    }
-  }
+  // Calculate XIRR using the corrected Excel TRI.PAIEMENT formula
+  const xirr = syntheseData.length > 1 ? calculateXIRR(syntheseData) : 0;
 
   return (
     <div className="space-y-6">
