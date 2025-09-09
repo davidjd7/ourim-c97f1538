@@ -32,31 +32,59 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const LIMIT = 10;
 
-  // Load history from Supabase
-  useEffect(() => {
-    const loadHistory = async () => {
-      if (!user || !investmentId) return;
+  // Load history from Supabase with pagination
+  const loadHistory = async (resetHistory: boolean = true) => {
+    if (!user || !investmentId) return;
 
-      try {
-        const { data, error } = await supabase
-          .from('investment_history')
-          .select('*')
-          .eq('investment_id', investmentId)
-          .order('created_at', { ascending: false });
+    try {
+      const currentOffset = resetHistory ? 0 : offset;
+      const { data, error } = await supabase
+        .from('investment_history')
+        .select('*')
+        .eq('investment_id', investmentId)
+        .order('created_at', { ascending: false })
+        .range(currentOffset, currentOffset + LIMIT - 1);
 
-        if (error) throw error;
-        setHistory((data || []).map(item => ({
-          ...item,
-          action_type: item.action_type as 'create' | 'update' | 'delete'
-        })));
-      } catch (error) {
-        console.error('Error loading investment history:', error);
-      } finally {
-        setLoading(false);
+      if (error) throw error;
+      
+      const newHistory = (data || []).map(item => ({
+        ...item,
+        action_type: item.action_type as 'create' | 'update' | 'delete'
+      }));
+
+      if (resetHistory) {
+        setHistory(newHistory);
+        setOffset(LIMIT);
+      } else {
+        setHistory(prev => [...prev, ...newHistory]);
+        setOffset(prev => prev + LIMIT);
       }
-    };
+      
+      setHasMore(newHistory.length === LIMIT);
+    } catch (error) {
+      console.error('Error loading investment history:', error);
+    } finally {
+      if (resetHistory) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
+    }
+  };
 
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      setLoadingMore(true);
+      loadHistory(false);
+    }
+  };
+
+  useEffect(() => {
     loadHistory();
   }, [user, investmentId]);
 
@@ -76,15 +104,11 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
 
   // Helper function to format values for display
   const formatValueForDisplay = (fieldName: string, value: string | null): string => {
-    console.log('formatValueForDisplay called:', { fieldName, value, companiesCount: companies.length });
-    
     if (!value) return 'Non défini';
     
     // Convert company_id OR companyId to company name
     if (fieldName === 'company_id' || fieldName === 'companyId') {
-      console.log('Looking for company with ID:', value);
       const company = companies.find(c => c.id === value);
-      console.log('Found company:', company);
       return company ? company.name : `Société inconnue (${value.substring(0, 8)}...)`;
     }
     
@@ -331,6 +355,20 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
                   ? 'Aucun événement trouvé pour les critères sélectionnés'
                   : 'Aucun historique disponible pour cet investissement'
                 }
+              </div>
+            )}
+            
+            {/* Load More Button */}
+            {filteredHistory.length > 0 && hasMore && (searchTerm === '' && filterType === 'all') && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="w-full max-w-xs"
+                >
+                  {loadingMore ? 'Chargement...' : 'Charger plus d\'événements'}
+                </Button>
               </div>
             )}
           </div>
