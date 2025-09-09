@@ -293,20 +293,33 @@ export function PerformanceTab({
   // Get chart data grouped by year
   const getChartData = () => {
     const syntheseData = getSyntheseData();
-    const yearMap = new Map<number, { year: number; flux: number; valeur: number; count: number }>();
+    const yearMap = new Map<number, { year: number; flux: number; valeur: number; varValeur: number; gain: number }>();
 
-    syntheseData.forEach(row => {
+    // First pass: Group data by year and calculate totals
+    syntheseData.forEach((row) => {
       const year = new Date(row.date).getFullYear();
       if (!yearMap.has(year)) {
-        yearMap.set(year, { year, flux: 0, valeur: 0, count: 0 });
+        yearMap.set(year, { year, flux: 0, valeur: 0, varValeur: 0, gain: 0 });
       }
       const yearData = yearMap.get(year)!;
       yearData.flux += row.flux;
       yearData.valeur = row.valeur; // Take the latest value for the year
-      yearData.count++;
     });
 
-    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+    // Convert to array and sort by year
+    const yearArray = Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+
+    // Second pass: Calculate varValeur (difference from previous year) and gain
+    yearArray.forEach((yearData, index) => {
+      if (index > 0) {
+        yearData.varValeur = yearData.valeur - yearArray[index - 1].valeur;
+      } else {
+        yearData.varValeur = 0; // First year has no previous year to compare
+      }
+      yearData.gain = yearData.flux + yearData.varValeur;
+    });
+
+    return yearArray;
   };
 
   const chartConfig = {
@@ -314,9 +327,13 @@ export function PerformanceTab({
       label: "Flux",
       color: "#2563eb", // Blue color for bars
     },
-    valeur: {
-      label: "Valeur", 
-      color: "#ea580c", // Orange color for line
+    varValeur: {
+      label: "Var Valeur",
+      color: "#ea580c", // Orange color for bars
+    },
+    gain: {
+      label: "Gain", 
+      color: "#06b6d4", // Cyan color for line
     },
   };
 
@@ -932,46 +949,52 @@ export function PerformanceTab({
                   tickLine={{ stroke: 'hsl(var(--border))' }}
                   tickFormatter={(value) => `01/01/${value}`}
                 />
-                <YAxis 
-                  yAxisId="flux"
-                  orientation="left"
-                  tick={{ fontSize: 12 }}
-                  tickLine={{ stroke: 'hsl(var(--border))' }}
-                  tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                />
-                <YAxis 
-                  yAxisId="valeur"
-                  orientation="right"
-                  tick={{ fontSize: 12 }}
-                  tickLine={{ stroke: 'hsl(var(--border))' }}
-                  tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                />
-                <ChartTooltip 
-                  content={
-                    <ChartTooltipContent 
-                      formatter={(value, name) => [
-                        `${formatCurrency(Number(value))}`,
-                        name === 'flux' ? 'Flux' : 'Valeur'
-                      ]}
-                      labelFormatter={(label) => `Année ${label}`}
-                    />
-                  }
-                />
-                <Bar 
-                  yAxisId="flux"
-                  dataKey="flux" 
-                  fill="#2563eb"
-                  name="Flux"
-                />
-                <Line 
-                  yAxisId="valeur"
-                  type="monotone" 
-                  dataKey="valeur" 
-                  stroke="#ea580c"
-                  strokeWidth={2}
-                  dot={{ fill: "#ea580c", strokeWidth: 2, r: 4 }}
-                  name="Valeur"
-                />
+                 <YAxis 
+                   yAxisId="bars"
+                   orientation="left"
+                   tick={{ fontSize: 12 }}
+                   tickLine={{ stroke: 'hsl(var(--border))' }}
+                   tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                 />
+                 <YAxis 
+                   yAxisId="gain"
+                   orientation="right"
+                   tick={{ fontSize: 12 }}
+                   tickLine={{ stroke: 'hsl(var(--border))' }}
+                   tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                 />
+                 <ChartTooltip 
+                   content={
+                     <ChartTooltipContent 
+                       formatter={(value, name) => [
+                         `${formatCurrency(Number(value))}`,
+                         name === 'flux' ? 'Flux' : name === 'varValeur' ? 'Var Valeur' : 'Gain'
+                       ]}
+                       labelFormatter={(label) => `Année ${label}`}
+                     />
+                   }
+                 />
+                 <Bar 
+                   yAxisId="bars"
+                   dataKey="flux" 
+                   fill="#2563eb"
+                   name="Flux"
+                 />
+                 <Bar 
+                   yAxisId="bars"
+                   dataKey="varValeur" 
+                   fill="#ea580c"
+                   name="Var Valeur"
+                 />
+                 <Line 
+                   yAxisId="gain"
+                   type="monotone" 
+                   dataKey="gain" 
+                   stroke="#06b6d4"
+                   strokeWidth={3}
+                   dot={{ fill: "#06b6d4", strokeWidth: 2, r: 5 }}
+                   name="Gain"
+                 />
               </ComposedChart>
             </ResponsiveContainer>
           </ChartContainer>
