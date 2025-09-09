@@ -316,11 +316,11 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
       });
     });
 
-    // Add EBITDA from cashflows (rex)
+    // Add EBITDA from cashflows
     cashflows.forEach(cf => {
       const existing = dateMap.get(cf.date);
       if (existing) {
-        existing.flux += cf.rex;
+        existing.flux += calculateEBITDA(cf);
       }
     });
 
