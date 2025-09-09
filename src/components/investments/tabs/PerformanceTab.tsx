@@ -309,17 +309,23 @@ export function PerformanceTab({
     // Convert to array and sort by year
     const yearArray = Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
 
+    // Exclude the oldest year (first year in the sorted array)
+    const filteredYearArray = yearArray.length > 1 ? yearArray.slice(1) : yearArray;
+
     // Second pass: Calculate varValeur (difference from previous year) and gain
-    yearArray.forEach((yearData, index) => {
+    filteredYearArray.forEach((yearData, index) => {
       if (index > 0) {
-        yearData.varValeur = yearData.valeur - yearArray[index - 1].valeur;
+        yearData.varValeur = yearData.valeur - filteredYearArray[index - 1].valeur;
+      } else if (yearArray.length > 1) {
+        // For the first year in filtered array, compare with the excluded oldest year
+        yearData.varValeur = yearData.valeur - yearArray[0].valeur;
       } else {
-        yearData.varValeur = 0; // First year has no previous year to compare
+        yearData.varValeur = 0;
       }
       yearData.gain = yearData.flux + yearData.varValeur;
     });
 
-    return yearArray;
+    return filteredYearArray;
   };
 
   const chartConfig = {
