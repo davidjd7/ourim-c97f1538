@@ -683,6 +683,73 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     );
   }
 
+  // XIRR calculation function
+  const calculateXIRR = (initialValue: number, flows: Array<{date: Date, value: number}>, finalValue: number, finalDate: Date) => {
+    // Simple IRR approximation using Newton-Raphson method
+    const cashFlows = [
+      { date: flows[0]?.date || new Date(), value: -initialValue }, // Initial investment (negative)
+      ...flows.map(f => ({ date: f.date, value: f.value })), // Annual flows
+      { date: finalDate, value: finalValue } // Final value
+    ];
+
+    // Sort by date
+    cashFlows.sort((a, b) => a.date.getTime() - b.date.getTime());
+    
+    let rate = 0.1; // Initial guess 10%
+    const maxIterations = 100;
+    const tolerance = 0.0001;
+
+    for (let i = 0; i < maxIterations; i++) {
+      let npv = 0;
+      let dnpv = 0;
+      const baseDate = cashFlows[0].date;
+
+      for (const flow of cashFlows) {
+        const years = (flow.date.getTime() - baseDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+        const factor = Math.pow(1 + rate, years);
+        npv += flow.value / factor;
+        dnpv -= flow.value * years / (factor * (1 + rate));
+      }
+
+      if (Math.abs(npv) < tolerance) {
+        return rate * 100; // Return as percentage
+      }
+
+      const newRate = rate - npv / dnpv;
+      if (Math.abs(newRate - rate) < tolerance) {
+        return newRate * 100;
+      }
+      rate = newRate;
+    }
+
+    return 0; // Return 0 if convergence fails
+  };
+
+  // Calculate KPI values from Synthèse data
+  const syntheseData = getSyntheseData();
+  const latestSynthese = syntheseData[syntheseData.length - 1];
+  const oldestSynthese = syntheseData[0];
+
+  // KPI calculations
+  const fondPropre = latestSynthese?.fp || 0;
+  const coc = latestSynthese?.fp && latestSynthese.fp > 0 ? (latestSynthese.flux / latestSynthese.fp) * 100 : 0;
+  const ltv = latestSynthese?.valeur && latestSynthese.valeur > 0 ? (latestSynthese.crd / latestSynthese.valeur) * 100 : 0;
+
+  let xirr = 0;
+  if (oldestSynthese && latestSynthese && syntheseData.length > 1) {
+    const initialValue = oldestSynthese.fp;
+    const flows = syntheseData.slice(1, -1).map(row => ({
+      date: new Date(row.date + 'T00:00:00'),
+      value: row.flux
+    }));
+    const finalValue = latestSynthese.fp;
+    const finalDate = new Date(latestSynthese.date + 'T00:00:00');
+    
+    if (initialValue > 0) {
+      xirr = calculateXIRR(initialValue, flows, finalValue, finalDate);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Performance Overview */}
@@ -691,9 +758,9 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Valeur actuelle</p>
+                <p className="text-sm text-muted-foreground">Fond Propre</p>
                 <p className="text-2xl font-bold financial-value">
-                  {formatCurrency(data.currentValue)}
+                  {formatCurrency(fondPropre)}
                 </p>
               </div>
               <DollarSign className="h-5 w-5 text-primary" />
@@ -705,15 +772,15 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Plus-value</p>
+                <p className="text-sm text-muted-foreground">COC</p>
                 <p className={`text-2xl font-bold financial-value ${
-                  data.totalReturn >= 0 ? 'text-success' : 'text-destructive'
+                  coc >= 0 ? 'text-success' : 'text-destructive'
                 }`}>
-                  {data.totalReturn >= 0 ? '+' : ''}
-                  {formatCurrency(data.totalReturn)}
+                  {coc >= 0 ? '+' : ''}
+                  {formatPercentage(coc)}
                 </p>
               </div>
-              {data.totalReturn >= 0 ? (
+              {coc >= 0 ? (
                 <TrendingUp className="h-5 w-5 text-success" />
               ) : (
                 <TrendingDown className="h-5 w-5 text-destructive" />
@@ -726,12 +793,9 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Rendement</p>
-                <p className={`text-2xl font-bold financial-value ${
-                  data.returnPercentage >= 0 ? 'text-success' : 'text-destructive'
-                }`}>
-                  {data.returnPercentage >= 0 ? '+' : ''}
-                  {formatPercentage(data.returnPercentage)}
+                <p className="text-sm text-muted-foreground">LTV</p>
+                <p className="text-2xl font-bold financial-value text-primary">
+                  {formatPercentage(ltv)}
                 </p>
               </div>
               <Target className="h-5 w-5 text-primary" />
@@ -743,9 +807,9 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">TRI</p>
+                <p className="text-sm text-muted-foreground">XIRR</p>
                 <p className="text-2xl font-bold financial-value text-primary">
-                  {formatPercentage(data.tri)}
+                  {formatPercentage(xirr)}
                 </p>
               </div>
               <TrendingUp className="h-5 w-5 text-primary" />
