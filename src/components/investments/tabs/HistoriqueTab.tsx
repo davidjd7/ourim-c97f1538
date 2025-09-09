@@ -80,8 +80,8 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
     
     if (!value) return 'Non défini';
     
-    // Convert company_id to company name
-    if (fieldName === 'company_id') {
+    // Convert company_id OR companyId to company name
+    if (fieldName === 'company_id' || fieldName === 'companyId') {
       console.log('Looking for company with ID:', value);
       const company = companies.find(c => c.id === value);
       console.log('Found company:', company);
