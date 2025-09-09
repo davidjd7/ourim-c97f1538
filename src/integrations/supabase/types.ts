@@ -254,45 +254,6 @@ export type Database = {
         }
         Relationships: []
       }
-      investment_performance: {
-        Row: {
-          created_at: string
-          current_value: number | null
-          id: string
-          initial_value: number | null
-          investment_id: string
-          return_percentage: number | null
-          total_return: number | null
-          tri: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_value?: number | null
-          id?: string
-          initial_value?: number | null
-          investment_id: string
-          return_percentage?: number | null
-          total_return?: number | null
-          tri?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_value?: number | null
-          id?: string
-          initial_value?: number | null
-          investment_id?: string
-          return_percentage?: number | null
-          total_return?: number | null
-          tri?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       investment_valorisations: {
         Row: {
           created_at: string
