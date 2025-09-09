@@ -995,41 +995,46 @@ export function PerformanceTab({
                   <TableHead>Flux</TableHead>
                   <TableHead>Valeur</TableHead>
                   <TableHead>Var Valeur</TableHead>
+                  <TableHead>Gain</TableHead>
                   <TableHead>CRD</TableHead>
                   <TableHead>FP</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {getSyntheseData().map((row, index) => {
-                  const syntheseData = getSyntheseData();
-                  const varValeur = index > 0 ? row.valeur - syntheseData[index - 1].valeur : 0;
-                  
-                  return <TableRow key={index}>
-                    <TableCell className="font-medium">
-                      {new Date(row.date).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    <TableCell className="financial-value">
-                      {formatCurrency(row.flux)}
-                    </TableCell>
-                    <TableCell className="financial-value">
-                      {formatCurrency(row.valeur)}
-                    </TableCell>
-                    <TableCell className={`financial-value ${varValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {varValeur >= 0 ? '+' : ''}{formatCurrency(varValeur)}
-                    </TableCell>
-                    <TableCell className="financial-value">
-                      {formatCurrency(row.crd)}
-                    </TableCell>
-                    <TableCell className="financial-value font-medium">
-                      {formatCurrency(row.fp)}
-                    </TableCell>
-                  </TableRow>
-                })}
-                {getSyntheseData().length === 0 && <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Aucune donnée disponible pour la synthèse
-                    </TableCell>
-                  </TableRow>}
+                 {getSyntheseData().map((row, index) => {
+                   const syntheseData = getSyntheseData();
+                   const varValeur = index > 0 ? row.valeur - syntheseData[index - 1].valeur : 0;
+                   const gain = row.flux + varValeur;
+                   
+                   return <TableRow key={index}>
+                     <TableCell className="font-medium">
+                       {new Date(row.date).toLocaleDateString('fr-FR')}
+                     </TableCell>
+                     <TableCell className="financial-value">
+                       {formatCurrency(row.flux)}
+                     </TableCell>
+                     <TableCell className="financial-value">
+                       {formatCurrency(row.valeur)}
+                     </TableCell>
+                     <TableCell className={`financial-value ${varValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
+                       {varValeur >= 0 ? '+' : ''}{formatCurrency(varValeur)}
+                     </TableCell>
+                     <TableCell className={`financial-value font-medium ${gain >= 0 ? 'text-success' : 'text-destructive'}`}>
+                       {gain >= 0 ? '+' : ''}{formatCurrency(gain)}
+                     </TableCell>
+                     <TableCell className="financial-value">
+                       {formatCurrency(row.crd)}
+                     </TableCell>
+                     <TableCell className="financial-value font-medium">
+                       {formatCurrency(row.fp)}
+                     </TableCell>
+                   </TableRow>
+                 })}
+                 {getSyntheseData().length === 0 && <TableRow>
+                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                       Aucune donnée disponible pour la synthèse
+                     </TableCell>
+                   </TableRow>}
               </TableBody>
             </Table>
           </div>
