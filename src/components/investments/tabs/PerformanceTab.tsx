@@ -282,6 +282,10 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     return flow.capitalDebut - flow.rmbtCapital;
   };
 
+  const calculateFlux = (flow: DebtFlowRow) => {
+    return flow.rmbtCapital + flow.rmbtInteret;
+  };
+
   // CRUD functions for cashflows
   const addCashflow = () => {
     const newRow: CashflowRow = {
@@ -1165,6 +1169,7 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                   <TableHead>Capital Début</TableHead>
                   <TableHead>Rmbt Capital</TableHead>
                   <TableHead>Rmbt Intérêt</TableHead>
+                  <TableHead>Flux</TableHead>
                   <TableHead>Capital Fin</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -1227,6 +1232,9 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                       ) : (
                         formatCurrency(flow.rmbtInteret)
                       )}
+                    </TableCell>
+                    <TableCell className="financial-value font-medium">
+                      {formatCurrency(calculateFlux(editingDebtFlow && editingDebtFlow.index === index ? editingDebtFlow.row : flow))}
                     </TableCell>
                     <TableCell className="financial-value font-medium">
                       {formatCurrency(calculateCapitalFin(editingDebtFlow && editingDebtFlow.index === index ? editingDebtFlow.row : flow))}
