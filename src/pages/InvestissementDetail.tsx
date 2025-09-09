@@ -10,7 +10,7 @@ import { PerformanceTab } from '@/components/investments/tabs/PerformanceTab';
 import { DocumentsTab } from '@/components/investments/tabs/DocumentsTab';
 import { NotesTab } from '@/components/investments/tabs/NotesTab';
 import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
-import { DetteTab } from '@/components/investments/tabs/DetteTab';
+
 import { useInvestments } from '@/contexts/InvestmentContext';
 
 export default function InvestissementDetail() {
@@ -498,16 +498,15 @@ export default function InvestissementDetail() {
       {/* Tabs */}
       <Tabs defaultValue="general" className="w-full">
         {(() => {
-          // Determine if Performance and Dette tabs should be shown
+          // Determine if Performance tab should be shown
           const showAdvancedTabs = !isNewInvestment && investment!.status !== 'RECU' && investment!.status !== 'DUE_DIL';
           
           return (
-            <TabsList className={`grid w-full ${showAdvancedTabs ? 'grid-cols-6' : 'grid-cols-4'}`}>
+            <TabsList className={`grid w-full ${showAdvancedTabs ? 'grid-cols-5' : 'grid-cols-4'}`}>
               <TabsTrigger value="general">Général</TabsTrigger>
               {showAdvancedTabs && <TabsTrigger value="performance">Performance</TabsTrigger>}
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
-              {showAdvancedTabs && <TabsTrigger value="dette">Dette</TabsTrigger>}
               <TabsTrigger value="historique">Historique</TabsTrigger>
             </TabsList>
           );
@@ -558,11 +557,6 @@ export default function InvestissementDetail() {
           <NotesTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
         </TabsContent>
 
-        {!isNewInvestment && investment!.status !== 'RECU' && investment!.status !== 'DUE_DIL' && (
-          <TabsContent value="dette" className="mt-6">
-            <DetteTab investmentId={investment!.id} isEditMode={isEditMode} />
-          </TabsContent>
-        )}
 
         <TabsContent value="historique" className="mt-6">
           <HistoriqueTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
