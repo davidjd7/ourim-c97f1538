@@ -309,7 +309,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                       // Utiliser tempEditData.companyId comme source de vérité
                       const companyId = tempEditData?.companyId;
                       const foundCompany = companies.find(c => c.id === companyId);
-                      console.log('Affichage société - companyId:', companyId, 'foundCompany:', foundCompany);
                       return foundCompany?.name || (companyId ? 'Société inconnue' : 'Non défini');
                     })()}
                   </p>
