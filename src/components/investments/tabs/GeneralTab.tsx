@@ -131,6 +131,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     acquisitionDate: investmentData.acquisitionDate,
     notaryFees: investmentData.notaryFees,
     renovationBudget: investmentData.renovationBudget,
+    companyId: investmentData.companyId, // ← AJOUT CRUCIAL
     company: investmentData.company,
     // Bail fields avec valeurs par défaut
     bailPriseEffet: investmentData.bailPriseEffet || '',
@@ -303,16 +304,9 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                     </SelectContent>
                   </Select>
                 ) : (
-                  <div>
-                    <p className="font-medium mb-2">
-                      {companies.find(c => c.id === data.companyId)?.name || (data.companyId ? 'Société inconnue' : 'Non défini')}
-                    </p>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p>Debug - ID société: {data.companyId || 'undefined'}</p>
-                      <p>Debug - Sociétés disponibles: {companies.length}</p>
-                      <p>Debug - Noms: {companies.map(c => c.name).join(', ')}</p>
-                    </div>
-                  </div>
+                  <p className="font-medium">
+                    {companies.find(c => c.id === data.companyId)?.name || (data.companyId ? 'Société inconnue' : 'Non défini')}
+                  </p>
                 )}
               </div>
             </div>
