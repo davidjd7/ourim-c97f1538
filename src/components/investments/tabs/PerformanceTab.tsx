@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus, Trash2, Edit, Save } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus, Trash2, Edit, Save, CreditCard } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -30,6 +31,23 @@ interface ValorisationRow {
   date: string;
   valeur: number;
   note: string;
+}
+
+interface DebtCharacteristics {
+  id?: string;
+  montantInitial: number;
+  dureeMois: number;
+  taux: number;
+  type: 'Amortissement constant' | 'Annuité constante';
+  amortissementAnnuel?: number;
+}
+
+interface DebtFlowRow {
+  id?: string;
+  date: string;
+  capitalDebut: number;
+  rmbtCapital: number;
+  rmbtInteret: number;
 }
 
 interface PerformanceData {
@@ -62,11 +80,20 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   const [cashflows, setCashflows] = useState<CashflowRow[]>([]);
   const [immobilisations, setImmobilisations] = useState<ImmobilisationRow[]>([]);
   const [valorisations, setValorisations] = useState<ValorisationRow[]>([]);
+  const [debtCharacteristics, setDebtCharacteristics] = useState<DebtCharacteristics>({
+    montantInitial: 0,
+    dureeMois: 0,
+    taux: 0,
+    type: 'Amortissement constant'
+  });
+  const [debtFlows, setDebtFlows] = useState<DebtFlowRow[]>([]);
   
   // Editing states
   const [editingCashflow, setEditingCashflow] = useState<{ index: number; row: CashflowRow } | null>(null);
   const [editingImmo, setEditingImmo] = useState<{ index: number; row: ImmobilisationRow } | null>(null);
   const [editingValo, setEditingValo] = useState<{ index: number; row: ValorisationRow } | null>(null);
+  const [editingDebtFlow, setEditingDebtFlow] = useState<{ index: number; row: DebtFlowRow } | null>(null);
+  const [editingDebtCharacteristics, setEditingDebtCharacteristics] = useState(false);
   
   const [loading, setLoading] = useState(true);
 
@@ -76,7 +103,9 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
         loadPerformanceData(),
         loadCashflows(),
         loadImmobilisations(),
-        loadValorisations()
+        loadValorisations(),
+        loadDebtCharacteristics(),
+        loadDebtFlows()
       ]).finally(() => setLoading(false));
     }
   }, [user, investmentId]);
@@ -181,6 +210,57 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     }
   };
 
+  const loadDebtCharacteristics = async () => {
+    try {
+      const { data: debtData, error } = await supabase
+        .from('investment_debt_characteristics')
+        .select('*')
+        .eq('investment_id', investmentId)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (debtData) {
+        setDebtCharacteristics({
+          id: debtData.id,
+          montantInitial: debtData.montant_initial || 0,
+          dureeMois: debtData.duree_mois || 0,
+          taux: debtData.taux || 0,
+          type: (debtData.type as 'Amortissement constant' | 'Annuité constante') || 'Amortissement constant',
+          amortissementAnnuel: debtData.amortissement_annuel || undefined
+        });
+      }
+    } catch (error) {
+      console.error('Error loading debt characteristics:', error);
+    }
+  };
+
+  const loadDebtFlows = async () => {
+    try {
+      const { data: flowData, error } = await supabase
+        .from('investment_debt_flows')
+        .select('*')
+        .eq('investment_id', investmentId)
+        .eq('user_id', user?.id)
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedFlows = flowData?.map(flow => ({
+        id: flow.id,
+        date: flow.date,
+        capitalDebut: flow.capital_debut || 0,
+        rmbtCapital: flow.rmbt_capital || 0,
+        rmbtInteret: flow.rmbt_interet || 0
+      })) || [];
+
+      setDebtFlows(formattedFlows);
+    } catch (error) {
+      console.error('Error loading debt flows:', error);
+    }
+  };
+
   // Utility functions
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -196,6 +276,10 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
 
   const calculateEBITDA = (cashflow: CashflowRow) => {
     return cashflow.rex + cashflow.retraitAmort + cashflow.retraitAutres;
+  };
+
+  const calculateCapitalFin = (flow: DebtFlowRow) => {
+    return flow.capitalDebut - flow.rmbtCapital;
   };
 
   // CRUD functions for cashflows
@@ -402,6 +486,115 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
     }
     if (editingValo && editingValo.index === index) {
       setEditingValo(null);
+    }
+  };
+
+  // CRUD functions for debt characteristics
+  const saveDebtCharacteristics = async () => {
+    try {
+      if (debtCharacteristics.id) {
+        const { error } = await supabase
+          .from('investment_debt_characteristics')
+          .update({
+            montant_initial: debtCharacteristics.montantInitial,
+            duree_mois: debtCharacteristics.dureeMois,
+            taux: debtCharacteristics.taux,
+            type: debtCharacteristics.type,
+            amortissement_annuel: debtCharacteristics.amortissementAnnuel
+          })
+          .eq('id', debtCharacteristics.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('investment_debt_characteristics')
+          .insert({
+            investment_id: investmentId,
+            user_id: user?.id,
+            montant_initial: debtCharacteristics.montantInitial,
+            duree_mois: debtCharacteristics.dureeMois,
+            taux: debtCharacteristics.taux,
+            type: debtCharacteristics.type,
+            amortissement_annuel: debtCharacteristics.amortissementAnnuel
+          });
+        if (error) throw error;
+      }
+      await loadDebtCharacteristics();
+      setEditingDebtCharacteristics(false);
+      toast.success('Caractéristiques de dette sauvegardées');
+    } catch (error) {
+      console.error('Error saving debt characteristics:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
+  // CRUD functions for debt flows
+  const addDebtFlow = () => {
+    const newRow: DebtFlowRow = {
+      date: new Date().toISOString().split('T')[0],
+      capitalDebut: 0,
+      rmbtCapital: 0,
+      rmbtInteret: 0
+    };
+    const newIndex = debtFlows.length;
+    setDebtFlows([...debtFlows, newRow]);
+    setEditingDebtFlow({ index: newIndex, row: newRow });
+  };
+
+  const saveDebtFlow = async (row: DebtFlowRow) => {
+    try {
+      if (row.id) {
+        const { error } = await supabase
+          .from('investment_debt_flows')
+          .update({
+            date: row.date,
+            capital_debut: row.capitalDebut,
+            rmbt_capital: row.rmbtCapital,
+            rmbt_interet: row.rmbtInteret
+          })
+          .eq('id', row.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('investment_debt_flows')
+          .insert({
+            investment_id: investmentId,
+            user_id: user?.id,
+            date: row.date,
+            capital_debut: row.capitalDebut,
+            rmbt_capital: row.rmbtCapital,
+            rmbt_interet: row.rmbtInteret
+          });
+        if (error) throw error;
+      }
+      await loadDebtFlows();
+      setEditingDebtFlow(null);
+      toast.success('Flux de dette sauvegardé');
+    } catch (error) {
+      console.error('Error saving debt flow:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
+  const deleteDebtFlow = async (index: number) => {
+    const row = debtFlows[index];
+    if (row.id) {
+      try {
+        const { error } = await supabase
+          .from('investment_debt_flows')
+          .delete()
+          .eq('id', row.id);
+        if (error) throw error;
+        await loadDebtFlows();
+        toast.success('Flux de dette supprimé');
+      } catch (error) {
+        console.error('Error deleting debt flow:', error);
+        toast.error('Erreur lors de la suppression');
+      }
+    } else {
+      setDebtFlows(debtFlows.filter((_, i) => i !== index));
+    }
+    if (editingDebtFlow && editingDebtFlow.index === index) {
+      setEditingDebtFlow(null);
     }
   };
 
@@ -816,6 +1009,265 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
             </Table>
             <div className="mt-4 flex justify-center">
               <Button onClick={addValorisation} variant="outline" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Ajouter une ligne
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+        </CardContent>
+      </Card>
+
+      {/* Section Dette */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Dette
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          
+          {/* Section 1: Caractéristiques */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Caractéristiques</h3>
+              {editingDebtCharacteristics ? (
+                <Button onClick={saveDebtCharacteristics} size="sm" className="flex items-center gap-2">
+                  <Save className="h-4 w-4" />
+                  Sauvegarder
+                </Button>
+              ) : (
+                <Button onClick={() => setEditingDebtCharacteristics(true)} size="sm" variant="outline" className="flex items-center gap-2">
+                  <Edit className="h-4 w-4" />
+                  Modifier
+                </Button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Montant Initial (€)</label>
+                {editingDebtCharacteristics ? (
+                  <Input
+                    type="number"
+                    value={debtCharacteristics.montantInitial}
+                    onChange={(e) => setDebtCharacteristics({
+                      ...debtCharacteristics,
+                      montantInitial: parseFloat(e.target.value) || 0
+                    })}
+                  />
+                ) : (
+                  <div className="financial-value font-medium text-lg">
+                    {formatCurrency(debtCharacteristics.montantInitial)}
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Durée (mois)</label>
+                {editingDebtCharacteristics ? (
+                  <Input
+                    type="number"
+                    value={debtCharacteristics.dureeMois}
+                    onChange={(e) => setDebtCharacteristics({
+                      ...debtCharacteristics,
+                      dureeMois: parseInt(e.target.value) || 0
+                    })}
+                  />
+                ) : (
+                  <div className="font-medium text-lg">
+                    {debtCharacteristics.dureeMois} mois
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Taux (%)</label>
+                {editingDebtCharacteristics ? (
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={debtCharacteristics.taux}
+                    onChange={(e) => setDebtCharacteristics({
+                      ...debtCharacteristics,
+                      taux: parseFloat(e.target.value) || 0
+                    })}
+                  />
+                ) : (
+                  <div className="font-medium text-lg">
+                    {formatPercentage(debtCharacteristics.taux)}
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Type</label>
+                {editingDebtCharacteristics ? (
+                  <Select
+                    value={debtCharacteristics.type}
+                    onValueChange={(value: 'Amortissement constant' | 'Annuité constante') => 
+                      setDebtCharacteristics({
+                        ...debtCharacteristics,
+                        type: value,
+                        amortissementAnnuel: value === 'Amortissement constant' ? debtCharacteristics.amortissementAnnuel : undefined
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
+                      <SelectItem value="Annuité constante">Annuité constante</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="font-medium text-lg">
+                    {debtCharacteristics.type}
+                  </div>
+                )}
+              </div>
+              
+              {debtCharacteristics.type === 'Amortissement constant' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Amortissement annuel (%)</label>
+                  {editingDebtCharacteristics ? (
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={debtCharacteristics.amortissementAnnuel || 0}
+                      onChange={(e) => setDebtCharacteristics({
+                        ...debtCharacteristics,
+                        amortissementAnnuel: parseFloat(e.target.value) || 0
+                      })}
+                    />
+                  ) : (
+                    <div className="font-medium text-lg">
+                      {formatPercentage(debtCharacteristics.amortissementAnnuel || 0)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Section 2: Flux */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Flux</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Capital Début</TableHead>
+                  <TableHead>Rmbt Capital</TableHead>
+                  <TableHead>Rmbt Intérêt</TableHead>
+                  <TableHead>Capital Fin</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {debtFlows.map((flow, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      {editingDebtFlow && editingDebtFlow.index === index ? (
+                        <Input
+                          type="date"
+                          value={editingDebtFlow.row.date}
+                          onChange={(e) => setEditingDebtFlow({
+                            ...editingDebtFlow,
+                            row: { ...editingDebtFlow.row, date: e.target.value }
+                          })}
+                        />
+                      ) : (
+                        new Date(flow.date).toLocaleDateString('fr-FR')
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingDebtFlow && editingDebtFlow.index === index ? (
+                        <Input
+                          type="number"
+                          value={editingDebtFlow.row.capitalDebut}
+                          onChange={(e) => setEditingDebtFlow({
+                            ...editingDebtFlow,
+                            row: { ...editingDebtFlow.row, capitalDebut: parseFloat(e.target.value) || 0 }
+                          })}
+                        />
+                      ) : (
+                        formatCurrency(flow.capitalDebut)
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingDebtFlow && editingDebtFlow.index === index ? (
+                        <Input
+                          type="number"
+                          value={editingDebtFlow.row.rmbtCapital}
+                          onChange={(e) => setEditingDebtFlow({
+                            ...editingDebtFlow,
+                            row: { ...editingDebtFlow.row, rmbtCapital: parseFloat(e.target.value) || 0 }
+                          })}
+                        />
+                      ) : (
+                        formatCurrency(flow.rmbtCapital)
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingDebtFlow && editingDebtFlow.index === index ? (
+                        <Input
+                          type="number"
+                          value={editingDebtFlow.row.rmbtInteret}
+                          onChange={(e) => setEditingDebtFlow({
+                            ...editingDebtFlow,
+                            row: { ...editingDebtFlow.row, rmbtInteret: parseFloat(e.target.value) || 0 }
+                          })}
+                        />
+                      ) : (
+                        formatCurrency(flow.rmbtInteret)
+                      )}
+                    </TableCell>
+                    <TableCell className="financial-value font-medium">
+                      {formatCurrency(calculateCapitalFin(editingDebtFlow && editingDebtFlow.index === index ? editingDebtFlow.row : flow))}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {editingDebtFlow && editingDebtFlow.index === index ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => saveDebtFlow(editingDebtFlow.row)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Save className="h-4 w-4 text-success" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingDebtFlow({ index, row: { ...flow } })}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="h-4 w-4 text-primary" />
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => deleteDebtFlow(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-center">
+              <Button onClick={addDebtFlow} variant="outline" className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Ajouter une ligne
               </Button>
