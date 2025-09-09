@@ -720,71 +720,81 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Performance Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Fond Propre</p>
-                <p className="text-2xl font-bold financial-value">
-                  {formatCurrency(fondPropre)}
-                </p>
-              </div>
-              <DollarSign className="h-5 w-5 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPI Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            KPI
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Fond Propre</p>
+                    <p className="text-2xl font-bold financial-value">
+                      {formatCurrency(fondPropre)}
+                    </p>
+                  </div>
+                  <DollarSign className="h-5 w-5 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">COC</p>
-                <p className={`text-2xl font-bold financial-value ${
-                  coc >= 0 ? 'text-success' : 'text-destructive'
-                }`}>
-                  {coc >= 0 ? '+' : ''}
-                  {formatPercentage(coc)}
-                </p>
-              </div>
-              {coc >= 0 ? (
-                <TrendingUp className="h-5 w-5 text-success" />
-              ) : (
-                <TrendingDown className="h-5 w-5 text-destructive" />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">COC</p>
+                    <p className={`text-2xl font-bold financial-value ${
+                      coc >= 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {coc >= 0 ? '+' : ''}
+                      {formatPercentage(coc)}
+                    </p>
+                  </div>
+                  {coc >= 0 ? (
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-destructive" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">LTV</p>
-                <p className="text-2xl font-bold financial-value text-primary">
-                  {formatPercentage(ltv)}
-                </p>
-              </div>
-              <Target className="h-5 w-5 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">LTV</p>
+                    <p className="text-2xl font-bold financial-value text-primary">
+                      {formatPercentage(ltv)}
+                    </p>
+                  </div>
+                  <Target className="h-5 w-5 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">XIRR</p>
-                <p className="text-2xl font-bold financial-value text-primary">
-                  {formatPercentage(xirr)}
-                </p>
-              </div>
-              <TrendingUp className="h-5 w-5 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">XIRR</p>
+                    <p className="text-2xl font-bold financial-value text-primary">
+                      {formatPercentage(xirr)}
+                    </p>
+                  </div>
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Synthesis Section */}
       <Card>
