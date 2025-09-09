@@ -50,6 +50,14 @@ interface DebtFlowRow {
   rmbtInteret: number;
 }
 
+interface SyntheseRow {
+  date: string;
+  flux: number;
+  valeur: number;
+  crd: number;
+  fp: number;
+}
+
 interface PerformanceData {
   id?: string;
   currentValue: number;
@@ -284,6 +292,69 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
 
   const calculateFlux = (flow: DebtFlowRow) => {
     return flow.rmbtCapital + flow.rmbtInteret;
+  };
+
+  // Calculate synthesis data by grouping all data by date
+  const getSyntheseData = (): SyntheseRow[] => {
+    const dateMap = new Map<string, SyntheseRow>();
+
+    // Initialize all dates
+    const allDates = new Set<string>();
+    cashflows.forEach(cf => allDates.add(cf.date));
+    immobilisations.forEach(immo => allDates.add(immo.date));
+    debtFlows.forEach(df => allDates.add(df.date));
+    valorisations.forEach(valo => allDates.add(valo.date));
+
+    // Initialize all dates in map
+    allDates.forEach(date => {
+      dateMap.set(date, {
+        date,
+        flux: 0,
+        valeur: 0,
+        crd: 0,
+        fp: 0
+      });
+    });
+
+    // Add EBITDA from cashflows (rex)
+    cashflows.forEach(cf => {
+      const existing = dateMap.get(cf.date);
+      if (existing) {
+        existing.flux += cf.rex;
+      }
+    });
+
+    // Add immobilisation amounts
+    immobilisations.forEach(immo => {
+      const existing = dateMap.get(immo.date);
+      if (existing) {
+        existing.flux += immo.montant;
+      }
+    });
+
+    // Add debt flows and CRD
+    debtFlows.forEach(df => {
+      const existing = dateMap.get(df.date);
+      if (existing) {
+        existing.flux += calculateFlux(df);
+        existing.crd = calculateCapitalFin(df);
+      }
+    });
+
+    // Add valorisations
+    valorisations.forEach(valo => {
+      const existing = dateMap.get(valo.date);
+      if (existing) {
+        existing.valeur = valo.valeur;
+      }
+    });
+
+    // Calculate FP = Valeur - CRD
+    dateMap.forEach(row => {
+      row.fp = row.valeur - row.crd;
+    });
+
+    return Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
   // CRUD functions for cashflows
@@ -1280,6 +1351,59 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                 Ajouter une ligne
               </Button>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Synthesis Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Synthèse
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Flux</TableHead>
+                  <TableHead>Valeur</TableHead>
+                  <TableHead>CRD</TableHead>
+                  <TableHead>FP</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {getSyntheseData().map((row, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">
+                      {new Date(row.date).toLocaleDateString('fr-FR')}
+                    </TableCell>
+                    <TableCell className="financial-value">
+                      {formatCurrency(row.flux)}
+                    </TableCell>
+                    <TableCell className="financial-value">
+                      {formatCurrency(row.valeur)}
+                    </TableCell>
+                    <TableCell className="financial-value">
+                      {formatCurrency(row.crd)}
+                    </TableCell>
+                    <TableCell className="financial-value font-medium">
+                      {formatCurrency(row.fp)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {getSyntheseData().length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      Aucune donnée disponible pour la synthèse
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
