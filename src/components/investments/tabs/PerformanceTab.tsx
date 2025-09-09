@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus, Trash2, Edit, Save } from 'lucide-react';
 
 interface CashflowRow {
   date: string;
   rex: number;
   retraitAmort: number;
-  retraitImmo: number;
   retraitAutres: number;
 }
 
@@ -38,28 +38,24 @@ const mockPerformanceData: PerformanceData = {
       date: '2023-03-15',
       rex: 0,
       retraitAmort: 0,
-      retraitImmo: 2100000,
-      retraitAutres: 0
+      retraitAutres: 2100000
     },
     {
       date: '2023-06-15',
       rex: 15000,
       retraitAmort: 0,
-      retraitImmo: 0,
       retraitAutres: 0
     },
     {
       date: '2023-09-15',
       rex: 15500,
       retraitAmort: 0,
-      retraitImmo: 0,
       retraitAutres: 0
     },
     {
       date: '2023-12-15',
       rex: 16000,
       retraitAmort: 0,
-      retraitImmo: 0,
       retraitAutres: 0
     }
   ]
@@ -68,6 +64,8 @@ const mockPerformanceData: PerformanceData = {
 export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   const [data] = useState<PerformanceData>(mockPerformanceData);
   const [cashflows, setCashflows] = useState<CashflowRow[]>(data.cashflows);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingRow, setEditingRow] = useState<CashflowRow | null>(null);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -82,7 +80,7 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   };
 
   const calculateCashIn = (cashflow: CashflowRow) => {
-    return cashflow.rex - cashflow.retraitAmort - cashflow.retraitImmo - cashflow.retraitAutres;
+    return cashflow.rex - cashflow.retraitAmort - cashflow.retraitAutres;
   };
 
   const addCashflowRow = () => {
@@ -90,10 +88,52 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
       date: new Date().toISOString().split('T')[0],
       rex: 0,
       retraitAmort: 0,
-      retraitImmo: 0,
       retraitAutres: 0
     };
-    setCashflows([...cashflows, newRow]);
+    const newCashflows = [...cashflows, newRow];
+    setCashflows(newCashflows);
+    // Mettre la nouvelle ligne en mode édition
+    setEditingIndex(newCashflows.length - 1);
+    setEditingRow(newRow);
+  };
+
+  const deleteCashflowRow = (index: number) => {
+    const newCashflows = cashflows.filter((_, i) => i !== index);
+    setCashflows(newCashflows);
+    // Si on supprime la ligne en cours d'édition, sortir du mode édition
+    if (editingIndex === index) {
+      setEditingIndex(null);
+      setEditingRow(null);
+    }
+  };
+
+  const startEdit = (index: number) => {
+    setEditingIndex(index);
+    setEditingRow({ ...cashflows[index] });
+  };
+
+  const saveEdit = () => {
+    if (editingIndex !== null && editingRow) {
+      const newCashflows = [...cashflows];
+      newCashflows[editingIndex] = editingRow;
+      setCashflows(newCashflows);
+      setEditingIndex(null);
+      setEditingRow(null);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setEditingRow(null);
+  };
+
+  const updateEditingField = (field: keyof CashflowRow, value: string | number) => {
+    if (editingRow) {
+      setEditingRow({
+        ...editingRow,
+        [field]: value
+      });
+    }
   };
 
   return (
@@ -172,7 +212,7 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Historique des flux de trésorerie
+            Historique Performance
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -182,34 +222,98 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                 <TableHead>Date</TableHead>
                 <TableHead>REX</TableHead>
                 <TableHead>Retrait Amort</TableHead>
-                <TableHead>Retrait Immo</TableHead>
                 <TableHead>Retrait Autres</TableHead>
                 <TableHead>Cash In avant Levier</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {cashflows.map((cashflow, index) => (
                 <TableRow key={index}>
                   <TableCell>
-                    {new Date(cashflow.date).toLocaleDateString('fr-FR')}
+                    {editingIndex === index ? (
+                      <Input
+                        type="date"
+                        value={editingRow?.date || ''}
+                        onChange={(e) => updateEditingField('date', e.target.value)}
+                        className="w-full"
+                      />
+                    ) : (
+                      new Date(cashflow.date).toLocaleDateString('fr-FR')
+                    )}
                   </TableCell>
                   <TableCell className="financial-value">
-                    {formatCurrency(cashflow.rex)}
+                    {editingIndex === index ? (
+                      <Input
+                        type="number"
+                        value={editingRow?.rex || 0}
+                        onChange={(e) => updateEditingField('rex', parseFloat(e.target.value) || 0)}
+                        className="w-full"
+                      />
+                    ) : (
+                      formatCurrency(cashflow.rex)
+                    )}
                   </TableCell>
                   <TableCell className="financial-value">
-                    {formatCurrency(cashflow.retraitAmort)}
+                    {editingIndex === index ? (
+                      <Input
+                        type="number"
+                        value={editingRow?.retraitAmort || 0}
+                        onChange={(e) => updateEditingField('retraitAmort', parseFloat(e.target.value) || 0)}
+                        className="w-full"
+                      />
+                    ) : (
+                      formatCurrency(cashflow.retraitAmort)
+                    )}
                   </TableCell>
                   <TableCell className="financial-value">
-                    {formatCurrency(cashflow.retraitImmo)}
-                  </TableCell>
-                  <TableCell className="financial-value">
-                    {formatCurrency(cashflow.retraitAutres)}
+                    {editingIndex === index ? (
+                      <Input
+                        type="number"
+                        value={editingRow?.retraitAutres || 0}
+                        onChange={(e) => updateEditingField('retraitAutres', parseFloat(e.target.value) || 0)}
+                        className="w-full"
+                      />
+                    ) : (
+                      formatCurrency(cashflow.retraitAutres)
+                    )}
                   </TableCell>
                   <TableCell className={`financial-value font-medium ${
-                    calculateCashIn(cashflow) >= 0 ? 'text-success' : 'text-destructive'
+                    calculateCashIn(editingIndex === index ? editingRow! : cashflow) >= 0 ? 'text-success' : 'text-destructive'
                   }`}>
-                    {calculateCashIn(cashflow) >= 0 ? '+' : ''}
-                    {formatCurrency(calculateCashIn(cashflow))}
+                    {calculateCashIn(editingIndex === index ? editingRow! : cashflow) >= 0 ? '+' : ''}
+                    {formatCurrency(calculateCashIn(editingIndex === index ? editingRow! : cashflow))}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {editingIndex === index ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={saveEdit}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Save className="h-4 w-4 text-success" />
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => startEdit(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-4 w-4 text-primary" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteCashflowRow(index)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
