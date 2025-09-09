@@ -304,9 +304,18 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                     </SelectContent>
                   </Select>
                 ) : (
-                  <p className="font-medium">
-                    {companies.find(c => c.id === data.companyId)?.name || (data.companyId ? 'Société inconnue' : 'Non défini')}
-                  </p>
+                  <div className="space-y-2">
+                    <p className="font-medium">
+                      {companies.find(c => c.id === data.companyId)?.name || (data.companyId ? 'Société inconnue' : 'Non défini')}
+                    </p>
+                    <div className="text-xs text-muted-foreground space-y-1 bg-gray-100 p-2 rounded">
+                      <p><strong>Debug Info:</strong></p>
+                      <p>data.companyId: {String(data.companyId)}</p>
+                      <p>investmentData?.companyId: {String(investmentData?.companyId)}</p>
+                      <p>tempEditData?.companyId: {String(tempEditData?.companyId)}</p>
+                      <p>Sociétés: [{companies.map(c => `${c.name}(${c.id})`).join(', ')}]</p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
