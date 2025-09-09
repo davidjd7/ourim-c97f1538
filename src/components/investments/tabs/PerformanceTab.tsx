@@ -718,6 +718,21 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   // Calculate XIRR using the corrected Excel TRI.PAIEMENT formula
   const xirr = syntheseData.length > 1 ? calculateXIRR(syntheseData) : 0;
 
+  // Calculate additional KPIs
+  const latestCashflow = cashflows[cashflows.length - 1];
+  const latestDebtFlow = debtFlows[debtFlows.length - 1];
+  
+  // Yield = flux / FP à la date la plus récente
+  const yield_ = latestSynthese?.fp && latestSynthese.fp !== 0 ? (latestSynthese.flux / latestSynthese.fp) * 100 : 0;
+  
+  // Cap Rate = flux / Valeur à la date la plus récente  
+  const capRate = latestSynthese?.valeur && latestSynthese.valeur !== 0 ? (latestSynthese.flux / latestSynthese.valeur) * 100 : 0;
+  
+  // ICR = EBITDA le plus récent / Rmbt Intérêt le plus récent
+  const latestEBITDA = latestCashflow ? calculateEBITDA(latestCashflow) : 0;
+  const latestRmbtInteret = latestDebtFlow?.rmbtInteret || 0;
+  const icr = latestRmbtInteret > 0 ? latestEBITDA / latestRmbtInteret : 0;
+
   return (
     <div className="space-y-6">
       {/* KPI Section */}
@@ -729,7 +744,7 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -789,6 +804,68 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                     </p>
                   </div>
                   <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Yield</p>
+                    <p className={`text-2xl font-bold financial-value ${
+                      yield_ >= 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {yield_ >= 0 ? '+' : ''}
+                      {formatPercentage(yield_)}
+                    </p>
+                  </div>
+                  {yield_ >= 0 ? (
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-destructive" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Cap Rate</p>
+                    <p className={`text-2xl font-bold financial-value ${
+                      capRate >= 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {capRate >= 0 ? '+' : ''}
+                      {formatPercentage(capRate)}
+                    </p>
+                  </div>
+                  {capRate >= 0 ? (
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-destructive" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">ICR</p>
+                    <p className={`text-2xl font-bold financial-value ${
+                      icr >= 1 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {icr.toFixed(2)}x
+                    </p>
+                  </div>
+                  {icr >= 1 ? (
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-destructive" />
+                  )}
                 </div>
               </CardContent>
             </Card>
