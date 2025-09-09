@@ -6,8 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus, Trash2, Edit, Save, CreditCard, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Target, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { KPICard } from '@/components/dashboard/KPICard';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { ComposedChart, Bar, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
@@ -928,6 +929,65 @@ export function PerformanceTab({
           </div>
         </CardContent>
       </Card>
+
+      {/* Latest Values KPI Section */}
+      {(() => {
+        const chartData = getChartData();
+        const latestData = chartData[chartData.length - 1];
+        
+        if (!latestData) return null;
+        
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Valeurs les plus récentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <KPICard
+                  title="Dernière Valeur"
+                  value={formatCurrency(latestData.valeur)}
+                  icon={Target}
+                  variant="primary"
+                />
+                <KPICard
+                  title="Dernier Flux"
+                  value={formatCurrency(latestData.flux)}
+                  icon={DollarSign}
+                  variant={latestData.flux >= 0 ? "success" : "default"}
+                  trend={latestData.flux !== 0 ? {
+                    value: Math.abs(latestData.flux),
+                    direction: latestData.flux >= 0 ? "up" : "down"
+                  } : undefined}
+                />
+                <KPICard
+                  title="Dernier Var Valeur"
+                  value={formatCurrency(latestData.varValeur)}
+                  icon={TrendIcon}
+                  variant={latestData.varValeur >= 0 ? "success" : "default"}
+                  trend={latestData.varValeur !== 0 ? {
+                    value: Math.abs(latestData.varValeur),
+                    direction: latestData.varValeur >= 0 ? "up" : "down"
+                  } : undefined}
+                />
+                <KPICard
+                  title="Dernier Gain"
+                  value={formatCurrency(latestData.gain)}
+                  icon={TrendingUp}
+                  variant={latestData.gain >= 0 ? "success" : "default"}
+                  trend={latestData.gain !== 0 ? {
+                    value: Math.abs(latestData.gain),
+                    direction: latestData.gain >= 0 ? "up" : "down"
+                  } : undefined}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Chart Section */}
       <div className="grid gap-6 lg:grid-cols-2">
