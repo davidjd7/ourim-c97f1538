@@ -499,7 +499,9 @@ export default function InvestissementDetail() {
               investmentAmount: (isNewInvestment ? 0 : investment?.investmentAmount) || 0,
               acquisitionDate: (isNewInvestment ? '' : investment?.acquisitionDate) || '',
               notaryFees: (isNewInvestment ? 0 : investment?.notaryFees) || 0,
-              renovationBudget: (isNewInvestment ? 0 : investment?.renovationBudget) || 0
+              renovationBudget: (isNewInvestment ? 0 : investment?.renovationBudget) || 0,
+              // Company field - CRITICAL for display
+              companyId: (isNewInvestment ? undefined : investment?.companyId) || tempEditData.companyId
             }}
             tempEditData={tempEditData}
             onDataChange={handleDataChange}

@@ -56,6 +56,7 @@ interface GeneralTabProps {
     acquisitionDate: string;
     notaryFees: number;
     renovationBudget: number;
+    companyId?: string;  // Added this field
     company?: string;
     // Bail fields
     bailPriseEffet?: string;
@@ -303,13 +304,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                   </Select>
                 ) : (
                   <p className="font-medium">
-                    {(() => {
-                      console.log('Companies:', companies);
-                      console.log('Looking for companyId:', data.companyId);
-                      const foundCompany = companies.find(c => c.id === data.companyId);
-                      console.log('Found company:', foundCompany);
-                      return foundCompany?.name || (data.companyId ? 'Société inconnue' : 'Non défini');
-                    })()}
+                    {companies.find(c => c.id === data.companyId)?.name || (data.companyId ? 'Société inconnue' : 'Non défini')}
                   </p>
                 )}
               </div>
