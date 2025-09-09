@@ -722,8 +722,8 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   const latestCashflow = cashflows[cashflows.length - 1];
   const latestDebtFlow = debtFlows[debtFlows.length - 1];
   
-  // Yield = flux / FP à la date la plus récente
-  const yield_ = latestSynthese?.fp && latestSynthese.fp !== 0 ? (latestSynthese.flux / latestSynthese.fp) * 100 : 0;
+  // Yield = flux / CRD à la date la plus récente
+  const yield_ = latestSynthese?.crd && latestSynthese.crd !== 0 ? (latestSynthese.flux / latestSynthese.crd) * 100 : 0;
   
   // Cap Rate = flux / Valeur à la date la plus récente  
   const capRate = latestSynthese?.valeur && latestSynthese.valeur !== 0 ? (latestSynthese.flux / latestSynthese.valeur) * 100 : 0;
@@ -732,6 +732,15 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   const latestEBITDA = latestCashflow ? calculateEBITDA(latestCashflow) : 0;
   const latestRmbtInteret = latestDebtFlow?.rmbtInteret || 0;
   const icr = latestRmbtInteret > 0 ? latestEBITDA / latestRmbtInteret : 0;
+
+  // Total Gain Valeur = Valeur la plus récente - Valeur la plus ancienne
+  const totalGainValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
+  
+  // Total Flux = Somme des flux
+  const totalFlux = syntheseData.reduce((sum, item) => sum + (item.flux || 0), 0);
+  
+  // Total Earning = Total Gain Valeur + Total Flux
+  const totalEarning = totalGainValeur + totalFlux;
 
   return (
     <div className="space-y-6">
@@ -744,7 +753,8 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+          {/* Première ligne - 4 KPIs */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -807,7 +817,10 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                 </div>
               </CardContent>
             </Card>
+          </div>
 
+          {/* Deuxième ligne - 6 KPIs */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -862,6 +875,69 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
                     </p>
                   </div>
                   {icr >= 1 ? (
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-destructive" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Gain Valeur</p>
+                    <p className={`text-2xl font-bold financial-value ${
+                      totalGainValeur >= 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {totalGainValeur >= 0 ? '+' : ''}
+                      {formatCurrency(totalGainValeur)}
+                    </p>
+                  </div>
+                  {totalGainValeur >= 0 ? (
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-destructive" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Flux</p>
+                    <p className={`text-2xl font-bold financial-value ${
+                      totalFlux >= 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {totalFlux >= 0 ? '+' : ''}
+                      {formatCurrency(totalFlux)}
+                    </p>
+                  </div>
+                  {totalFlux >= 0 ? (
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-destructive" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Earning</p>
+                    <p className={`text-2xl font-bold financial-value ${
+                      totalEarning >= 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {totalEarning >= 0 ? '+' : ''}
+                      {formatCurrency(totalEarning)}
+                    </p>
+                  </div>
+                  {totalEarning >= 0 ? (
                     <TrendingUp className="h-5 w-5 text-success" />
                   ) : (
                     <TrendingDown className="h-5 w-5 text-destructive" />
