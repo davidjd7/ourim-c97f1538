@@ -28,6 +28,45 @@ export default function InvestissementDetail() {
 
   // Get investment from global context (null for new investments)
   const investment = isNewInvestment ? null : getInvestment(id || '');
+  
+  // Force re-render when investment data changes
+  useEffect(() => {
+    if (investment && !isEditMode) {
+      // Update tempEditData with fresh investment data when not in edit mode
+      setTempEditData({
+        name: investment.name,
+        type: investment.type,
+        status: investment.status,
+        address: investment.address || '',
+        surface: investment.surface || 0,
+        price: investment.price || 0,
+        dateAcquisition: investment.dateAcquisition || '',
+        description: investment.description || '',
+        // Investment fields
+        dateInvestment: investment.dateInvestment || '',
+        investmentAmount: investment.investmentAmount || 0,
+        notaryFees: investment.notaryFees || 0,
+        companyId: investment.companyId || undefined,
+        // Bail fields
+        locataire: investment.locataire || '',
+        dateEntree: investment.dateEntree || '',
+        typeBail: investment.typeBail || '',
+        dureeBail: investment.dureeBail || 0,
+        bailNextBreak: investment.bailNextBreak || '',
+        bailGmapLink: investment.bailGmapLink || '',
+        bailGmapNote: investment.bailGmapNote || '',
+        bailLoyerHT: investment.bailLoyerHT || 0,
+        bailCNR: investment.bailCNR || 0,
+        bailPriseEffet: investment.bailPriseEffet || '',
+        bailActivite: investment.bailActivite || '',
+        bailAnciennete: investment.bailAnciennete || 0,
+        // Présentation Vente fields
+        netVendeur: investment.netVendeur || 0,
+        agent: investment.agent || 0,
+        honoNotaire: investment.honoNotaire || 0.08
+      });
+    }
+  }, [investment, isEditMode]);
 
   // Initialize state before any conditional returns
   const [tempEditData, setTempEditData] = useState({
@@ -248,10 +287,7 @@ export default function InvestissementDetail() {
           honoNotaire: tempEditData.honoNotaire
         });
         
-        console.log('Investment updated, reloading...');
-        
-        // Force reload the page to ensure data synchronization
-        window.location.reload();
+        console.log('Investment updated successfully');
         
         toast({
           title: "Modifications sauvegardées",
