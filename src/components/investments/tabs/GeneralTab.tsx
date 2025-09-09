@@ -306,7 +306,11 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                 ) : (
                   <div className="space-y-2">
                     <p className="font-medium">
-                      {companies.find(c => c.id === data.companyId)?.name || (data.companyId ? 'Société inconnue' : 'Non défini')}
+                      {(() => {
+                        // Utiliser investmentData.companyId directement au lieu de data.companyId
+                        const companyId = investmentData?.companyId;
+                        return companies.find(c => c.id === companyId)?.name || (companyId ? 'Société inconnue' : 'Non défini');
+                      })()}
                     </p>
                     <div className="text-xs text-muted-foreground space-y-1 bg-gray-100 p-2 rounded">
                       <p><strong>Debug Info:</strong></p>
