@@ -58,14 +58,6 @@ interface SyntheseRow {
   fp: number;
 }
 
-interface PerformanceData {
-  id?: string;
-  currentValue: number;
-  initialValue: number;
-  totalReturn: number;
-  returnPercentage: number;
-  tri: number;
-}
 
 interface PerformanceTabProps {
   investmentId: string;
@@ -75,14 +67,6 @@ interface PerformanceTabProps {
 export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   const { user } = useAuth();
   
-  // Performance data
-  const [data, setData] = useState<PerformanceData>({
-    currentValue: 0,
-    initialValue: 0,
-    totalReturn: 0,
-    returnPercentage: 0,
-    tri: 0
-  });
   
   // Data arrays
   const [cashflows, setCashflows] = useState<CashflowRow[]>([]);
@@ -108,7 +92,6 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   useEffect(() => {
     if (user && investmentId) {
       Promise.all([
-        loadPerformanceData(),
         loadCashflows(),
         loadImmobilisations(),
         loadValorisations(),
@@ -119,31 +102,6 @@ export function PerformanceTab({ investmentId }: PerformanceTabProps) {
   }, [user, investmentId]);
 
   // Load functions
-  const loadPerformanceData = async () => {
-    try {
-      const { data: performanceData, error } = await supabase
-        .from('investment_performance')
-        .select('*')
-        .eq('investment_id', investmentId)
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (performanceData) {
-        setData({
-          id: performanceData.id,
-          currentValue: performanceData.current_value || 0,
-          initialValue: performanceData.initial_value || 0,
-          totalReturn: performanceData.total_return || 0,
-          returnPercentage: performanceData.return_percentage || 0,
-          tri: performanceData.tri || 0
-        });
-      }
-    } catch (error) {
-      console.error('Error loading performance data:', error);
-    }
-  };
 
   const loadCashflows = async () => {
     try {
