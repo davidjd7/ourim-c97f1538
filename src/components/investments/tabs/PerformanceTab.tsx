@@ -312,11 +312,11 @@ export function PerformanceTab({
   const chartConfig = {
     flux: {
       label: "Flux",
-      color: "hsl(var(--chart-1))",
+      color: "#2563eb", // Blue color for bars
     },
     valeur: {
-      label: "Valeur",
-      color: "hsl(var(--chart-2))",
+      label: "Valeur", 
+      color: "#ea580c", // Orange color for line
     },
   };
 
@@ -911,7 +911,7 @@ export function PerformanceTab({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Évolution Annuelle
+            Evolution Valeur
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -930,20 +930,21 @@ export function PerformanceTab({
                   dataKey="year" 
                   tick={{ fontSize: 12 }}
                   tickLine={{ stroke: 'hsl(var(--border))' }}
+                  tickFormatter={(value) => `01/01/${value}`}
                 />
                 <YAxis 
                   yAxisId="flux"
                   orientation="left"
                   tick={{ fontSize: 12 }}
                   tickLine={{ stroke: 'hsl(var(--border))' }}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k€`}
+                  tickFormatter={(value) => value.toLocaleString('fr-FR')}
                 />
                 <YAxis 
                   yAxisId="valeur"
                   orientation="right"
                   tick={{ fontSize: 12 }}
                   tickLine={{ stroke: 'hsl(var(--border))' }}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k€`}
+                  tickFormatter={(value) => value.toLocaleString('fr-FR')}
                 />
                 <ChartTooltip 
                   content={
@@ -959,18 +960,17 @@ export function PerformanceTab({
                 <Bar 
                   yAxisId="flux"
                   dataKey="flux" 
-                  fill="var(--color-flux)"
-                  radius={[4, 4, 0, 0]}
-                  name="flux"
+                  fill="#2563eb"
+                  name="Flux"
                 />
                 <Line 
                   yAxisId="valeur"
                   type="monotone" 
                   dataKey="valeur" 
-                  stroke="var(--color-valeur)"
-                  strokeWidth={3}
-                  dot={{ fill: "var(--color-valeur)", strokeWidth: 2, r: 6 }}
-                  name="valeur"
+                  stroke="#ea580c"
+                  strokeWidth={2}
+                  dot={{ fill: "#ea580c", strokeWidth: 2, r: 4 }}
+                  name="Valeur"
                 />
               </ComposedChart>
             </ResponsiveContainer>
