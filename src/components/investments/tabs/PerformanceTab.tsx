@@ -994,12 +994,17 @@ export function PerformanceTab({
                   <TableHead>Date</TableHead>
                   <TableHead>Flux</TableHead>
                   <TableHead>Valeur</TableHead>
+                  <TableHead>Var Valeur</TableHead>
                   <TableHead>CRD</TableHead>
                   <TableHead>FP</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {getSyntheseData().map((row, index) => <TableRow key={index}>
+                {getSyntheseData().map((row, index) => {
+                  const syntheseData = getSyntheseData();
+                  const varValeur = index > 0 ? row.valeur - syntheseData[index - 1].valeur : 0;
+                  
+                  return <TableRow key={index}>
                     <TableCell className="font-medium">
                       {new Date(row.date).toLocaleDateString('fr-FR')}
                     </TableCell>
@@ -1009,15 +1014,19 @@ export function PerformanceTab({
                     <TableCell className="financial-value">
                       {formatCurrency(row.valeur)}
                     </TableCell>
+                    <TableCell className={`financial-value ${varValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {varValeur >= 0 ? '+' : ''}{formatCurrency(varValeur)}
+                    </TableCell>
                     <TableCell className="financial-value">
                       {formatCurrency(row.crd)}
                     </TableCell>
                     <TableCell className="financial-value font-medium">
                       {formatCurrency(row.fp)}
                     </TableCell>
-                  </TableRow>)}
+                  </TableRow>
+                })}
                 {getSyntheseData().length === 0 && <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Aucune donnée disponible pour la synthèse
                     </TableCell>
                   </TableRow>}
