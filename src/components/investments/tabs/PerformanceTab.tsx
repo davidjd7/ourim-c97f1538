@@ -775,17 +775,17 @@ export function PerformanceTab({
   return <div className="space-y-6">
 
       {/* Chart Section */}
-      <div className="flex justify-center">
-        <div className="w-full max-w-6xl">
-          {/* Graphique Synthèse Annuelle avec courbe de valeur */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Synthèse Annuelle
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+      <div className="grid gap-6">
+        {/* Graphique Synthèse Annuelle avec courbe de valeur */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Synthèse Annuelle
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <div className="w-full max-w-6xl">
               <ChartContainer config={chartConfig} className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
@@ -869,9 +869,9 @@ export function PerformanceTab({
                   </ComposedChart>
                 </ResponsiveContainer>
               </ChartContainer>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Synthesis Section */}
