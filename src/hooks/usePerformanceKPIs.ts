@@ -326,7 +326,7 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
       };
 
       // Dernier Earning calculations
-      const dernierFlux = latestChartData?.flux || 0;
+      const dernierFlux = latestSynthese?.flux || 0;
       const dernierVarValeur = previousChartData ? (latestChartData?.valeur || 0) - (previousChartData?.valeur || 0) : 0;
       const dernierEarning = dernierFlux + dernierVarValeur;
       const variationPercentage = previousChartData && previousChartData.valeur !== 0 
