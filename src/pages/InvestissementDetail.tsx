@@ -544,82 +544,133 @@ export default function InvestissementDetail() {
           );
         }
 
-        // For invested status: show performance KPIs
+        // For invested status: show performance KPIs with all details
         if (currentStatus === 'INVESTI') {
-          // Use actual calculated KPI values from PerformanceTab
-          const fondPropre = kpisLoading ? 0 : kpis.fondPropre;
-          const dernierEarning = kpisLoading ? 0 : kpis.dernierEarning;
-          const dernierFlux = kpisLoading ? 0 : kpis.dernierFlux;
-          const xirr = kpisLoading ? 0 : kpis.xirr;
-          
-          // Temporary fix for coc reference - using the correct path now
-          const coc = kpisLoading ? 0 : kpis.dernierFluxDetails.coc;
-          
+          const formatCurrency = (amount: number) => {
+            return new Intl.NumberFormat('fr-FR', {
+              style: 'currency',
+              currency: 'EUR',
+              minimumFractionDigits: 0
+            }).format(amount);
+          };
+
+          const formatPercentage = (value: number) => {
+            return `${value.toFixed(1)}%`;
+          };
+
           return (
             <div className="grid gap-4 md:grid-cols-4">
               {/* Fond Propre */}
               <div className="card-financial">
                 <div className="p-4">
-                  <label className="text-sm text-muted-foreground">
-                    Fond Propre ({kpisLoading ? '' : kpis.fondPropreDetails.year})
-                  </label>
-                  <p className="font-medium financial-value text-xl">
-                    {kpisLoading ? '...' : formatCurrency(fondPropre)}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">
+                        Fond Propre {kpisLoading ? '' : `(${kpis.fondPropreDetails.year})`}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xl font-bold financial-value">
+                          {kpisLoading ? '...' : formatCurrency(kpis.fondPropre)}
+                        </p>
+                        {!kpisLoading && kpis.fondPropreDetails && (
+                          <div className="text-xs text-muted-foreground text-left">
+                            <div>Valeur: {formatCurrency(kpis.fondPropreDetails.valeur)}</div>
+                            <div>CRD: {formatCurrency(kpis.fondPropreDetails.crd)}</div>
+                            <div>LTV: {formatPercentage(kpis.fondPropreDetails.ltv)}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+
               {/* Dernier Earning */}
               <div className="card-financial">
                 <div className="p-4">
-                  <label className="text-sm text-muted-foreground">
-                    Dernier Earning ({kpisLoading ? '' : kpis.dernierEarningDetails.year})
-                  </label>
-                  <p className={`font-medium financial-value text-xl ${
-                    dernierEarning >= 0 ? 'text-success' : 'text-destructive'
-                  }`}>
-                    {kpisLoading ? '...' : (
-                      <>
-                        {dernierEarning >= 0 ? '+' : ''}
-                        {formatCurrency(dernierEarning)}
-                      </>
-                    )}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">
+                        Dernier Earning {kpisLoading ? '' : `(${kpis.dernierEarningDetails.year})`}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className={`text-xl font-bold financial-value ${
+                          !kpisLoading && kpis.dernierEarning >= 0 ? 'text-success' : 'text-destructive'
+                        }`}>
+                          {kpisLoading ? '...' : (
+                            `${kpis.dernierEarning >= 0 ? '+' : ''}${formatCurrency(kpis.dernierEarning)}`
+                          )}
+                        </p>
+                        {!kpisLoading && kpis.dernierEarningDetails && (
+                          <div className="text-xs text-muted-foreground text-left">
+                            <div>Flux: {kpis.dernierEarningDetails.flux >= 0 ? '+' : ''}{formatCurrency(kpis.dernierEarningDetails.flux)}</div>
+                            <div>Var Valeur: {kpis.dernierEarningDetails.varValeur >= 0 ? '+' : ''}{formatCurrency(kpis.dernierEarningDetails.varValeur)} ({kpis.dernierEarningDetails.varValeurPercentage >= 0 ? '+' : ''}{kpis.dernierEarningDetails.varValeurPercentage.toFixed(1)}%)</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+
               {/* Dernier Flux */}
               <div className="card-financial">
                 <div className="p-4">
-                  <label className="text-sm text-muted-foreground">
-                    Dernier Flux ({kpisLoading ? '' : kpis.dernierFluxDetails.year})
-                  </label>
-                  <p className={`font-medium financial-value text-xl ${
-                    dernierFlux >= 0 ? 'text-success' : 'text-destructive'
-                  }`}>
-                    {kpisLoading ? '...' : (
-                      <>
-                        {dernierFlux >= 0 ? '+' : ''}
-                        {formatCurrency(dernierFlux)}
-                      </>
-                    )}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">
+                        Dernier Flux {kpisLoading ? '' : `(${kpis.dernierFluxDetails.year})`}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className={`text-xl font-bold financial-value ${
+                            !kpisLoading && kpis.dernierFlux >= 0 ? 'text-success' : 'text-destructive'
+                          }`}>
+                            {kpisLoading ? '...' : (
+                              `${kpis.dernierFlux >= 0 ? '+' : ''}${formatCurrency(kpis.dernierFlux)}`
+                            )}
+                          </p>
+                          {!kpisLoading && investment.bailLoyerHT && kpis.dernierFluxDetails.fluxRate && (
+                            <p className="text-xs text-muted-foreground">
+                              {Math.round(kpis.dernierFluxDetails.fluxRate)}% du loyer
+                            </p>
+                          )}
+                        </div>
+                        {!kpisLoading && kpis.dernierFluxDetails && (
+                          <div className="text-xs text-muted-foreground text-left">
+                            <div>Cap Rate: {kpis.dernierFluxDetails.capRate >= 0 ? '+' : ''}{formatPercentage(kpis.dernierFluxDetails.capRate)}</div>
+                            <div>COC: {kpis.dernierFluxDetails.coc >= 0 ? '+' : ''}{formatPercentage(kpis.dernierFluxDetails.coc)}</div>
+                            <div>Yield Banque: {kpis.dernierFluxDetails.yield >= 0 ? '+' : ''}{formatPercentage(kpis.dernierFluxDetails.yield)}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+
               {/* XIRR */}
               <div className="card-financial">
                 <div className="p-4">
-                  <label className="text-sm text-muted-foreground">
-                    XIRR ({kpisLoading ? '' : kpis.xirrDetails.years}Y)
-                  </label>
-                  <p className={`font-medium financial-value text-xl ${
-                    xirr >= 0 ? 'text-success' : 'text-destructive'
-                  }`}>
-                    {kpisLoading ? '...' : (
-                      <>
-                        {xirr >= 0 ? '+' : ''}
-                        {formatPercentage(xirr)}
-                      </>
-                    )}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">
+                        XIRR {kpisLoading ? '' : `(${kpis.xirrDetails.years}Y)`}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xl font-bold financial-value text-primary">
+                          {kpisLoading ? '...' : formatPercentage(kpis.xirr)}
+                        </p>
+                        {!kpisLoading && kpis.xirrDetails && (
+                          <div className="text-xs text-muted-foreground text-left">
+                            <div>Total: {kpis.xirrDetails.totalEarning >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.totalEarning)}</div>
+                            <div>Flux: {kpis.xirrDetails.totalFlux >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.totalFlux)}</div>
+                            <div>Valeur: {kpis.xirrDetails.totalGainValeur >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.totalGainValeur)}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
