@@ -781,7 +781,7 @@ export function PerformanceTab({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Synthèse Annuelle
+              Synthèse
             </CardTitle>
           </CardHeader>
           <CardContent>
