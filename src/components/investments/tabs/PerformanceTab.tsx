@@ -783,16 +783,16 @@ export function PerformanceTab({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 lg:grid-cols-6 items-start">
-            {/* Graphique - reste à gauche du séparateur */}
-            <div className="lg:col-span-2 pr-4">
+          <div className="flex items-start gap-4">
+            {/* Graphique - 40% de la largeur */}
+            <div className="w-[40%]">
               <ChartContainer config={chartConfig} className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
                     data={getChartData()}
                     margin={{
                       top: 20,
-                      right: 10,
+                      right: 5,
                       left: 20,
                       bottom: 60,
                     }}
@@ -872,12 +872,12 @@ export function PerformanceTab({
             </div>
 
             {/* Séparateur vertical */}
-            <div className="lg:col-span-1 flex justify-center px-2">
+            <div className="flex justify-center px-2">
               <Separator orientation="vertical" className="h-[400px]" />
             </div>
 
-            {/* Tableau - à droite du séparateur */}
-            <div className="lg:col-span-3 pl-4">
+            {/* Tableau - 60% de la largeur */}
+            <div className="w-[60%]">
               <div className="overflow-x-auto h-[400px] overflow-y-auto">
                 <Table>
                   <TableHeader>
