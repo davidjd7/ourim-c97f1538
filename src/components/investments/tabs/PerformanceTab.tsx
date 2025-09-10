@@ -855,7 +855,7 @@ export function PerformanceTab({
           </div>
 
           {/* Deuxième ligne - 6 KPIs */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -912,7 +912,7 @@ export function PerformanceTab({
                       </p>
                       <div className="text-xs text-muted-foreground text-left">
                         <div>Flux: {totalFlux >= 0 ? '+' : ''}{formatCurrency(totalFlux)}</div>
-                        <div>Gain Valeur: {totalGainValeur >= 0 ? '+' : ''}{formatCurrency(totalGainValeur)}</div>
+                        <div>Valeur: {totalGainValeur >= 0 ? '+' : ''}{formatCurrency(totalGainValeur)}</div>
                       </div>
                     </div>
                   </div>
