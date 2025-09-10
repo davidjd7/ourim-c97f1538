@@ -783,24 +783,28 @@ export function PerformanceTab({
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Fond Propre</p>
-                    <p className="text-2xl font-bold financial-value">
-                      {formatCurrency(fondPropre)}
-                    </p>
-                    {(() => {
-                      const syntheseData = getSyntheseData();
-                      const latestData = syntheseData[syntheseData.length - 1];
-                      if (latestData) {
-                        const ltv = latestData.valeur > 0 ? (latestData.crd / latestData.valeur) * 100 : 0;
-                        return (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Valeur: {formatCurrency(latestData.valeur)} • CRD: {formatCurrency(latestData.crd)} • LTV: {formatPercentage(ltv)}
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
+                    <div className="flex items-center justify-between">
+                      <p className="text-2xl font-bold financial-value">
+                        {formatCurrency(fondPropre)}
+                      </p>
+                      {(() => {
+                        const syntheseData = getSyntheseData();
+                        const latestData = syntheseData[syntheseData.length - 1];
+                        if (latestData) {
+                          const ltv = latestData.valeur > 0 ? (latestData.crd / latestData.valeur) * 100 : 0;
+                          return (
+                            <div className="text-xs text-muted-foreground text-right">
+                              <div>Valeur: {formatCurrency(latestData.valeur)}</div>
+                              <div>CRD: {formatCurrency(latestData.crd)}</div>
+                              <div>LTV: {formatPercentage(ltv)}</div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
                   </div>
                   <DollarSign className="h-5 w-5 text-primary" />
                 </div>
