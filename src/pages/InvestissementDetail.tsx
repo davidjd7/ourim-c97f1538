@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { StatusProgress } from '@/components/investments/StatusProgress';
+import { MinimalStatusProgress, StatusActions } from '@/components/investments/MinimalStatusProgress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GeneralTab } from '@/components/investments/tabs/GeneralTab';
 import { PerformanceTab } from '@/components/investments/tabs/PerformanceTab';
@@ -403,38 +403,62 @@ export default function InvestissementDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           
-          <div>
-            {isEditMode ? (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={tempEditData.name}
-                  onChange={(e) => handleDataChange({ name: e.target.value })}
-                  className="text-3xl font-bold bg-transparent border-b border-border focus:border-primary outline-none text-foreground"
-                />
-                <select
-                  value={tempEditData.type}
-                  onChange={(e) => handleDataChange({ type: e.target.value as 'IMMO' | 'PE' })}
-                  className="text-lg bg-transparent border-b border-border focus:border-primary outline-none text-muted-foreground"
-                >
-                  <option value="IMMO">Investissement Immobilier</option>
-                  <option value="PE">Private Equity</option>
-                </select>
-              </div>
-            ) : (
-              <>
-                <h1 className="text-3xl font-bold text-foreground">
-                  {isNewInvestment ? 'Nouvel Investissement' : investment!.name}
-                </h1>
-                <p className="text-lg text-muted-foreground">
-                  {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
-                </p>
-              </>
+          <div className="flex items-center gap-4">
+            <div>
+              {isEditMode ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={tempEditData.name}
+                    onChange={(e) => handleDataChange({ name: e.target.value })}
+                    className="text-3xl font-bold bg-transparent border-b border-border focus:border-primary outline-none text-foreground"
+                  />
+                  <select
+                    value={tempEditData.type}
+                    onChange={(e) => handleDataChange({ type: e.target.value as 'IMMO' | 'PE' })}
+                    className="text-lg bg-transparent border-b border-border focus:border-primary outline-none text-muted-foreground"
+                  >
+                    <option value="IMMO">Investissement Immobilier</option>
+                    <option value="PE">Private Equity</option>
+                  </select>
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-3xl font-bold text-foreground">
+                    {isNewInvestment ? 'Nouvel Investissement' : investment!.name}
+                  </h1>
+                  <p className="text-lg text-muted-foreground">
+                    {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+                  </p>
+                </>
+              )}
+            </div>
+            
+            {/* Minimal Status Progress à droite du nom */}
+            {!isNewInvestment && !isEditMode && (
+              <MinimalStatusProgress 
+                currentStatus={investment!.status}
+                onStatusChange={handleStatusChange}
+                netVendeur={investment!.netVendeur}
+                agent={investment!.agent}
+                honoNotaire={investment!.honoNotaire}
+              />
             )}
           </div>
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Status Actions à gauche du bouton Modifier */}
+          {!isNewInvestment && !isEditMode && (
+            <StatusActions 
+              currentStatus={investment!.status}
+              onStatusChange={handleStatusChange}
+              netVendeur={investment!.netVendeur}
+              agent={investment!.agent}
+              honoNotaire={investment!.honoNotaire}
+            />
+          )}
+          
           {isEditMode ? (
             <>
               <Button onClick={handleSaveChanges} size="sm">
@@ -454,17 +478,6 @@ export default function InvestissementDetail() {
            )}
         </div>
       </div>
-
-      {/* Status Progress */}
-      {!isNewInvestment && (
-        <StatusProgress 
-          currentStatus={investment!.status}
-          onStatusChange={handleStatusChange}
-          netVendeur={investment!.netVendeur}
-          agent={investment!.agent}
-          honoNotaire={investment!.honoNotaire}
-        />
-      )}
 
       {/* Dynamic KPI Cards based on Investment Status */}
       {!isNewInvestment && (() => {
