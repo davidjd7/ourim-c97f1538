@@ -783,8 +783,8 @@ export function PerformanceTab({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 lg:grid-cols-5">
-            {/* Graphique - 35% de la largeur (2 colonnes sur 5) */}
+          <div className="grid gap-6 lg:grid-cols-6 items-start">
+            {/* Graphique - 35% de la largeur (2 colonnes sur 6) */}
             <div className="lg:col-span-2">
               <ChartContainer config={chartConfig} className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -871,7 +871,12 @@ export function PerformanceTab({
               </ChartContainer>
             </div>
 
-            {/* Tableau - 65% de la largeur (3 colonnes sur 5) */}
+            {/* Séparateur vertical */}
+            <div className="lg:col-span-1 flex justify-center">
+              <Separator orientation="vertical" className="h-[400px]" />
+            </div>
+
+            {/* Tableau - 65% de la largeur (3 colonnes sur 6) */}
             <div className="lg:col-span-3">
               <div className="overflow-x-auto h-[400px] overflow-y-auto">
                 <Table>
