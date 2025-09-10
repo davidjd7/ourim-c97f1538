@@ -24,7 +24,9 @@ export default function Dashboard() {
 
       {/* KPI Cards - Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Fond Propre KPI */}
+        {/* Ces KPI seront connectés aux vraies données de performance */}
+        
+        {/* Fond Propre */}
         <div className="card-financial p-4">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -41,7 +43,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Dernier Earning KPI */}
+        {/* Dernier Earning */}
         <div className="card-financial p-4">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -57,7 +59,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Dernier Flux KPI */}
+        {/* Dernier Flux */}
         <div className="card-financial p-4">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -77,7 +79,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* XIRR KPI */}
+        {/* XIRR */}
         <div className="card-financial p-4">
           <div className="flex items-center justify-between">
             <div className="flex-1">
