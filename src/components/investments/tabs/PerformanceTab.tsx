@@ -816,18 +816,31 @@ export function PerformanceTab({
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Dernier Flux</p>
                     <div className="flex items-center justify-between">
-                      <p className={`text-2xl font-bold financial-value ${(() => {
-                        const chartData = getChartData();
-                        const latestData = chartData[chartData.length - 1];
-                        return latestData?.flux >= 0 ? 'text-success' : 'text-destructive';
-                      })()}`}>
-                        {(() => {
+                      <div>
+                        <p className={`text-2xl font-bold financial-value ${(() => {
+                          const chartData = getChartData();
+                          const latestData = chartData[chartData.length - 1];
+                          return latestData?.flux >= 0 ? 'text-success' : 'text-destructive';
+                        })()}`}>
+                          {(() => {
+                            const chartData = getChartData();
+                            const latestData = chartData[chartData.length - 1];
+                            const flux = latestData?.flux || 0;
+                            return `${flux >= 0 ? '+' : ''}${formatCurrency(flux)}`;
+                          })()}
+                        </p>
+                        {bailLoyerHT > 0 && (() => {
                           const chartData = getChartData();
                           const latestData = chartData[chartData.length - 1];
                           const flux = latestData?.flux || 0;
-                          return `${flux >= 0 ? '+' : ''}${formatCurrency(flux)}`;
+                          const fluxRate = (flux / bailLoyerHT) * 100;
+                          return (
+                            <p className="text-xs text-muted-foreground">
+                              {Math.round(fluxRate)}% vs loyer
+                            </p>
+                          );
                         })()}
-                      </p>
+                      </div>
                       <div className="text-xs text-muted-foreground text-left">
                         <div>Cap Rate: {capRate >= 0 ? '+' : ''}{formatPercentage(capRate)}</div>
                         <div>COC: {coc >= 0 ? '+' : ''}{formatPercentage(coc)}</div>
