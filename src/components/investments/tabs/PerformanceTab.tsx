@@ -783,9 +783,9 @@ export function PerformanceTab({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Graphique - 50% de la largeur */}
-            <div>
+          <div className="grid gap-6 lg:grid-cols-5">
+            {/* Graphique - 35% de la largeur (2 colonnes sur 5) */}
+            <div className="lg:col-span-2">
               <ChartContainer config={chartConfig} className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
@@ -794,7 +794,7 @@ export function PerformanceTab({
                       top: 20,
                       right: 30,
                       left: 20,
-                      bottom: 5,
+                      bottom: 60,
                     }}
                   >
                     <XAxis 
@@ -831,10 +831,10 @@ export function PerformanceTab({
                       }
                     />
                     <Legend 
-                      align="right" 
-                      verticalAlign="middle" 
-                      layout="vertical"
-                      wrapperStyle={{ paddingLeft: '20px' }}
+                      align="center" 
+                      verticalAlign="bottom" 
+                      layout="horizontal"
+                      wrapperStyle={{ paddingTop: '20px' }}
                     />
                     <Bar 
                       yAxisId="bars"
@@ -871,8 +871,8 @@ export function PerformanceTab({
               </ChartContainer>
             </div>
 
-            {/* Tableau - 50% de la largeur */}
-            <div>
+            {/* Tableau - 65% de la largeur (3 colonnes sur 5) */}
+            <div className="lg:col-span-3">
               <div className="overflow-x-auto h-[400px] overflow-y-auto">
                 <Table>
                   <TableHeader>
