@@ -903,44 +903,19 @@ export function PerformanceTab({
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Gain Valeur</p>
-                    <p className={`text-2xl font-bold financial-value ${totalGainValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {totalGainValeur >= 0 ? '+' : ''}
-                      {formatCurrency(totalGainValeur)}
-                    </p>
-                  </div>
-                  {totalGainValeur >= 0 ? <TrendingUp className="h-5 w-5 text-success" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Flux</p>
-                    <p className={`text-2xl font-bold financial-value ${totalFlux >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {totalFlux >= 0 ? '+' : ''}
-                      {formatCurrency(totalFlux)}
-                    </p>
-                  </div>
-                  {totalFlux >= 0 ? <TrendingUp className="h-5 w-5 text-success" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Total Earning</p>
-                    <p className={`text-2xl font-bold financial-value ${totalEarning >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {totalEarning >= 0 ? '+' : ''}
-                      {formatCurrency(totalEarning)}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className={`text-2xl font-bold financial-value ${totalEarning >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {totalEarning >= 0 ? '+' : ''}
+                        {formatCurrency(totalEarning)}
+                      </p>
+                      <div className="text-xs text-muted-foreground text-left">
+                        <div>Total Flux: {totalFlux >= 0 ? '+' : ''}{formatCurrency(totalFlux)}</div>
+                        <div>Total Gain Valeur: {totalGainValeur >= 0 ? '+' : ''}{formatCurrency(totalGainValeur)}</div>
+                      </div>
+                    </div>
                   </div>
-                  {totalEarning >= 0 ? <TrendingUp className="h-5 w-5 text-success" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
                 </div>
               </CardContent>
             </Card>
