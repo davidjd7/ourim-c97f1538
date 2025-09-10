@@ -816,7 +816,13 @@ export function PerformanceTab({
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Dernier Flux</p>
+                    <p className="text-sm text-muted-foreground">
+                      Dernier Flux {(() => {
+                        const chartData = getChartData();
+                        const latestData = chartData[chartData.length - 1];
+                        return latestData ? `(${latestData.year})` : '';
+                      })()}
+                    </p>
                     <div className="flex items-center justify-between">
                       <div>
                         <p className={`text-2xl font-bold financial-value ${(() => {
@@ -897,7 +903,13 @@ export function PerformanceTab({
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Dernier Earning</p>
+                    <p className="text-sm text-muted-foreground">
+                      Dernier Earning {(() => {
+                        const chartData = getChartData();
+                        const latestData = chartData[chartData.length - 1];
+                        return latestData ? `(${latestData.year})` : '';
+                      })()}
+                    </p>
                     <div className="flex items-center justify-between">
                       <p className={`text-2xl font-bold financial-value ${(() => {
                         const chartData = getChartData();
