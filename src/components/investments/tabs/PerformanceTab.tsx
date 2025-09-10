@@ -911,8 +911,8 @@ export function PerformanceTab({
                         {formatCurrency(totalEarning)}
                       </p>
                       <div className="text-xs text-muted-foreground text-left">
-                        <div>Total Flux: {totalFlux >= 0 ? '+' : ''}{formatCurrency(totalFlux)}</div>
-                        <div>Total Gain Valeur: {totalGainValeur >= 0 ? '+' : ''}{formatCurrency(totalGainValeur)}</div>
+                        <div>Flux: {totalFlux >= 0 ? '+' : ''}{formatCurrency(totalFlux)}</div>
+                        <div>Gain Valeur: {totalGainValeur >= 0 ? '+' : ''}{formatCurrency(totalGainValeur)}</div>
                       </div>
                     </div>
                   </div>
