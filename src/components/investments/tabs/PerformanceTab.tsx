@@ -795,7 +795,7 @@ export function PerformanceTab({
                         if (latestData) {
                           const ltv = latestData.valeur > 0 ? (latestData.crd / latestData.valeur) * 100 : 0;
                           return (
-                            <div className="text-xs text-muted-foreground text-right">
+                            <div className="text-xs text-muted-foreground text-left">
                               <div>Valeur: {formatCurrency(latestData.valeur)}</div>
                               <div>CRD: {formatCurrency(latestData.crd)}</div>
                               <div>LTV: {formatPercentage(ltv)}</div>
@@ -806,7 +806,6 @@ export function PerformanceTab({
                       })()}
                     </div>
                   </div>
-                  <DollarSign className="h-5 w-5 text-primary" />
                 </div>
               </CardContent>
             </Card>
