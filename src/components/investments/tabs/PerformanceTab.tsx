@@ -883,7 +883,17 @@ export function PerformanceTab({
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Total Earning</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Earning {(() => {
+                        if (syntheseData.length > 1) {
+                          const oldestDate = new Date(oldestSynthese.date);
+                          const latestDate = new Date(latestSynthese.date);
+                          const years = Math.round((latestDate.getTime() - oldestDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+                          return `(${years}Y)`;
+                        }
+                        return '';
+                      })()}
+                    </p>
                     <div className="flex items-center justify-between">
                       <p className={`text-2xl font-bold financial-value ${totalEarning >= 0 ? 'text-success' : 'text-destructive'}`}>
                         {totalEarning >= 0 ? '+' : ''}
