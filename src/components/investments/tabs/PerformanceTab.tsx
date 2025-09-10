@@ -927,7 +927,7 @@ export function PerformanceTab({
                         })()}
                       </p>
                       <div className="text-xs text-muted-foreground text-left">
-                        <div>Dernier Flux: {(() => {
+                        <div>Flux: {(() => {
                           const chartData = getChartData();
                           const latestData = chartData[chartData.length - 1];
                           const flux = latestData?.flux || 0;
