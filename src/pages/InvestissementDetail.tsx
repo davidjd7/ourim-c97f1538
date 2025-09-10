@@ -462,38 +462,120 @@ export default function InvestissementDetail() {
         />
       )}
 
-      {/* Performance Summary Cards */}
-      {!isNewInvestment && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="card-financial">
-            <div className="p-4">
-              <label className="text-sm text-muted-foreground">Dernière valeur</label>
-              <p className="font-medium financial-value text-xl">
-                {formatCurrency(investment!.lastValue)}
-              </p>
+      {/* Dynamic KPI Cards based on Investment Status */}
+      {!isNewInvestment && (() => {
+        const currentStatus = investment!.status;
+        
+        // Helper function to calculate Prix All In
+        const calculatePrixAllIn = () => {
+          const price = investment!.price || 0;
+          const notaryFees = investment!.notaryFees || 0;
+          const agent = investment!.agent || 0;
+          return price + notaryFees + agent;
+        };
+        
+        // Helper function to calculate Rendement All In
+        const calculateRdmtAllIn = () => {
+          const loyerHT = investment!.bailLoyerHT || 0;
+          const prixAllIn = calculatePrixAllIn();
+          return prixAllIn > 0 ? (loyerHT * 12 / prixAllIn) * 100 : 0;
+        };
+
+        // For pipeline statuses (RECU, DUE_DIL): show pipeline KPIs
+        if (currentStatus === 'RECU' || currentStatus === 'DUE_DIL') {
+          return (
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="card-financial">
+                <div className="p-4">
+                  <label className="text-sm text-muted-foreground">Loyer HT</label>
+                  <p className="font-medium financial-value text-xl">
+                    {formatCurrency(investment!.bailLoyerHT || 0)}
+                  </p>
+                </div>
+              </div>
+              <div className="card-financial">
+                <div className="p-4">
+                  <label className="text-sm text-muted-foreground">Prix All In</label>
+                  <p className="font-medium financial-value text-xl">
+                    {formatCurrency(calculatePrixAllIn())}
+                  </p>
+                </div>
+              </div>
+              <div className="card-financial">
+                <div className="p-4">
+                  <label className="text-sm text-muted-foreground">Rdmt All In</label>
+                  <p className="font-medium financial-value text-xl">
+                    {formatPercentage(calculateRdmtAllIn())}
+                  </p>
+                </div>
+              </div>
+              <div className="card-financial">
+                <div className="p-4">
+                  <label className="text-sm text-muted-foreground">Surface</label>
+                  <p className="font-medium financial-value text-xl">
+                    {investment!.surface || 0} m²
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="card-financial">
-            <div className="p-4">
-              <label className="text-sm text-muted-foreground">TRI</label>
-              <p className="font-medium financial-value text-xl">
-                {formatPercentage(investment!.lastTRI)}
-              </p>
+          );
+        }
+
+        // For invested status: show performance KPIs
+        if (currentStatus === 'INVESTI') {
+          // Calculate Fond Propre (Investment Amount - notary fees if any)
+          const fondPropre = investment!.investmentAmount || 0;
+          
+          // For now, use placeholder values for COC, Total Earning, XIRR
+          // These should be calculated from actual performance data
+          const coc = 0; // Cash on Cash return - to be calculated from cashflows
+          const totalEarning = investment!.lastValue || 0;
+          const xirr = investment!.lastTRI || 0;
+          
+          return (
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="card-financial">
+                <div className="p-4">
+                  <label className="text-sm text-muted-foreground">Fond Propre</label>
+                  <p className="font-medium financial-value text-xl">
+                    {formatCurrency(fondPropre)}
+                  </p>
+                </div>
+              </div>
+              <div className="card-financial">
+                <div className="p-4">
+                  <label className="text-sm text-muted-foreground">COC</label>
+                  <p className="font-medium financial-value text-xl">
+                    {formatPercentage(coc)}
+                  </p>
+                </div>
+              </div>
+              <div className="card-financial">
+                <div className="p-4">
+                  <label className="text-sm text-muted-foreground">Total Earning</label>
+                  <p className="font-medium financial-value text-xl">
+                    {formatCurrency(totalEarning)}
+                  </p>
+                </div>
+              </div>
+              <div className="card-financial">
+                <div className="p-4">
+                  <label className="text-sm text-muted-foreground">XIRR</label>
+                  <p className={`font-medium financial-value text-xl ${
+                    xirr >= 0 ? 'text-success' : 'text-destructive'
+                  }`}>
+                    {xirr >= 0 ? '+' : ''}
+                    {formatPercentage(xirr)}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="card-financial">
-            <div className="p-4">
-              <label className="text-sm text-muted-foreground">Variation</label>
-              <p className={`font-medium financial-value text-xl ${
-                investment!.lastVariation.percentage >= 0 ? 'text-success' : 'text-destructive'
-              }`}>
-                {investment!.lastVariation.percentage >= 0 ? '+' : ''}
-                {formatPercentage(investment!.lastVariation.percentage)}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+          );
+        }
+
+        // Default: no KPIs for other statuses
+        return null;
+      })()}
 
       {/* Tabs */}
       <Tabs defaultValue="general" className="w-full">
