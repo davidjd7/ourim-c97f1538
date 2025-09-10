@@ -933,12 +933,15 @@ export function PerformanceTab({
                           const flux = latestData?.flux || 0;
                           return `${flux >= 0 ? '+' : ''}${formatCurrency(flux)}`;
                         })()}</div>
-                        <div>Dernier Var Valeur: {(() => {
+                        <div>Var Valeur: {(() => {
                           const chartData = getChartData();
                           const latestData = chartData[chartData.length - 1];
                           const previousData = chartData.length > 1 ? chartData[chartData.length - 2] : null;
                           const dernierVarValeur = previousData ? (latestData?.valeur || 0) - (previousData?.valeur || 0) : 0;
-                          return `${dernierVarValeur >= 0 ? '+' : ''}${formatCurrency(dernierVarValeur)}`;
+                          const variationPercentage = previousData && previousData.valeur !== 0 
+                            ? (dernierVarValeur / previousData.valeur) * 100 
+                            : 0;
+                          return `${dernierVarValeur >= 0 ? '+' : ''}${formatCurrency(dernierVarValeur)} (${variationPercentage >= 0 ? '+' : ''}${variationPercentage.toFixed(1)}%)`;
                         })()}</div>
                       </div>
                     </div>
