@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MinimalStatusProgress, StatusActions } from '@/components/investments/MinimalStatusProgress';
 import { StatusProgress } from '@/components/investments/StatusProgress';
+import { InvestmentTags } from '@/components/investments/InvestmentTags';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GeneralTab } from '@/components/investments/tabs/GeneralTab';
 import { PerformanceTab } from '@/components/investments/tabs/PerformanceTab';
@@ -435,15 +436,19 @@ export default function InvestissementDetail() {
               )}
             </div>
             
-            {/* Minimal Status Progress à droite du nom */}
+            {/* Minimal Status Progress et Tags à droite du nom */}
             {!isNewInvestment && !isEditMode && (
-              <MinimalStatusProgress 
-                currentStatus={investment!.status}
-                onStatusChange={handleStatusChange}
-                netVendeur={investment!.netVendeur}
-                agent={investment!.agent}
-                honoNotaire={investment!.honoNotaire}
-              />
+              <div className="flex items-center gap-3">
+                <MinimalStatusProgress 
+                  currentStatus={investment!.status}
+                  onStatusChange={handleStatusChange}
+                  netVendeur={investment!.netVendeur}
+                  agent={investment!.agent}
+                  honoNotaire={investment!.honoNotaire}
+                />
+                <div className="h-4 w-px bg-border" />
+                <InvestmentTags investmentId={investment!.id} />
+              </div>
             )}
           </div>
         </div>

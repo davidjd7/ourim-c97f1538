@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Settings, Users, Building2, Tags, Bot, Map } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CompanyManagement } from '@/components/companies/CompanyManagement';
+import { TagsManagement } from '@/components/settings/TagsManagement';
 
 export default function Parametres() {
   const { toast } = useToast();
@@ -215,23 +216,7 @@ export default function Parametres() {
         </TabsContent>
 
         <TabsContent value="tags" className="space-y-6">
-          <Card className="card-financial">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Tags className="h-5 w-5 text-primary" />
-                Gestion des Tags
-              </CardTitle>
-              <CardDescription>
-                Tags utilisables sur tous les investissements
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Tags className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Fonctionnalité à développer</p>
-              </div>
-            </CardContent>
-          </Card>
+          <TagsManagement />
         </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
