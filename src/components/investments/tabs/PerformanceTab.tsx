@@ -1002,6 +1002,7 @@ export function PerformanceTab({
                   <TableHead>Retrait Amort</TableHead>
                   <TableHead>Retrait Autres</TableHead>
                   <TableHead>EBITDA</TableHead>
+                  <TableHead>QP Loyer</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1042,11 +1043,16 @@ export function PerformanceTab({
                       retraitAutres: parseFloat(e.target.value) || 0
                     }
                   })} /> : formatCurrency(cashflow.retraitAutres)}
-                    </TableCell>
-                    <TableCell className={`financial-value font-medium ${calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? '+' : ''}
-                      {formatCurrency(calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow))}
-                    </TableCell>
+                     </TableCell>
+                     <TableCell className={`financial-value font-medium ${calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                       {calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? '+' : ''}
+                       {formatCurrency(calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow))}
+                     </TableCell>
+                     <TableCell className="financial-value font-medium">
+                       {bailLoyerHT && bailLoyerHT > 0 
+                         ? `${(calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) / bailLoyerHT).toFixed(2)}x` 
+                         : 'N/A'}
+                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {editingCashflow && editingCashflow.index === index ? <Button size="sm" variant="ghost" onClick={() => saveCashflow(editingCashflow.row)} className="h-8 w-8 p-0">
