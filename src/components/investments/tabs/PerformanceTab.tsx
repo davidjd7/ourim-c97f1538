@@ -992,23 +992,13 @@ export function PerformanceTab({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-1">
                 <KPICard
                   title="Dernière Valeur"
                   value={formatCurrency(latestData.valeur)}
                   subtitle={`${variationValeur >= 0 ? '+' : ''}${formatCurrency(variationValeur)} (${variationPercentage >= 0 ? '+' : ''}${formatPercentage(variationPercentage)})`}
                   icon={Target}
                   variant="primary"
-                />
-                <KPICard
-                  title="Dernier Gain"
-                  value={formatCurrency(latestData.gain)}
-                  icon={TrendingUp}
-                  variant={latestData.gain >= 0 ? "success" : "default"}
-                  trend={latestData.gain !== 0 ? {
-                    value: Math.abs(latestData.gain),
-                    direction: latestData.gain >= 0 ? "up" : "down"
-                  } : undefined}
                 />
               </div>
             </CardContent>
