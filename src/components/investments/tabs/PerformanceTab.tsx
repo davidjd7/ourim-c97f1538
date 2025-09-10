@@ -1050,7 +1050,7 @@ export function PerformanceTab({
                      </TableCell>
                      <TableCell className="financial-value font-medium">
                        {bailLoyerHT && bailLoyerHT > 0 
-                         ? `${(calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) / bailLoyerHT).toFixed(2)}x` 
+                         ? `${((calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) / bailLoyerHT) * 100).toFixed(1)}%` 
                          : 'N/A'}
                      </TableCell>
                     <TableCell>
