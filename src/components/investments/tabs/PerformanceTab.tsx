@@ -856,12 +856,12 @@ export function PerformanceTab({
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">LTV</p>
+                    <p className="text-sm text-muted-foreground">XIRR</p>
                     <p className="text-2xl font-bold financial-value text-primary">
-                      {formatPercentage(ltv)}
+                      {formatPercentage(xirr)}
                     </p>
                   </div>
-                  <Target className="h-5 w-5 text-primary" />
+                  <TrendingUp className="h-5 w-5 text-primary" />
                 </div>
               </CardContent>
             </Card>
@@ -870,12 +870,34 @@ export function PerformanceTab({
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">XIRR</p>
-                    <p className="text-2xl font-bold financial-value text-primary">
-                      {formatPercentage(xirr)}
-                    </p>
+                    <p className="text-sm text-muted-foreground">Dernière Valeur</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold financial-value text-primary">
+                          {(() => {
+                            const chartData = getChartData();
+                            const latestData = chartData[chartData.length - 1];
+                            return formatCurrency(latestData?.valeur || 0);
+                          })()}
+                        </p>
+                        {(() => {
+                          const chartData = getChartData();
+                          const latestData = chartData[chartData.length - 1];
+                          const previousData = chartData.length > 1 ? chartData[chartData.length - 2] : null;
+                          const variationValeur = previousData ? (latestData?.valeur || 0) - (previousData?.valeur || 0) : 0;
+                          const variationPercentage = previousData && (previousData?.valeur || 0) !== 0 
+                            ? (variationValeur / (previousData?.valeur || 0)) * 100 
+                            : 0;
+                          return (
+                            <p className="text-xs text-muted-foreground">
+                              {variationValeur >= 0 ? '+' : ''}{formatCurrency(variationValeur)} ({variationPercentage >= 0 ? '+' : ''}{formatPercentage(variationPercentage)})
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    </div>
                   </div>
-                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <Target className="h-5 w-5 text-primary" />
                 </div>
               </CardContent>
             </Card>
@@ -965,46 +987,6 @@ export function PerformanceTab({
           </div>
         </CardContent>
       </Card>
-
-      {/* Latest Values KPI Section */}
-      {(() => {
-        const chartData = getChartData();
-        const latestData = chartData[chartData.length - 1];
-        const previousData = chartData.length > 1 ? chartData[chartData.length - 2] : null;
-        
-        if (!latestData) return null;
-        
-        // Calculate variation de valeur
-        const variationValeur = previousData ? latestData.valeur - previousData.valeur : 0;
-        const variationPercentage = previousData && previousData.valeur !== 0 
-          ? (variationValeur / previousData.valeur) * 100 
-          : 0;
-        
-        // Calculate flux rate vs loyer
-        const fluxRate = bailLoyerHT > 0 ? (latestData.flux / bailLoyerHT) * 100 : 0;
-        
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Valeurs les plus récentes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-1">
-                <KPICard
-                  title="Dernière Valeur"
-                  value={formatCurrency(latestData.valeur)}
-                  subtitle={`${variationValeur >= 0 ? '+' : ''}${formatCurrency(variationValeur)} (${variationPercentage >= 0 ? '+' : ''}${formatPercentage(variationPercentage)})`}
-                  icon={Target}
-                  variant="primary"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })()}
 
       {/* Chart Section */}
       <div className="grid gap-6 lg:grid-cols-2">
