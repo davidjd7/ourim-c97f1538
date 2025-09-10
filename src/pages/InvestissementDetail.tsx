@@ -621,9 +621,9 @@ export default function InvestissementDetail() {
                 <div className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">
-                        Dernier Flux {kpisLoading ? '' : `(${kpis.dernierFluxDetails.year})`}
-                      </p>
+                       <p className="text-sm text-muted-foreground">
+                         Dernier EBITDA {kpisLoading ? '' : `(${kpis.dernierFluxDetails.year})`}
+                       </p>
                       <div className="flex items-center justify-between">
                         <div>
                           <p className={`text-xl font-bold financial-value ${
