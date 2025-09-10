@@ -12,6 +12,7 @@ import { NotesTab } from '@/components/investments/tabs/NotesTab';
 import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
 
 import { useInvestments } from '@/contexts/InvestmentContext';
+import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
 
 export default function InvestissementDetail() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +29,9 @@ export default function InvestissementDetail() {
 
   // Get investment from global context (null for new investments)
   const investment = isNewInvestment ? null : getInvestment(id || '');
+  
+  // Load performance KPIs for invested status
+  const { kpis, loading: kpisLoading } = usePerformanceKPIs(isNewInvestment ? '' : (id || ''));
   
   // Force re-render when investment data changes
   useEffect(() => {
@@ -523,14 +527,11 @@ export default function InvestissementDetail() {
 
         // For invested status: show performance KPIs
         if (currentStatus === 'INVESTI') {
-          // Calculate Fond Propre (Investment Amount - notary fees if any)
-          const fondPropre = investment!.investmentAmount || 0;
-          
-          // For now, use placeholder values for COC, Total Earning, XIRR
-          // These should be calculated from actual performance data
-          const coc = 0; // Cash on Cash return - to be calculated from cashflows
-          const totalEarning = investment!.lastValue || 0;
-          const xirr = investment!.lastTRI || 0;
+          // Use actual calculated KPI values from PerformanceTab
+          const fondPropre = kpisLoading ? 0 : kpis.fondPropre;
+          const coc = kpisLoading ? 0 : kpis.coc;
+          const totalEarning = kpisLoading ? 0 : kpis.totalEarning;
+          const xirr = kpisLoading ? 0 : kpis.xirr;
           
           return (
             <div className="grid gap-4 md:grid-cols-4">
@@ -538,23 +539,37 @@ export default function InvestissementDetail() {
                 <div className="p-4">
                   <label className="text-sm text-muted-foreground">Fond Propre</label>
                   <p className="font-medium financial-value text-xl">
-                    {formatCurrency(fondPropre)}
+                    {kpisLoading ? '...' : formatCurrency(fondPropre)}
                   </p>
                 </div>
               </div>
               <div className="card-financial">
                 <div className="p-4">
                   <label className="text-sm text-muted-foreground">COC</label>
-                  <p className="font-medium financial-value text-xl">
-                    {formatPercentage(coc)}
+                  <p className={`font-medium financial-value text-xl ${
+                    coc >= 0 ? 'text-success' : 'text-destructive'
+                  }`}>
+                    {kpisLoading ? '...' : (
+                      <>
+                        {coc >= 0 ? '+' : ''}
+                        {formatPercentage(coc)}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
               <div className="card-financial">
                 <div className="p-4">
                   <label className="text-sm text-muted-foreground">Total Earning</label>
-                  <p className="font-medium financial-value text-xl">
-                    {formatCurrency(totalEarning)}
+                  <p className={`font-medium financial-value text-xl ${
+                    totalEarning >= 0 ? 'text-success' : 'text-destructive'
+                  }`}>
+                    {kpisLoading ? '...' : (
+                      <>
+                        {totalEarning >= 0 ? '+' : ''}
+                        {formatCurrency(totalEarning)}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -564,8 +579,12 @@ export default function InvestissementDetail() {
                   <p className={`font-medium financial-value text-xl ${
                     xirr >= 0 ? 'text-success' : 'text-destructive'
                   }`}>
-                    {xirr >= 0 ? '+' : ''}
-                    {formatPercentage(xirr)}
+                    {kpisLoading ? '...' : (
+                      <>
+                        {xirr >= 0 ? '+' : ''}
+                        {formatPercentage(xirr)}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
