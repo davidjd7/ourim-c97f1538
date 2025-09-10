@@ -775,17 +775,17 @@ export function PerformanceTab({
   return <div className="space-y-6">
 
       {/* Chart and Synthesis Section */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Graphique Synthèse - 2/3 de la largeur */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Synthèse
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Synthèse
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Graphique - 50% de la largeur */}
+            <div>
               <ChartContainer config={chartConfig} className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
@@ -869,21 +869,11 @@ export function PerformanceTab({
                   </ComposedChart>
                 </ResponsiveContainer>
               </ChartContainer>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
 
-        {/* Tableau Synthèse - 1/3 de la largeur */}
-        <div className="lg:col-span-1">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Données
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
+            {/* Tableau - 50% de la largeur */}
+            <div>
+              <div className="overflow-x-auto h-[400px] overflow-y-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -934,10 +924,10 @@ export function PerformanceTab({
                   </TableBody>
                 </Table>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Historique Performance */}
       <Card>
