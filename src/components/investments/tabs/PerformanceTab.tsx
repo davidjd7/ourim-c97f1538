@@ -882,7 +882,7 @@ export function PerformanceTab({
           </div>
 
           {/* Deuxième ligne - 6 KPIs */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -910,6 +910,52 @@ export function PerformanceTab({
                       <div className="text-xs text-muted-foreground text-left">
                         <div>Flux: {totalFlux >= 0 ? '+' : ''}{formatCurrency(totalFlux)}</div>
                         <div>Valeur: {totalGainValeur >= 0 ? '+' : ''}{formatCurrency(totalGainValeur)}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Dernier Earning</p>
+                    <div className="flex items-center justify-between">
+                      <p className={`text-2xl font-bold financial-value ${(() => {
+                        const chartData = getChartData();
+                        const latestData = chartData[chartData.length - 1];
+                        const previousData = chartData.length > 1 ? chartData[chartData.length - 2] : null;
+                        const dernierFlux = latestData?.flux || 0;
+                        const dernierVarValeur = previousData ? (latestData?.valeur || 0) - (previousData?.valeur || 0) : 0;
+                        const dernierEarning = dernierFlux + dernierVarValeur;
+                        return dernierEarning >= 0 ? 'text-success' : 'text-destructive';
+                      })()}`}>
+                        {(() => {
+                          const chartData = getChartData();
+                          const latestData = chartData[chartData.length - 1];
+                          const previousData = chartData.length > 1 ? chartData[chartData.length - 2] : null;
+                          const dernierFlux = latestData?.flux || 0;
+                          const dernierVarValeur = previousData ? (latestData?.valeur || 0) - (previousData?.valeur || 0) : 0;
+                          const dernierEarning = dernierFlux + dernierVarValeur;
+                          return `${dernierEarning >= 0 ? '+' : ''}${formatCurrency(dernierEarning)}`;
+                        })()}
+                      </p>
+                      <div className="text-xs text-muted-foreground text-left">
+                        <div>Dernier Flux: {(() => {
+                          const chartData = getChartData();
+                          const latestData = chartData[chartData.length - 1];
+                          const flux = latestData?.flux || 0;
+                          return `${flux >= 0 ? '+' : ''}${formatCurrency(flux)}`;
+                        })()}</div>
+                        <div>Dernier Var Valeur: {(() => {
+                          const chartData = getChartData();
+                          const latestData = chartData[chartData.length - 1];
+                          const previousData = chartData.length > 1 ? chartData[chartData.length - 2] : null;
+                          const dernierVarValeur = previousData ? (latestData?.valeur || 0) - (previousData?.valeur || 0) : 0;
+                          return `${dernierVarValeur >= 0 ? '+' : ''}${formatCurrency(dernierVarValeur)}`;
+                        })()}</div>
                       </div>
                     </div>
                   </div>
