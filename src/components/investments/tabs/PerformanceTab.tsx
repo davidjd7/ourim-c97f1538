@@ -788,6 +788,19 @@ export function PerformanceTab({
                     <p className="text-2xl font-bold financial-value">
                       {formatCurrency(fondPropre)}
                     </p>
+                    {(() => {
+                      const syntheseData = getSyntheseData();
+                      const latestData = syntheseData[syntheseData.length - 1];
+                      if (latestData) {
+                        const ltv = latestData.valeur > 0 ? (latestData.crd / latestData.valeur) * 100 : 0;
+                        return (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Valeur: {formatCurrency(latestData.valeur)} • CRD: {formatCurrency(latestData.crd)} • LTV: {formatPercentage(ltv)}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                   <DollarSign className="h-5 w-5 text-primary" />
                 </div>
