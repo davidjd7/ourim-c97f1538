@@ -22,37 +22,77 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* KPI Cards - General */}
+      {/* KPI Cards - Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Nombre d'Investissements"
-          value="12"
-          subtitle="Actifs en portefeuille"
-          icon={Wallet}
-          variant="primary"
-        />
-        <KPICard
-          title="Montant Investi"
-          value="€24.5M"
-          subtitle="Capital déployé"
-          icon={Euro}
-          trend={{ value: 8.2, direction: 'up' }}
-        />
-        <KPICard
-          title="TRI Moyen Pondéré"
-          value="7.8%"
-          subtitle="Performance portfolio"
-          icon={TrendingUp}
-          variant="success"
-          trend={{ value: 1.2, direction: 'up' }}
-        />
-        <KPICard
-          title="Cash Attendu"
-          value="€31.2M"
-          subtitle="Valeur cible"
-          icon={Target}
-          trend={{ value: 3.5, direction: 'up' }}
-        />
+        {/* Fond Propre KPI */}
+        <div className="card-financial p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">Fond Propre (2024)</p>
+              <div className="flex items-center justify-between">
+                <p className="text-2xl font-bold financial-value">€1,367,000</p>
+                <div className="text-xs text-muted-foreground text-left">
+                  <div>Valeur: €2,390,000</div>
+                  <div>CRD: €1,023,000</div>
+                  <div>LTV: 42.8%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Dernier Earning KPI */}
+        <div className="card-financial p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">Dernier Earning (2024)</p>
+              <div className="flex items-center justify-between">
+                <p className="text-2xl font-bold financial-value text-success">+€113,275</p>
+                <div className="text-xs text-muted-foreground text-left">
+                  <div>Flux: +€163,329</div>
+                  <div>Var Valeur: -€50,000 (-2.0%)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Dernier Flux KPI */}
+        <div className="card-financial p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">Dernier Flux (2024)</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold financial-value text-success">+€163,329</p>
+                  <p className="text-xs text-muted-foreground">142% du loyer</p>
+                </div>
+                <div className="text-xs text-muted-foreground text-left">
+                  <div>Cap Rate: +6.8%</div>
+                  <div>COC: +11.9%</div>
+                  <div>Yield Banque: +16.0%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* XIRR KPI */}
+        <div className="card-financial p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">XIRR (3Y)</p>
+              <div className="flex items-center justify-between">
+                <p className="text-2xl font-bold financial-value text-primary">12.5%</p>
+                <div className="text-xs text-muted-foreground text-left">
+                  <div>Total: +€170,000</div>
+                  <div>Flux: +€220,000</div>
+                  <div>Valeur: -€50,000</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* KPI Cards - By Asset Type */}
