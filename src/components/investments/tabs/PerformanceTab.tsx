@@ -783,101 +783,103 @@ export function PerformanceTab({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-start gap-4">
-            {/* Graphique - 40% de la largeur */}
-            <div className="w-[40%]">
-              <ChartContainer config={chartConfig} className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={getChartData()}
-                    margin={{
-                      top: 20,
-                      right: 5,
-                      left: 20,
-                      bottom: 60,
-                    }}
-                  >
-                    <XAxis 
-                      dataKey="year" 
-                      tick={{ fontSize: 12 }}
-                      tickLine={{ stroke: 'hsl(var(--border))' }}
-                      tickFormatter={(value) => `01/01/${value}`}
-                    />
-                    <YAxis 
-                      yAxisId="bars"
-                      orientation="left"
-                      tick={{ fontSize: 12 }}
-                      tickLine={{ stroke: 'hsl(var(--border))' }}
-                      tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                    />
-                    <YAxis 
-                      yAxisId="valeur"
-                      orientation="right"
-                      tick={{ fontSize: 12 }}
-                      tickLine={{ stroke: 'hsl(var(--border))' }}
-                      tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                    />
-                    <ChartTooltip 
-                      content={
-                        <ChartTooltipContent 
-                          formatter={(value, name) => [
-                            `${formatCurrency(Number(value))}`,
-                            name === 'flux' ? 'Flux' : 
-                            name === 'varValeur' ? 'Var Valeur' : 
-                            name === 'gain' ? 'Gain' : 'Valeur'
-                          ]}
-                          labelFormatter={(label) => `Année ${label}`}
-                        />
-                      }
-                    />
-                    <Legend 
-                      align="center" 
-                      verticalAlign="bottom" 
-                      layout="horizontal"
-                      wrapperStyle={{ paddingTop: '20px' }}
-                    />
-                    <Bar 
-                      yAxisId="bars"
-                      dataKey="flux" 
-                      fill="#2563eb"
-                      name="Flux"
-                    />
-                    <Bar 
-                      yAxisId="bars"
-                      dataKey="varValeur" 
-                      fill="#ea580c"
-                      name="Var Valeur"
-                    />
-                    <Line 
-                      yAxisId="bars"
-                      type="monotone" 
-                      dataKey="gain" 
-                      stroke="#06b6d4"
-                      strokeWidth={3}
-                      dot={{ fill: "#06b6d4", strokeWidth: 2, r: 5 }}
-                      name="Gain"
-                    />
-                    <Line 
-                      yAxisId="valeur"
-                      type="monotone" 
-                      dataKey="valeur" 
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
-                      name="Valeur"
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+          <div className="flex items-start">
+            {/* Graphique - 40% de la largeur avec conteneur strict */}
+            <div className="w-2/5 pr-4 flex-shrink-0">
+              <div className="w-full overflow-hidden">
+                <ChartContainer config={chartConfig} className="h-[400px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart
+                      data={getChartData()}
+                      margin={{
+                        top: 20,
+                        right: 0,
+                        left: 15,
+                        bottom: 80,
+                      }}
+                    >
+                      <XAxis 
+                        dataKey="year" 
+                        tick={{ fontSize: 10 }}
+                        tickLine={{ stroke: 'hsl(var(--border))' }}
+                        tickFormatter={(value) => `${value}`}
+                      />
+                      <YAxis 
+                        yAxisId="bars"
+                        orientation="left"
+                        tick={{ fontSize: 10 }}
+                        tickLine={{ stroke: 'hsl(var(--border))' }}
+                        tickFormatter={(value) => `${(value/1000).toFixed(0)}k`}
+                        width={40}
+                      />
+                      <YAxis 
+                        yAxisId="valeur"
+                        orientation="right"
+                        tick={{ fontSize: 10 }}
+                        tickLine={{ stroke: 'hsl(var(--border))' }}
+                        tickFormatter={(value) => `${(value/1000000).toFixed(1)}M`}
+                        width={40}
+                      />
+                      <ChartTooltip 
+                        content={
+                          <ChartTooltipContent 
+                            formatter={(value, name) => [
+                              `${formatCurrency(Number(value))}`,
+                              name === 'flux' ? 'Flux' : 
+                              name === 'varValeur' ? 'Var Valeur' : 
+                              name === 'gain' ? 'Gain' : 'Valeur'
+                            ]}
+                            labelFormatter={(label) => `Année ${label}`}
+                          />
+                        }
+                      />
+                      <Legend 
+                        align="center" 
+                        verticalAlign="bottom" 
+                        layout="horizontal"
+                        wrapperStyle={{ paddingTop: '10px', fontSize: '10px' }}
+                      />
+                      <Bar 
+                        yAxisId="bars"
+                        dataKey="flux" 
+                        fill="#2563eb"
+                        name="Flux"
+                      />
+                      <Bar 
+                        yAxisId="bars"
+                        dataKey="varValeur" 
+                        fill="#ea580c"
+                        name="Var Valeur"
+                      />
+                      <Line 
+                        yAxisId="bars"
+                        type="monotone" 
+                        dataKey="gain" 
+                        stroke="#06b6d4"
+                        strokeWidth={2}
+                        dot={{ fill: "#06b6d4", strokeWidth: 1, r: 3 }}
+                        name="Gain"
+                      />
+                      <Line 
+                        yAxisId="valeur"
+                        type="monotone" 
+                        dataKey="valeur" 
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        dot={{ fill: "#10b981", strokeWidth: 1, r: 3 }}
+                        name="Valeur"
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
             </div>
 
             {/* Séparateur vertical */}
-            <div className="flex justify-center px-2">
-              <Separator orientation="vertical" className="h-[400px]" />
-            </div>
+            <div className="w-px bg-border h-[400px] mx-4 flex-shrink-0"></div>
 
             {/* Tableau - 60% de la largeur */}
-            <div className="w-[60%]">
+            <div className="flex-1">
               <div className="overflow-x-auto h-[400px] overflow-y-auto">
                 <Table>
                   <TableHeader>
