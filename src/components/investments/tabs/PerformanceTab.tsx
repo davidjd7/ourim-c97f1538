@@ -784,92 +784,90 @@ export function PerformanceTab({
               Synthèse Annuelle
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex justify-center">
-            <div className="w-full max-w-6xl">
-              <ChartContainer config={chartConfig} className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={getChartData()}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <XAxis 
-                      dataKey="year" 
-                      tick={{ fontSize: 12 }}
-                      tickLine={{ stroke: 'hsl(var(--border))' }}
-                      tickFormatter={(value) => `01/01/${value}`}
-                    />
-                    <YAxis 
-                      yAxisId="bars"
-                      orientation="left"
-                      tick={{ fontSize: 12 }}
-                      tickLine={{ stroke: 'hsl(var(--border))' }}
-                      tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                    />
-                    <YAxis 
-                      yAxisId="valeur"
-                      orientation="right"
-                      tick={{ fontSize: 12 }}
-                      tickLine={{ stroke: 'hsl(var(--border))' }}
-                      tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                    />
-                    <ChartTooltip 
-                      content={
-                        <ChartTooltipContent 
-                          formatter={(value, name) => [
-                            `${formatCurrency(Number(value))}`,
-                            name === 'flux' ? 'Flux' : 
-                            name === 'varValeur' ? 'Var Valeur' : 
-                            name === 'gain' ? 'Gain' : 'Valeur'
-                          ]}
-                          labelFormatter={(label) => `Année ${label}`}
-                        />
-                      }
-                    />
-                    <Legend 
-                      align="right" 
-                      verticalAlign="middle" 
-                      layout="vertical"
-                      wrapperStyle={{ paddingLeft: '20px' }}
-                    />
-                    <Bar 
-                      yAxisId="bars"
-                      dataKey="flux" 
-                      fill="#2563eb"
-                      name="Flux"
-                    />
-                    <Bar 
-                      yAxisId="bars"
-                      dataKey="varValeur" 
-                      fill="#ea580c"
-                      name="Var Valeur"
-                    />
-                    <Line 
-                      yAxisId="bars"
-                      type="monotone" 
-                      dataKey="gain" 
-                      stroke="#06b6d4"
-                      strokeWidth={3}
-                      dot={{ fill: "#06b6d4", strokeWidth: 2, r: 5 }}
-                      name="Gain"
-                    />
-                    <Line 
-                      yAxisId="valeur"
-                      type="monotone" 
-                      dataKey="valeur" 
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
-                      name="Valeur"
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </div>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={getChartData()}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <XAxis 
+                    dataKey="year" 
+                    tick={{ fontSize: 12 }}
+                    tickLine={{ stroke: 'hsl(var(--border))' }}
+                    tickFormatter={(value) => `01/01/${value}`}
+                  />
+                  <YAxis 
+                    yAxisId="bars"
+                    orientation="left"
+                    tick={{ fontSize: 12 }}
+                    tickLine={{ stroke: 'hsl(var(--border))' }}
+                    tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                  />
+                  <YAxis 
+                    yAxisId="valeur"
+                    orientation="right"
+                    tick={{ fontSize: 12 }}
+                    tickLine={{ stroke: 'hsl(var(--border))' }}
+                    tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                  />
+                  <ChartTooltip 
+                    content={
+                      <ChartTooltipContent 
+                        formatter={(value, name) => [
+                          `${formatCurrency(Number(value))}`,
+                          name === 'flux' ? 'Flux' : 
+                          name === 'varValeur' ? 'Var Valeur' : 
+                          name === 'gain' ? 'Gain' : 'Valeur'
+                        ]}
+                        labelFormatter={(label) => `Année ${label}`}
+                      />
+                    }
+                  />
+                  <Legend 
+                    align="right" 
+                    verticalAlign="middle" 
+                    layout="vertical"
+                    wrapperStyle={{ paddingLeft: '20px' }}
+                  />
+                  <Bar 
+                    yAxisId="bars"
+                    dataKey="flux" 
+                    fill="#2563eb"
+                    name="Flux"
+                  />
+                  <Bar 
+                    yAxisId="bars"
+                    dataKey="varValeur" 
+                    fill="#ea580c"
+                    name="Var Valeur"
+                  />
+                  <Line 
+                    yAxisId="bars"
+                    type="monotone" 
+                    dataKey="gain" 
+                    stroke="#06b6d4"
+                    strokeWidth={3}
+                    dot={{ fill: "#06b6d4", strokeWidth: 2, r: 5 }}
+                    name="Gain"
+                  />
+                  <Line 
+                    yAxisId="valeur"
+                    type="monotone" 
+                    dataKey="valeur" 
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
+                    name="Valeur"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
