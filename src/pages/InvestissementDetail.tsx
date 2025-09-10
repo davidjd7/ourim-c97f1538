@@ -548,53 +548,65 @@ export default function InvestissementDetail() {
         if (currentStatus === 'INVESTI') {
           // Use actual calculated KPI values from PerformanceTab
           const fondPropre = kpisLoading ? 0 : kpis.fondPropre;
-          const coc = kpisLoading ? 0 : kpis.coc;
-          const totalEarning = kpisLoading ? 0 : kpis.totalEarning;
+          const dernierEarning = kpisLoading ? 0 : kpis.dernierEarning;
+          const dernierFlux = kpisLoading ? 0 : kpis.dernierFlux;
           const xirr = kpisLoading ? 0 : kpis.xirr;
           
           return (
             <div className="grid gap-4 md:grid-cols-4">
+              {/* Fond Propre */}
               <div className="card-financial">
                 <div className="p-4">
-                  <label className="text-sm text-muted-foreground">Fond Propre</label>
+                  <label className="text-sm text-muted-foreground">
+                    Fond Propre ({kpisLoading ? '' : kpis.fondPropreDetails.year})
+                  </label>
                   <p className="font-medium financial-value text-xl">
                     {kpisLoading ? '...' : formatCurrency(fondPropre)}
                   </p>
                 </div>
               </div>
+              {/* Dernier Earning */}
               <div className="card-financial">
                 <div className="p-4">
-                  <label className="text-sm text-muted-foreground">COC</label>
+                  <label className="text-sm text-muted-foreground">
+                    Dernier Earning ({kpisLoading ? '' : kpis.dernierEarningDetails.year})
+                  </label>
                   <p className={`font-medium financial-value text-xl ${
-                    coc >= 0 ? 'text-success' : 'text-destructive'
+                    dernierEarning >= 0 ? 'text-success' : 'text-destructive'
                   }`}>
                     {kpisLoading ? '...' : (
                       <>
-                        {coc >= 0 ? '+' : ''}
-                        {formatPercentage(coc)}
+                        {dernierEarning >= 0 ? '+' : ''}
+                        {formatCurrency(dernierEarning)}
                       </>
                     )}
                   </p>
                 </div>
               </div>
+              {/* Dernier Flux */}
               <div className="card-financial">
                 <div className="p-4">
-                  <label className="text-sm text-muted-foreground">Total Earning</label>
+                  <label className="text-sm text-muted-foreground">
+                    Dernier Flux ({kpisLoading ? '' : kpis.dernierFluxDetails.year})
+                  </label>
                   <p className={`font-medium financial-value text-xl ${
-                    totalEarning >= 0 ? 'text-success' : 'text-destructive'
+                    dernierFlux >= 0 ? 'text-success' : 'text-destructive'
                   }`}>
                     {kpisLoading ? '...' : (
                       <>
-                        {totalEarning >= 0 ? '+' : ''}
-                        {formatCurrency(totalEarning)}
+                        {dernierFlux >= 0 ? '+' : ''}
+                        {formatCurrency(dernierFlux)}
                       </>
                     )}
                   </p>
                 </div>
               </div>
+              {/* XIRR */}
               <div className="card-financial">
                 <div className="p-4">
-                  <label className="text-sm text-muted-foreground">XIRR</label>
+                  <label className="text-sm text-muted-foreground">
+                    XIRR ({kpisLoading ? '' : kpis.xirrDetails.years}Y)
+                  </label>
                   <p className={`font-medium financial-value text-xl ${
                     xirr >= 0 ? 'text-success' : 'text-destructive'
                   }`}>

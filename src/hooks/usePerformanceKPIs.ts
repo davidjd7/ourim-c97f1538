@@ -45,9 +45,13 @@ export function usePerformanceKPIs(investmentId: string) {
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState({
     fondPropre: 0,
-    coc: 0,
-    totalEarning: 0,
-    xirr: 0
+    fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
+    dernierEarning: 0,
+    dernierEarningDetails: { flux: 0, varValeur: 0, varValeurPercentage: 0, year: 0 },
+    dernierFlux: 0,
+    dernierFluxDetails: { capRate: 0, coc: 0, yield: 0, fluxRate: 0, year: 0 },
+    xirr: 0,
+    xirrDetails: { totalEarning: 0, totalFlux: 0, totalGainValeur: 0, years: 0 }
   });
 
   // Helper functions (exact same as PerformanceTab)
@@ -250,37 +254,143 @@ export function usePerformanceKPIs(investmentId: string) {
       const syntheseData = getSyntheseData(cashflows, immobilisations, debtFlows, valorisations);
 
       if (syntheseData.length === 0) {
-        setKpis({ fondPropre: 0, coc: 0, totalEarning: 0, xirr: 0 });
+        setKpis({ 
+          fondPropre: 0,
+          fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
+          dernierEarning: 0,
+          dernierEarningDetails: { flux: 0, varValeur: 0, varValeurPercentage: 0, year: 0 },
+          dernierFlux: 0,
+          dernierFluxDetails: { capRate: 0, coc: 0, yield: 0, fluxRate: 0, year: 0 },
+          xirr: 0,
+          xirrDetails: { totalEarning: 0, totalFlux: 0, totalGainValeur: 0, years: 0 }
+        });
         return;
       }
 
       const latestSynthese = syntheseData[syntheseData.length - 1];
       const oldestSynthese = syntheseData[0];
 
-      // KPI calculations (exact same as PerformanceTab)
+      // Get chart data grouped by year (same as PerformanceTab)
+      const getChartData = () => {
+        const yearMap = new Map<number, { year: number; flux: number; valeur: number; varValeur: number; gain: number }>();
+
+        // First pass: Group data by year and calculate totals
+        syntheseData.forEach((row) => {
+          const year = new Date(row.date).getFullYear();
+          if (!yearMap.has(year)) {
+            yearMap.set(year, { year, flux: 0, valeur: 0, varValeur: 0, gain: 0 });
+          }
+          const yearData = yearMap.get(year)!;
+          yearData.flux += row.flux;
+          yearData.valeur = row.valeur; // Take the latest value for the year
+        });
+
+        // Convert to array and sort by year
+        const yearArray = Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+
+        // Exclude the oldest year (first year in the sorted array)
+        const filteredYearArray = yearArray.length > 1 ? yearArray.slice(1) : yearArray;
+
+        // Second pass: Calculate varValeur (difference from previous year) and gain
+        filteredYearArray.forEach((yearData, index) => {
+          if (index > 0) {
+            yearData.varValeur = yearData.valeur - filteredYearArray[index - 1].valeur;
+          } else if (yearArray.length > 1) {
+            // For the first year in filtered array, compare with the excluded oldest year
+            yearData.varValeur = yearData.valeur - yearArray[0].valeur;
+          } else {
+            yearData.varValeur = 0;
+          }
+          yearData.gain = yearData.flux + yearData.varValeur;
+        });
+
+        return filteredYearArray;
+      };
+
+      const chartData = getChartData();
+      const latestChartData = chartData[chartData.length - 1];
+      const previousChartData = chartData.length > 1 ? chartData[chartData.length - 2] : null;
+
+      // KPI calculations
       const fondPropre = latestSynthese?.fp || 0;
-      const coc = latestSynthese?.fp && latestSynthese.fp > 0 ? latestSynthese.flux / latestSynthese.fp * 100 : 0;
       const xirr = syntheseData.length > 1 ? calculateXIRR(syntheseData) : 0;
 
-      // Total Gain Valeur = Valeur la plus récente - Valeur la plus ancienne
+      // Fond Propre details
+      const fondPropreYear = latestSynthese ? new Date(latestSynthese.date).getFullYear() : 0;
+      const ltv = latestSynthese?.valeur && latestSynthese.valeur > 0 ? (latestSynthese.crd / latestSynthese.valeur) * 100 : 0;
+      const fondPropreDetails = {
+        valeur: latestSynthese?.valeur || 0,
+        crd: latestSynthese?.crd || 0,
+        ltv,
+        year: fondPropreYear
+      };
+
+      // Dernier Earning calculations
+      const dernierFlux = latestChartData?.flux || 0;
+      const dernierVarValeur = previousChartData ? (latestChartData?.valeur || 0) - (previousChartData?.valeur || 0) : 0;
+      const dernierEarning = dernierFlux + dernierVarValeur;
+      const variationPercentage = previousChartData && previousChartData.valeur !== 0 
+        ? (dernierVarValeur / previousChartData.valeur) * 100 
+        : 0;
+      const dernierEarningYear = latestChartData?.year || 0;
+      const dernierEarningDetails = {
+        flux: dernierFlux,
+        varValeur: dernierVarValeur,
+        varValeurPercentage: variationPercentage,
+        year: dernierEarningYear
+      };
+
+      // Dernier Flux details
+      const coc = latestSynthese?.fp && latestSynthese.fp > 0 ? latestSynthese.flux / latestSynthese.fp * 100 : 0;
+      const capRate = latestSynthese?.valeur && latestSynthese.valeur > 0 ? latestSynthese.flux / latestSynthese.valeur * 100 : 0;
+      
+      // Calculate yield (flux/CRD) if we have debt data
+      const yield_ = latestSynthese?.crd && latestSynthese.crd !== 0 ? latestSynthese.flux / latestSynthese.crd * 100 : 0;
+      
+      const dernierFluxDetails = {
+        capRate,
+        coc,
+        yield: yield_,
+        fluxRate: 0, // Would need bailLoyerHT from investment data
+        year: dernierEarningYear
+      };
+
+      // XIRR details
       const totalGainValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
-
-      // Total Flux = Somme des flux
       const totalFlux = syntheseData.reduce((sum, item) => sum + (item.flux || 0), 0);
-
-      // Total Earning = Total Gain Valeur + Total Flux
       const totalEarning = totalGainValeur + totalFlux;
+      const years = syntheseData.length > 1 ? Math.round((new Date(latestSynthese.date).getTime() - new Date(oldestSynthese.date).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
+      
+      const xirrDetails = {
+        totalEarning,
+        totalFlux,
+        totalGainValeur,
+        years
+      };
 
       setKpis({
         fondPropre,
-        coc,
-        totalEarning,
-        xirr
+        fondPropreDetails,
+        dernierEarning,
+        dernierEarningDetails,
+        dernierFlux,
+        dernierFluxDetails,
+        xirr,
+        xirrDetails
       });
 
     } catch (error) {
       console.error('Error loading performance KPIs:', error);
-      setKpis({ fondPropre: 0, coc: 0, totalEarning: 0, xirr: 0 });
+      setKpis({ 
+        fondPropre: 0,
+        fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
+        dernierEarning: 0,
+        dernierEarningDetails: { flux: 0, varValeur: 0, varValeurPercentage: 0, year: 0 },
+        dernierFlux: 0,
+        dernierFluxDetails: { capRate: 0, coc: 0, yield: 0, fluxRate: 0, year: 0 },
+        xirr: 0,
+        xirrDetails: { totalEarning: 0, totalFlux: 0, totalGainValeur: 0, years: 0 }
+      });
     } finally {
       setLoading(false);
     }

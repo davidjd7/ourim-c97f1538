@@ -59,22 +59,22 @@ function InvestmentKPIRow({ investment }: { investment: any }) {
         {loading ? '...' : formatCurrency(kpis.fondPropre)}
       </TableCell>
       <TableCell className={`text-right financial-value ${
-        kpis.coc >= 0 ? 'text-success' : 'text-destructive'
+        kpis.dernierFluxDetails.coc >= 0 ? 'text-success' : 'text-destructive'
       }`}>
         {loading ? '...' : (
           <>
-            {kpis.coc >= 0 ? '+' : ''}
-            {formatPercentage(kpis.coc)}
+            {kpis.dernierFluxDetails.coc >= 0 ? '+' : ''}
+            {formatPercentage(kpis.dernierFluxDetails.coc)}
           </>
         )}
       </TableCell>
       <TableCell className={`text-right financial-value ${
-        kpis.totalEarning >= 0 ? 'text-success' : 'text-destructive'
+        kpis.xirrDetails.totalEarning >= 0 ? 'text-success' : 'text-destructive'
       }`}>
         {loading ? '...' : (
           <>
-            {kpis.totalEarning >= 0 ? '+' : ''}
-            {formatCurrency(kpis.totalEarning)}
+            {kpis.xirrDetails.totalEarning >= 0 ? '+' : ''}
+            {formatCurrency(kpis.xirrDetails.totalEarning)}
           </>
         )}
       </TableCell>
