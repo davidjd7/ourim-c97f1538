@@ -965,10 +965,6 @@ export function PerformanceTab({
                   subtitle={`${variationValeur >= 0 ? '+' : ''}${formatCurrency(variationValeur)} (${variationPercentage >= 0 ? '+' : ''}${formatPercentage(variationPercentage)})`}
                   icon={Target}
                   variant="primary"
-                  trend={variationValeur !== 0 ? {
-                    value: Math.abs(variationPercentage),
-                    direction: variationValeur >= 0 ? "up" : "down"
-                  } : undefined}
                 />
                 <KPICard
                   title="Dernier Flux"
