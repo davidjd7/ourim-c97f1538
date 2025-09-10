@@ -903,9 +903,9 @@ export function PerformanceTab({
                          <TableCell className="font-medium text-xs">
                            {new Date(row.date).toLocaleDateString('fr-FR')}
                          </TableCell>
-                         <TableCell className="financial-value text-xs">
-                           {formatCurrency(row.flux)}
-                         </TableCell>
+                          <TableCell className={`financial-value text-xs ${row.flux >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {row.flux >= 0 ? '+' : ''}{formatCurrency(row.flux)}
+                          </TableCell>
                          <TableCell className="financial-value text-xs">
                            {formatCurrency(row.valeur)}
                          </TableCell>
@@ -949,8 +949,8 @@ export function PerformanceTab({
                            <TableCell className="font-bold text-xs">
                              Total
                            </TableCell>
-                           <TableCell className="financial-value font-bold text-xs">
-                             {formatCurrency(totalFlux)}
+                           <TableCell className={`financial-value font-bold text-xs ${totalFlux >= 0 ? 'text-success' : 'text-destructive'}`}>
+                             {totalFlux >= 0 ? '+' : ''}{formatCurrency(totalFlux)}
                            </TableCell>
                            <TableCell className="financial-value text-xs">
                              {/* Pas de total pour la valeur */}
