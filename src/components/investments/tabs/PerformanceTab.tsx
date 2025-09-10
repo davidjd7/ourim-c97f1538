@@ -57,9 +57,11 @@ interface SyntheseRow {
 interface PerformanceTabProps {
   investmentId: string;
   isEditMode?: boolean;
+  bailLoyerHT?: number;
 }
 export function PerformanceTab({
-  investmentId
+  investmentId,
+  bailLoyerHT = 0
 }: PerformanceTabProps) {
   const {
     user
@@ -934,8 +936,18 @@ export function PerformanceTab({
       {(() => {
         const chartData = getChartData();
         const latestData = chartData[chartData.length - 1];
+        const previousData = chartData.length > 1 ? chartData[chartData.length - 2] : null;
         
         if (!latestData) return null;
+        
+        // Calculate variation de valeur
+        const variationValeur = previousData ? latestData.valeur - previousData.valeur : 0;
+        const variationPercentage = previousData && previousData.valeur !== 0 
+          ? (variationValeur / previousData.valeur) * 100 
+          : 0;
+        
+        // Calculate flux rate vs loyer
+        const fluxRate = bailLoyerHT > 0 ? (latestData.flux / bailLoyerHT) * 100 : 0;
         
         return (
           <Card>
@@ -946,31 +958,27 @@ export function PerformanceTab({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-3">
                 <KPICard
                   title="Dernière Valeur"
                   value={formatCurrency(latestData.valeur)}
+                  subtitle={`${variationValeur >= 0 ? '+' : ''}${formatCurrency(variationValeur)} (${variationPercentage >= 0 ? '+' : ''}${formatPercentage(variationPercentage)})`}
                   icon={Target}
                   variant="primary"
+                  trend={variationValeur !== 0 ? {
+                    value: Math.abs(variationPercentage),
+                    direction: variationValeur >= 0 ? "up" : "down"
+                  } : undefined}
                 />
                 <KPICard
                   title="Dernier Flux"
                   value={formatCurrency(latestData.flux)}
+                  subtitle={bailLoyerHT > 0 ? `${fluxRate >= 0 ? '+' : ''}${formatPercentage(fluxRate)} vs loyer` : undefined}
                   icon={DollarSign}
                   variant={latestData.flux >= 0 ? "success" : "default"}
-                  trend={latestData.flux !== 0 ? {
-                    value: Math.abs(latestData.flux),
-                    direction: latestData.flux >= 0 ? "up" : "down"
-                  } : undefined}
-                />
-                <KPICard
-                  title="Dernier Var Valeur"
-                  value={formatCurrency(latestData.varValeur)}
-                  icon={TrendIcon}
-                  variant={latestData.varValeur >= 0 ? "success" : "default"}
-                  trend={latestData.varValeur !== 0 ? {
-                    value: Math.abs(latestData.varValeur),
-                    direction: latestData.varValeur >= 0 ? "up" : "down"
+                  trend={bailLoyerHT > 0 ? {
+                    value: Math.abs(fluxRate),
+                    direction: fluxRate >= 0 ? "up" : "down"
                   } : undefined}
                 />
                 <KPICard

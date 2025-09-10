@@ -665,7 +665,11 @@ export default function InvestissementDetail() {
 
         {!isNewInvestment && investment!.status !== 'RECU' && investment!.status !== 'DUE_DIL' && (
           <TabsContent value="performance" className="mt-6">
-            <PerformanceTab investmentId={investment!.id} isEditMode={isEditMode} />
+            <PerformanceTab 
+              investmentId={investment!.id} 
+              isEditMode={isEditMode}
+              bailLoyerHT={tempEditData.bailLoyerHT}
+            />
           </TabsContent>
         )}
 
