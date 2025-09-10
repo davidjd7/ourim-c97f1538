@@ -863,28 +863,9 @@ export function PerformanceTab({
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">XIRR</p>
-                    <p className="text-2xl font-bold financial-value text-primary">
-                      {formatPercentage(xirr)}
-                    </p>
-                  </div>
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-
-          </div>
-
-          {/* Deuxième ligne - 6 KPIs */}
-          <div className="grid gap-4 md:grid-cols-2">
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">
-                      Total Earning {(() => {
+                      XIRR {(() => {
                         if (syntheseData.length > 1) {
                           const oldestDate = new Date(oldestSynthese.date);
                           const latestDate = new Date(latestSynthese.date);
@@ -895,11 +876,11 @@ export function PerformanceTab({
                       })()}
                     </p>
                     <div className="flex items-center justify-between">
-                      <p className={`text-2xl font-bold financial-value ${totalEarning >= 0 ? 'text-success' : 'text-destructive'}`}>
-                        {totalEarning >= 0 ? '+' : ''}
-                        {formatCurrency(totalEarning)}
+                      <p className="text-2xl font-bold financial-value text-primary">
+                        {formatPercentage(xirr)}
                       </p>
                       <div className="text-xs text-muted-foreground text-left">
+                        <div>Total: {totalEarning >= 0 ? '+' : ''}{formatCurrency(totalEarning)}</div>
                         <div>Flux: {totalFlux >= 0 ? '+' : ''}{formatCurrency(totalFlux)}</div>
                         <div>Valeur: {totalGainValeur >= 0 ? '+' : ''}{formatCurrency(totalGainValeur)}</div>
                       </div>
@@ -908,6 +889,11 @@ export function PerformanceTab({
                 </div>
               </CardContent>
             </Card>
+
+          </div>
+
+          {/* Deuxième ligne - 1 KPI */}
+          <div className="grid gap-4">
 
             <Card>
               <CardContent className="p-4">
