@@ -928,13 +928,55 @@ export function PerformanceTab({
                            Aucune donnée disponible pour la synthèse
                          </TableCell>
                        </TableRow>}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                     {/* Ligne Total */}
+                     {getSyntheseData().length > 0 && (() => {
+                       const syntheseData = getSyntheseData();
+                       
+                       // Calculer les totaux pour Flux, Var Valeur et Gain
+                       let totalFlux = 0;
+                       let totalVarValeur = 0;
+                       let totalGain = 0;
+                       
+                       syntheseData.forEach((row, index) => {
+                         totalFlux += row.flux;
+                         const varValeur = index > 0 ? row.valeur - syntheseData[index - 1].valeur : 0;
+                         totalVarValeur += varValeur;
+                         totalGain += row.flux + varValeur;
+                       });
+                       
+                       return (
+                         <TableRow className="border-t-2 border-border bg-muted/30">
+                           <TableCell className="font-bold text-xs">
+                             Total
+                           </TableCell>
+                           <TableCell className="financial-value font-bold text-xs">
+                             {formatCurrency(totalFlux)}
+                           </TableCell>
+                           <TableCell className="financial-value text-xs">
+                             {/* Pas de total pour la valeur */}
+                           </TableCell>
+                           <TableCell className={`financial-value font-bold text-xs ${totalVarValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
+                             {totalVarValeur >= 0 ? '+' : ''}{formatCurrency(totalVarValeur)}
+                           </TableCell>
+                           <TableCell className={`financial-value font-bold text-xs ${totalGain >= 0 ? 'text-success' : 'text-destructive'}`}>
+                             {totalGain >= 0 ? '+' : ''}{formatCurrency(totalGain)}
+                           </TableCell>
+                           <TableCell className="financial-value text-xs">
+                             {/* Pas de total pour le CRD */}
+                           </TableCell>
+                           <TableCell className="financial-value text-xs">
+                             {/* Pas de total pour le FP */}
+                           </TableCell>
+                         </TableRow>
+                       );
+                     })()}
+                   </TableBody>
+                 </Table>
+               </div>
+             </div>
+           </div>
+         </CardContent>
+       </Card>
 
       {/* Historique Performance */}
       <Card>
