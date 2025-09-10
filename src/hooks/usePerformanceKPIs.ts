@@ -325,7 +325,11 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
         year: fondPropreYear
       };
 
-      // Dernier Earning calculations
+      // Get the most recent EBITDA from cashflows for dernier flux
+      const sortedCashflows = [...cashflows].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const latestEBITDA = sortedCashflows.length > 0 ? calculateEBITDA(sortedCashflows[0]) : 0;
+
+      // Dernier Earning calculations (still using synthese flux)
       const dernierFlux = latestSynthese?.flux || 0;
       const dernierVarValeur = previousChartData ? (latestChartData?.valeur || 0) - (previousChartData?.valeur || 0) : 0;
       const dernierEarning = dernierFlux + dernierVarValeur;
@@ -340,18 +344,18 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
         year: dernierEarningYear
       };
 
-      // Dernier Flux details
-      const coc = latestSynthese?.fp && latestSynthese.fp > 0 ? latestSynthese.flux / latestSynthese.fp * 100 : 0;
-      const capRate = latestSynthese?.valeur && latestSynthese.valeur > 0 ? latestSynthese.flux / latestSynthese.valeur * 100 : 0;
+      // Dernier Flux details - Using most recent EBITDA instead of synthese flux
+      const coc = latestSynthese?.fp && latestSynthese.fp > 0 ? latestEBITDA / latestSynthese.fp * 100 : 0;
+      const capRate = latestSynthese?.valeur && latestSynthese.valeur > 0 ? latestEBITDA / latestSynthese.valeur * 100 : 0;
       
-      // Calculate yield (flux/CRD) if we have debt data
-      const yield_ = latestSynthese?.crd && latestSynthese.crd !== 0 ? latestSynthese.flux / latestSynthese.crd * 100 : 0;
+      // Calculate yield (EBITDA/CRD) if we have debt data
+      const yield_ = latestSynthese?.crd && latestSynthese.crd !== 0 ? latestEBITDA / latestSynthese.crd * 100 : 0;
       
       const dernierFluxDetails = {
         capRate,
         coc,
         yield: yield_,
-        fluxRate: bailLoyerHT && bailLoyerHT > 0 ? (latestSynthese.flux / bailLoyerHT) * 100 : 0,
+        fluxRate: bailLoyerHT && bailLoyerHT > 0 ? (latestEBITDA / bailLoyerHT) * 100 : 0,
         year: dernierEarningYear
       };
 
@@ -373,7 +377,7 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
         fondPropreDetails,
         dernierEarning,
         dernierEarningDetails,
-        dernierFlux,
+        dernierFlux: latestEBITDA, // Use most recent EBITDA instead of synthese flux
         dernierFluxDetails,
         xirr,
         xirrDetails
