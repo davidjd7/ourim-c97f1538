@@ -774,166 +774,170 @@ export function PerformanceTab({
   const totalEarning = totalGainValeur + totalFlux;
   return <div className="space-y-6">
 
-      {/* Chart Section */}
-      <div className="grid gap-6">
-        {/* Graphique Synthèse Annuelle avec courbe de valeur */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Synthèse
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={getChartData()}
-                  margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <XAxis 
-                    dataKey="year" 
-                    tick={{ fontSize: 12 }}
-                    tickLine={{ stroke: 'hsl(var(--border))' }}
-                    tickFormatter={(value) => `01/01/${value}`}
-                  />
-                  <YAxis 
-                    yAxisId="bars"
-                    orientation="left"
-                    tick={{ fontSize: 12 }}
-                    tickLine={{ stroke: 'hsl(var(--border))' }}
-                    tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                  />
-                  <YAxis 
-                    yAxisId="valeur"
-                    orientation="right"
-                    tick={{ fontSize: 12 }}
-                    tickLine={{ stroke: 'hsl(var(--border))' }}
-                    tickFormatter={(value) => value.toLocaleString('fr-FR')}
-                  />
-                  <ChartTooltip 
-                    content={
-                      <ChartTooltipContent 
-                        formatter={(value, name) => [
-                          `${formatCurrency(Number(value))}`,
-                          name === 'flux' ? 'Flux' : 
-                          name === 'varValeur' ? 'Var Valeur' : 
-                          name === 'gain' ? 'Gain' : 'Valeur'
-                        ]}
-                        labelFormatter={(label) => `Année ${label}`}
-                      />
-                    }
-                  />
-                  <Legend 
-                    align="right" 
-                    verticalAlign="middle" 
-                    layout="vertical"
-                    wrapperStyle={{ paddingLeft: '20px' }}
-                  />
-                  <Bar 
-                    yAxisId="bars"
-                    dataKey="flux" 
-                    fill="#2563eb"
-                    name="Flux"
-                  />
-                  <Bar 
-                    yAxisId="bars"
-                    dataKey="varValeur" 
-                    fill="#ea580c"
-                    name="Var Valeur"
-                  />
-                  <Line 
-                    yAxisId="bars"
-                    type="monotone" 
-                    dataKey="gain" 
-                    stroke="#06b6d4"
-                    strokeWidth={3}
-                    dot={{ fill: "#06b6d4", strokeWidth: 2, r: 5 }}
-                    name="Gain"
-                  />
-                  <Line 
-                    yAxisId="valeur"
-                    type="monotone" 
-                    dataKey="valeur" 
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
-                    name="Valeur"
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Chart and Synthesis Section */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Graphique Synthèse - 2/3 de la largeur */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Synthèse
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={getChartData()}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <XAxis 
+                      dataKey="year" 
+                      tick={{ fontSize: 12 }}
+                      tickLine={{ stroke: 'hsl(var(--border))' }}
+                      tickFormatter={(value) => `01/01/${value}`}
+                    />
+                    <YAxis 
+                      yAxisId="bars"
+                      orientation="left"
+                      tick={{ fontSize: 12 }}
+                      tickLine={{ stroke: 'hsl(var(--border))' }}
+                      tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                    />
+                    <YAxis 
+                      yAxisId="valeur"
+                      orientation="right"
+                      tick={{ fontSize: 12 }}
+                      tickLine={{ stroke: 'hsl(var(--border))' }}
+                      tickFormatter={(value) => value.toLocaleString('fr-FR')}
+                    />
+                    <ChartTooltip 
+                      content={
+                        <ChartTooltipContent 
+                          formatter={(value, name) => [
+                            `${formatCurrency(Number(value))}`,
+                            name === 'flux' ? 'Flux' : 
+                            name === 'varValeur' ? 'Var Valeur' : 
+                            name === 'gain' ? 'Gain' : 'Valeur'
+                          ]}
+                          labelFormatter={(label) => `Année ${label}`}
+                        />
+                      }
+                    />
+                    <Legend 
+                      align="right" 
+                      verticalAlign="middle" 
+                      layout="vertical"
+                      wrapperStyle={{ paddingLeft: '20px' }}
+                    />
+                    <Bar 
+                      yAxisId="bars"
+                      dataKey="flux" 
+                      fill="#2563eb"
+                      name="Flux"
+                    />
+                    <Bar 
+                      yAxisId="bars"
+                      dataKey="varValeur" 
+                      fill="#ea580c"
+                      name="Var Valeur"
+                    />
+                    <Line 
+                      yAxisId="bars"
+                      type="monotone" 
+                      dataKey="gain" 
+                      stroke="#06b6d4"
+                      strokeWidth={3}
+                      dot={{ fill: "#06b6d4", strokeWidth: 2, r: 5 }}
+                      name="Gain"
+                    />
+                    <Line 
+                      yAxisId="valeur"
+                      type="monotone" 
+                      dataKey="valeur" 
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
+                      name="Valeur"
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Synthesis Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Synthèse
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Flux</TableHead>
-                  <TableHead>Valeur</TableHead>
-                  <TableHead>Var Valeur</TableHead>
-                  <TableHead>Gain</TableHead>
-                  <TableHead>CRD</TableHead>
-                  <TableHead>FP</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                 {getSyntheseData().map((row, index) => {
-                   const syntheseData = getSyntheseData();
-                   const varValeur = index > 0 ? row.valeur - syntheseData[index - 1].valeur : 0;
-                   const gain = row.flux + varValeur;
-                   
-                   return <TableRow key={index}>
-                     <TableCell className="font-medium">
-                       {new Date(row.date).toLocaleDateString('fr-FR')}
-                     </TableCell>
-                     <TableCell className="financial-value">
-                       {formatCurrency(row.flux)}
-                     </TableCell>
-                     <TableCell className="financial-value">
-                       {formatCurrency(row.valeur)}
-                     </TableCell>
-                     <TableCell className={`financial-value ${varValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
-                       {varValeur >= 0 ? '+' : ''}{formatCurrency(varValeur)}
-                     </TableCell>
-                     <TableCell className={`financial-value font-medium ${gain >= 0 ? 'text-success' : 'text-destructive'}`}>
-                       {gain >= 0 ? '+' : ''}{formatCurrency(gain)}
-                     </TableCell>
-                     <TableCell className="financial-value">
-                       {formatCurrency(row.crd)}
-                     </TableCell>
-                     <TableCell className="financial-value font-medium">
-                       {formatCurrency(row.fp)}
-                     </TableCell>
-                   </TableRow>
-                 })}
-                 {getSyntheseData().length === 0 && <TableRow>
-                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                       Aucune donnée disponible pour la synthèse
-                     </TableCell>
-                   </TableRow>}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Tableau Synthèse - 1/3 de la largeur */}
+        <div className="lg:col-span-1">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Données
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Date</TableHead>
+                      <TableHead className="text-xs">Flux</TableHead>
+                      <TableHead className="text-xs">Valeur</TableHead>
+                      <TableHead className="text-xs">Var Valeur</TableHead>
+                      <TableHead className="text-xs">Gain</TableHead>
+                      <TableHead className="text-xs">CRD</TableHead>
+                      <TableHead className="text-xs">FP</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                     {getSyntheseData().map((row, index) => {
+                       const syntheseData = getSyntheseData();
+                       const varValeur = index > 0 ? row.valeur - syntheseData[index - 1].valeur : 0;
+                       const gain = row.flux + varValeur;
+                       
+                       return <TableRow key={index}>
+                         <TableCell className="font-medium text-xs">
+                           {new Date(row.date).toLocaleDateString('fr-FR')}
+                         </TableCell>
+                         <TableCell className="financial-value text-xs">
+                           {formatCurrency(row.flux)}
+                         </TableCell>
+                         <TableCell className="financial-value text-xs">
+                           {formatCurrency(row.valeur)}
+                         </TableCell>
+                         <TableCell className={`financial-value text-xs ${varValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
+                           {varValeur >= 0 ? '+' : ''}{formatCurrency(varValeur)}
+                         </TableCell>
+                         <TableCell className={`financial-value font-medium text-xs ${gain >= 0 ? 'text-success' : 'text-destructive'}`}>
+                           {gain >= 0 ? '+' : ''}{formatCurrency(gain)}
+                         </TableCell>
+                         <TableCell className="financial-value text-xs">
+                           {formatCurrency(row.crd)}
+                         </TableCell>
+                         <TableCell className="financial-value font-medium text-xs">
+                           {formatCurrency(row.fp)}
+                         </TableCell>
+                       </TableRow>
+                     })}
+                     {getSyntheseData().length === 0 && <TableRow>
+                         <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-xs">
+                           Aucune donnée disponible pour la synthèse
+                         </TableCell>
+                       </TableRow>}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Historique Performance */}
       <Card>
