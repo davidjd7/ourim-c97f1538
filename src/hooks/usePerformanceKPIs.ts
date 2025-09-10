@@ -50,114 +50,156 @@ export function usePerformanceKPIs(investmentId: string) {
     xirr: 0
   });
 
-  // XIRR calculation function - Following Excel TRI.PAIEMENT structure
+  // Helper functions (exact same as PerformanceTab)
+  const calculateEBITDA = (cashflow: CashflowRow) => {
+    return cashflow.rex + cashflow.retraitAmort + cashflow.retraitAutres;
+  };
+
+  const calculateCapitalFin = (flow: DebtFlowRow) => {
+    return flow.capitalDebut - flow.rmbtCapital;
+  };
+
+  const calculateFlux = (flow: DebtFlowRow) => {
+    return flow.rmbtCapital + flow.rmbtInteret;
+  };
+
+  // Calculate synthesis data by grouping all data by date (exact same as PerformanceTab)
+  const getSyntheseData = (
+    cashflows: CashflowRow[],
+    immobilisations: ImmobilisationRow[],
+    debtFlows: DebtFlowRow[],
+    valorisations: ValorisationRow[]
+  ): SyntheseRow[] => {
+    const dateMap = new Map<string, SyntheseRow>();
+
+    // Initialize all dates
+    const allDates = new Set<string>();
+    cashflows.forEach(cf => allDates.add(cf.date));
+    immobilisations.forEach(immo => allDates.add(immo.date));
+    debtFlows.forEach(df => allDates.add(df.date));
+    valorisations.forEach(valo => allDates.add(valo.date));
+
+    // Initialize all dates in map
+    allDates.forEach(date => {
+      dateMap.set(date, {
+        date,
+        flux: 0,
+        valeur: 0,
+        crd: 0,
+        fp: 0
+      });
+    });
+
+    // Add EBITDA from cashflows
+    cashflows.forEach(cf => {
+      const existing = dateMap.get(cf.date);
+      if (existing) {
+        existing.flux += calculateEBITDA(cf);
+      }
+    });
+
+    // Add immobilisation amounts (subtract)
+    immobilisations.forEach(immo => {
+      const existing = dateMap.get(immo.date);
+      if (existing) {
+        existing.flux -= immo.montant;
+      }
+    });
+
+    // Add debt flows and CRD (subtract debt flows)
+    debtFlows.forEach(df => {
+      const existing = dateMap.get(df.date);
+      if (existing) {
+        existing.flux -= calculateFlux(df);
+        existing.crd = calculateCapitalFin(df);
+      }
+    });
+
+    // Add valorisations
+    valorisations.forEach(valo => {
+      const existing = dateMap.get(valo.date);
+      if (existing) {
+        existing.valeur = valo.valeur;
+      }
+    });
+
+    // Calculate FP = Valeur - CRD
+    dateMap.forEach(row => {
+      row.fp = row.valeur - row.crd;
+    });
+
+    return Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
+
+  // XIRR calculation function - Following Excel TRI.PAIEMENT structure (exact same as PerformanceTab)
   const calculateXIRR = (syntheseData: SyntheseRow[]) => {
     if (syntheseData.length < 2) return 0;
 
     // Sort by date to ensure chronological order
     const sortedData = [...syntheseData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    let guess = 0.1; // Initial guess at 10%
-    let maxIterations = 100;
-    let tolerance = 0.00001;
-
-    for (let i = 0; i < maxIterations; i++) {
-      let sum = 0;
-      let dsum = 0;
-      const baseDate = new Date(sortedData[0].date);
-      
-      for (const row of sortedData) {
-        const currentDate = new Date(row.date);
-        const yearFraction = (currentDate.getTime() - baseDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-        
-        if (yearFraction === 0) {
-          sum += -row.fp;
-          dsum += 0;
-        } else {
-          const discountFactor = Math.pow(1 + guess, -yearFraction);
-          sum += row.flux * discountFactor;
-          dsum += row.flux * discountFactor * (-yearFraction) / (1 + guess);
-        }
+    // Build cash flows following Excel TRI.PAIEMENT structure:
+    const cashFlows: Array<{
+      date: Date;
+      value: number;
+    }> = [];
+    
+    for (let i = 0; i < sortedData.length; i++) {
+      const row = sortedData[i];
+      const date = new Date(row.date + 'T00:00:00');
+      if (i === 0) {
+        // Initial investment: -FP (negative because it's an outflow)
+        cashFlows.push({
+          date,
+          value: -row.fp
+        });
+      } else if (i === sortedData.length - 1) {
+        // Final period: flux + FP (cash flow + final value)
+        cashFlows.push({
+          date,
+          value: row.flux + row.fp
+        });
+      } else {
+        // Intermediate periods: just the flux
+        cashFlows.push({
+          date,
+          value: row.flux
+        });
       }
-
-      // Add the final value (current asset value minus remaining debt)
-      const lastRow = sortedData[sortedData.length - 1];
-      const lastYearFraction = (new Date(lastRow.date).getTime() - baseDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-      const finalValue = lastRow.valeur - lastRow.crd;
-      const discountFactor = Math.pow(1 + guess, -lastYearFraction);
-      sum += finalValue * discountFactor;
-      dsum += finalValue * discountFactor * (-lastYearFraction) / (1 + guess);
-      
-      if (Math.abs(sum) < tolerance) {
-        return guess * 100; // Convert to percentage
-      }
-      
-      if (Math.abs(dsum) < tolerance) {
-        break;
-      }
-      
-      guess = guess - sum / dsum;
-      
-      if (guess < -0.99) guess = -0.99;
-      if (guess > 5) guess = 5;
     }
 
-    return guess * 100; // Convert to percentage
-  };
-
-  const calculateSynthese = (
-    cashflows: CashflowRow[],
-    valorisations: ValorisationRow[],
-    debtFlows: DebtFlowRow[],
-    immobilisations: ImmobilisationRow[]
-  ): SyntheseRow[] => {
-    // Group all data by year
-    const dataByYear: { [year: string]: any } = {};
-
-    // Process cashflows
-    cashflows.forEach(cf => {
-      const year = cf.date.substring(0, 4);
-      if (!dataByYear[year]) dataByYear[year] = { year, flux: 0, valeur: 0, crd: 0, fp: 0 };
-      dataByYear[year].flux += cf.rex - cf.retraitAmort - cf.retraitAutres;
-    });
-
-    // Process immobilisations
-    immobilisations.forEach(immo => {
-      const year = immo.date.substring(0, 4);
-      if (!dataByYear[year]) dataByYear[year] = { year, flux: 0, valeur: 0, crd: 0, fp: 0 };
-      dataByYear[year].flux -= immo.montant;
-    });
-
-    // Process valorisations (latest in year)
-    valorisations.forEach(valo => {
-      const year = valo.date.substring(0, 4);
-      if (!dataByYear[year]) dataByYear[year] = { year, flux: 0, valeur: 0, crd: 0, fp: 0 };
-      dataByYear[year].valeur = Math.max(dataByYear[year].valeur, valo.valeur);
-    });
-
-    // Process debt flows (latest CRD in year)
-    debtFlows.forEach(debt => {
-      const year = debt.date.substring(0, 4);
-      if (!dataByYear[year]) dataByYear[year] = { year, flux: 0, valeur: 0, crd: 0, fp: 0 };
-      const crdFin = debt.capitalDebut - debt.rmbtCapital;
-      dataByYear[year].crd = crdFin;
-    });
-
-    // Calculate FP (Fond Propre) = Valeur - CRD
-    Object.values(dataByYear).forEach((yearData: any) => {
-      yearData.fp = yearData.valeur - yearData.crd;
-    });
-
-    // Convert to array and sort
-    const syntheseArray = Object.values(dataByYear).map((yearData: any) => ({
-      date: `${yearData.year}-12-31`,
-      flux: yearData.flux,
-      valeur: yearData.valeur,
-      crd: yearData.crd,
-      fp: yearData.fp
-    }));
-
-    return syntheseArray.sort((a, b) => a.date.localeCompare(b.date));
+    // Newton-Raphson method for IRR calculation
+    let rate = 0.1; // Initial guess 10%
+    const maxIterations = 100;
+    const tolerance = 0.0001;
+    
+    for (let i = 0; i < maxIterations; i++) {
+      let npv = 0;
+      let dnpv = 0;
+      const baseDate = cashFlows[0].date;
+      
+      for (const flow of cashFlows) {
+        const years = (flow.date.getTime() - baseDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+        const factor = Math.pow(1 + rate, years);
+        npv += flow.value / factor;
+        dnpv -= flow.value * years / (factor * (1 + rate));
+      }
+      
+      if (Math.abs(npv) < tolerance) {
+        return rate * 100; // Return as percentage
+      }
+      
+      if (Math.abs(dnpv) < tolerance) {
+        break; // Avoid division by zero
+      }
+      
+      const newRate = rate - npv / dnpv;
+      if (Math.abs(newRate - rate) < tolerance) {
+        return newRate * 100;
+      }
+      rate = newRate;
+    }
+    return 0; // Return 0 if convergence fails
   };
 
   const loadKPIs = async () => {
@@ -204,8 +246,8 @@ export function usePerformanceKPIs(investmentId: string) {
         note: immo.note || ''
       }));
 
-      // Calculate synthese data
-      const syntheseData = calculateSynthese(cashflows, valorisations, debtFlows, immobilisations);
+      // Calculate synthese data using exact same logic as PerformanceTab
+      const syntheseData = getSyntheseData(cashflows, immobilisations, debtFlows, valorisations);
 
       if (syntheseData.length === 0) {
         setKpis({ fondPropre: 0, coc: 0, totalEarning: 0, xirr: 0 });
@@ -215,14 +257,18 @@ export function usePerformanceKPIs(investmentId: string) {
       const latestSynthese = syntheseData[syntheseData.length - 1];
       const oldestSynthese = syntheseData[0];
 
-      // KPI calculations
+      // KPI calculations (exact same as PerformanceTab)
       const fondPropre = latestSynthese?.fp || 0;
       const coc = latestSynthese?.fp && latestSynthese.fp > 0 ? latestSynthese.flux / latestSynthese.fp * 100 : 0;
       const xirr = syntheseData.length > 1 ? calculateXIRR(syntheseData) : 0;
 
-      // Calculate Total Earning
+      // Total Gain Valeur = Valeur la plus récente - Valeur la plus ancienne
       const totalGainValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
+
+      // Total Flux = Somme des flux
       const totalFlux = syntheseData.reduce((sum, item) => sum + (item.flux || 0), 0);
+
+      // Total Earning = Total Gain Valeur + Total Flux
       const totalEarning = totalGainValeur + totalFlux;
 
       setKpis({
