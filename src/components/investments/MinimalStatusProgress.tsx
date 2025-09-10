@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -148,6 +148,9 @@ export function MinimalStatusProgress({
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Confirmer l'investissement</DialogTitle>
+                  <DialogDescription>
+                    Saisissez les informations nécessaires pour confirmer l'investissement.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -245,6 +248,9 @@ export function MinimalStatusProgress({
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Abandonner l'investissement</DialogTitle>
+                  <DialogDescription>
+                    Veuillez expliquer les raisons de l'abandon de cet investissement.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -449,6 +455,9 @@ export function StatusActions({
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Confirmer l'investissement</DialogTitle>
+                <DialogDescription>
+                  Saisissez les informations nécessaires pour confirmer l'investissement.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -546,6 +555,9 @@ export function StatusActions({
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Abandonner l'investissement</DialogTitle>
+                <DialogDescription>
+                  Veuillez expliquer les raisons de l'abandon de cet investissement.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>

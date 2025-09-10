@@ -4,6 +4,7 @@ import { ArrowLeft, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MinimalStatusProgress, StatusActions } from '@/components/investments/MinimalStatusProgress';
+import { StatusProgress } from '@/components/investments/StatusProgress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GeneralTab } from '@/components/investments/tabs/GeneralTab';
 import { PerformanceTab } from '@/components/investments/tabs/PerformanceTab';
