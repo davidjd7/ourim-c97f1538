@@ -552,6 +552,9 @@ export default function InvestissementDetail() {
           const dernierFlux = kpisLoading ? 0 : kpis.dernierFlux;
           const xirr = kpisLoading ? 0 : kpis.xirr;
           
+          // Temporary fix for coc reference - using the correct path now
+          const coc = kpisLoading ? 0 : kpis.dernierFluxDetails.coc;
+          
           return (
             <div className="grid gap-4 md:grid-cols-4">
               {/* Fond Propre */}
