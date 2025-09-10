@@ -813,14 +813,28 @@ export function PerformanceTab({
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">COC</p>
-                    <p className={`text-2xl font-bold financial-value ${coc >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {coc >= 0 ? '+' : ''}
-                      {formatPercentage(coc)}
-                    </p>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Dernier Flux</p>
+                    <div className="flex items-center justify-between">
+                      <p className={`text-2xl font-bold financial-value ${(() => {
+                        const chartData = getChartData();
+                        const latestData = chartData[chartData.length - 1];
+                        return latestData?.flux >= 0 ? 'text-success' : 'text-destructive';
+                      })()}`}>
+                        {(() => {
+                          const chartData = getChartData();
+                          const latestData = chartData[chartData.length - 1];
+                          const flux = latestData?.flux || 0;
+                          return `${flux >= 0 ? '+' : ''}${formatCurrency(flux)}`;
+                        })()}
+                      </p>
+                      <div className="text-xs text-muted-foreground text-left">
+                        <div>Cap Rate: {capRate >= 0 ? '+' : ''}{formatPercentage(capRate)}</div>
+                        <div>COC: {coc >= 0 ? '+' : ''}{formatPercentage(coc)}</div>
+                        <div>Yield Banque: {yield_ >= 0 ? '+' : ''}{formatPercentage(yield_)}</div>
+                      </div>
+                    </div>
                   </div>
-                  {coc >= 0 ? <TrendingUp className="h-5 w-5 text-success" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
                 </div>
               </CardContent>
             </Card>
@@ -855,37 +869,7 @@ export function PerformanceTab({
           </div>
 
           {/* Deuxième ligne - 6 KPIs */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Yield Banque</p>
-                    <p className={`text-2xl font-bold financial-value ${yield_ >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {yield_ >= 0 ? '+' : ''}
-                      {formatPercentage(yield_)}
-                    </p>
-                  </div>
-                  {yield_ >= 0 ? <TrendingUp className="h-5 w-5 text-success" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Cap Rate</p>
-                    <p className={`text-2xl font-bold financial-value ${capRate >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {capRate >= 0 ? '+' : ''}
-                      {formatPercentage(capRate)}
-                    </p>
-                  </div>
-                  {capRate >= 0 ? <TrendingUp className="h-5 w-5 text-success" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
-                </div>
-              </CardContent>
-            </Card>
-
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -949,24 +933,13 @@ export function PerformanceTab({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 <KPICard
                   title="Dernière Valeur"
                   value={formatCurrency(latestData.valeur)}
                   subtitle={`${variationValeur >= 0 ? '+' : ''}${formatCurrency(variationValeur)} (${variationPercentage >= 0 ? '+' : ''}${formatPercentage(variationPercentage)})`}
                   icon={Target}
                   variant="primary"
-                />
-                <KPICard
-                  title="Dernier Flux"
-                  value={formatCurrency(latestData.flux)}
-                  subtitle={bailLoyerHT > 0 ? `${fluxRate >= 0 ? '+' : ''}${formatPercentage(fluxRate)} vs loyer` : undefined}
-                  icon={DollarSign}
-                  variant={latestData.flux >= 0 ? "success" : "default"}
-                  trend={bailLoyerHT > 0 ? {
-                    value: Math.abs(fluxRate),
-                    direction: fluxRate >= 0 ? "up" : "down"
-                  } : undefined}
                 />
                 <KPICard
                   title="Dernier Gain"
