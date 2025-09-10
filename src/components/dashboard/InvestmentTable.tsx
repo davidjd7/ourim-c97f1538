@@ -45,8 +45,8 @@ function InvestmentKPIRow({ investment }: { investment: any }) {
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant="outline" className="status-investi">
-          Investi
+        <Badge variant="outline">
+          {investment.type === 'IMMO' ? 'Immobilier' : 'Private Equity'}
         </Badge>
       </TableCell>
       <TableCell>
