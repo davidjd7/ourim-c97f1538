@@ -866,58 +866,10 @@ export function PerformanceTab({
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Dernière Valeur</p>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-2xl font-bold financial-value text-primary">
-                          {(() => {
-                            const chartData = getChartData();
-                            const latestData = chartData[chartData.length - 1];
-                            return formatCurrency(latestData?.valeur || 0);
-                          })()}
-                        </p>
-                        {(() => {
-                          const chartData = getChartData();
-                          const latestData = chartData[chartData.length - 1];
-                          const previousData = chartData.length > 1 ? chartData[chartData.length - 2] : null;
-                          const variationValeur = previousData ? (latestData?.valeur || 0) - (previousData?.valeur || 0) : 0;
-                          const variationPercentage = previousData && (previousData?.valeur || 0) !== 0 
-                            ? (variationValeur / (previousData?.valeur || 0)) * 100 
-                            : 0;
-                          return (
-                            <p className="text-xs text-muted-foreground">
-                              {variationValeur >= 0 ? '+' : ''}{formatCurrency(variationValeur)} ({variationPercentage >= 0 ? '+' : ''}{formatPercentage(variationPercentage)})
-                            </p>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                  <Target className="h-5 w-5 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Deuxième ligne - 6 KPIs */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">ICR</p>
-                    <p className={`text-2xl font-bold financial-value ${icr >= 1 ? 'text-success' : 'text-destructive'}`}>
-                      {icr.toFixed(2)}x
-                    </p>
-                  </div>
-                  {icr >= 1 ? <TrendingUp className="h-5 w-5 text-success" /> : <TrendingDown className="h-5 w-5 text-destructive" />}
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid gap-4 md:grid-cols-2">
 
             <Card>
               <CardContent className="p-4">
