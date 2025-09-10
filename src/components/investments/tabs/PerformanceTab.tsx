@@ -835,9 +835,9 @@ export function PerformanceTab({
                           const flux = latestData?.flux || 0;
                           const fluxRate = (flux / bailLoyerHT) * 100;
                           return (
-                            <p className="text-xs text-muted-foreground">
-                              {Math.round(fluxRate)}% vs loyer
-                            </p>
+                             <p className="text-xs text-muted-foreground">
+                               {Math.round(fluxRate)}% du loyer
+                             </p>
                           );
                         })()}
                       </div>
