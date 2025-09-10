@@ -33,7 +33,10 @@ export default function InvestissementDetail() {
   const investment = isNewInvestment ? null : getInvestment(id || '');
   
   // Load performance KPIs for invested status
-  const { kpis, loading: kpisLoading } = usePerformanceKPIs(isNewInvestment ? '' : (id || ''));
+  const { kpis, loading: kpisLoading } = usePerformanceKPIs(
+    isNewInvestment ? '' : (id || ''), 
+    investment?.bailLoyerHT
+  );
   
   // Force re-render when investment data changes
   useEffect(() => {

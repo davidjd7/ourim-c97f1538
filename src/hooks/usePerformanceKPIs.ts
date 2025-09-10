@@ -40,7 +40,7 @@ interface ImmobilisationRow {
   note: string;
 }
 
-export function usePerformanceKPIs(investmentId: string) {
+export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState({
@@ -351,7 +351,7 @@ export function usePerformanceKPIs(investmentId: string) {
         capRate,
         coc,
         yield: yield_,
-        fluxRate: 0, // Would need bailLoyerHT from investment data
+        fluxRate: bailLoyerHT && bailLoyerHT > 0 ? (latestSynthese.flux / bailLoyerHT) * 100 : 0,
         year: dernierEarningYear
       };
 
