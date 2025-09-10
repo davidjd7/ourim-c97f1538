@@ -820,19 +820,22 @@ export function PerformanceTab({
                         tickFormatter={(value) => `${(value/1000000).toFixed(1)}M`}
                         width={40}
                       />
-                      <ChartTooltip 
-                        content={
-                          <ChartTooltipContent 
-                            formatter={(value, name) => [
-                              `${formatCurrency(Number(value))}`,
-                              name === 'flux' ? 'Flux' : 
-                              name === 'varValeur' ? 'Var Valeur' : 
-                              name === 'gain' ? 'Gain' : 'Valeur'
-                            ]}
-                            labelFormatter={(label) => `Année ${label}`}
-                          />
-                        }
-                      />
+                       <ChartTooltip 
+                         content={
+                           <ChartTooltipContent 
+                             formatter={(value, name) => [
+                               `${formatCurrency(Number(value))}`,
+                               <span className="font-bold">
+                                 {name === 'flux' ? 'Flux' : 
+                                  name === 'varValeur' ? 'Var Valeur' : 
+                                  name === 'gain' ? 'Gain' : 
+                                  name === 'valeur' ? 'Valeur' : name}
+                               </span>
+                             ]}
+                             labelFormatter={(label) => `Année ${label}`}
+                           />
+                         }
+                       />
                       <Legend 
                         align="center" 
                         verticalAlign="bottom" 
