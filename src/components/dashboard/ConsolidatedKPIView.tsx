@@ -1,9 +1,7 @@
 import React, { useMemo } from 'react';
 import { useInvestments } from '@/contexts/InvestmentContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
-import { KPICard } from './KPICard';
 import { InvestmentChart } from './InvestmentChart';
-import { TrendingUp, DollarSign, Percent, BarChart3 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -19,9 +17,32 @@ interface ConsolidatedKPIViewProps {
 
 interface ConsolidatedData {
   fondPropre: number;
+  fondPropreDetails: {
+    valeur: number;
+    crd: number;
+    ltv: number;
+  };
   rendementNet: number;
+  rendementNetDetails: {
+    noi: number;
+    loyer: number;
+    noiSurLoyer: number;
+  };
   coc: number;
+  cocDetails: {
+    cfni: number;
+    dscr: number;
+    yieldBanque: number;
+  };
   xirr: number;
+  xirrDetails: {
+    years: number;
+    totalCfni: number;
+    cfniDerniereAnnee: number;
+    deltaValeur: number;
+    variationValeurDerniereAnnee: number;
+    total: number;
+  };
   chartData: Array<{
     date: string;
     fondPropre: number;
@@ -43,12 +64,14 @@ function InvestmentKPIData({ investmentId, onDataLoaded }: { investmentId: strin
     if (!loading && kpis && investment) {
       onDataLoaded({
         fondPropre: Number(kpis.fondPropre ?? 0),
+        fondPropreDetails: kpis.fondPropreDetails || { valeur: 0, crd: 0, ltv: 0 },
         rendementNet: Number(kpis.rendementNet ?? 0),
+        rendementNetDetails: kpis.rendementNetDetails || { noi: 0, loyer: 0, noiSurLoyer: 0 },
         coc: Number(kpis.coc ?? 0),
+        cocDetails: kpis.cocDetails || { cfni: 0, dscr: 0, yieldBanque: 0 },
         xirr: Number(kpis.xirr ?? 0),
-        noi: Number(kpis.rendementNetDetails?.noi ?? 0),
-        cfni: Number(kpis.xirrDetails?.totalCfni ?? 0),
-        investmentAmount: Number(investment.investmentAmount ?? 0), // Ajout du montant investi pour COC
+        xirrDetails: kpis.xirrDetails || { years: 3, totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0 },
+        investmentAmount: Number(investment.investmentAmount ?? 0),
       });
     }
   }, [loading, kpis, investment, onDataLoaded]);
@@ -74,25 +97,50 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
     if (selectedKPIs.length === 0) {
       return {
         fondPropre: 0,
+        fondPropreDetails: { valeur: 0, crd: 0, ltv: 0 },
         rendementNet: 0,
+        rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0 },
         coc: 0,
+        cocDetails: { cfni: 0, dscr: 0, yieldBanque: 0 },
         xirr: 0,
+        xirrDetails: { years: 3, totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0 },
         chartData: []
       };
     }
 
     // Sommer toutes les données en €
     const totalFondPropre = selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropre || 0), 0);
-    const totalNOI = selectedKPIs.reduce((sum, kpi) => sum + (kpi.noi || 0), 0);
-    const totalCFNI = selectedKPIs.reduce((sum, kpi) => sum + (kpi.cfni || 0), 0);
+    const totalValeur = selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.valeur || 0), 0);
+    const totalCrd = selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.crd || 0), 0);
+    const totalNOI = selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.noi || 0), 0);
+    const totalLoyer = selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.loyer || 0), 0);
+    const totalCFNI = selectedKPIs.reduce((sum, kpi) => sum + (kpi.cocDetails?.cfni || 0), 0);
     const totalInvestmentAmount = selectedKPIs.reduce((sum, kpi) => sum + (kpi.investmentAmount || 0), 0);
+    const totalCfniDerniereAnnee = selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.cfniDerniereAnnee || 0), 0);
+    const totalDeltaValeur = selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.deltaValeur || 0), 0);
+    const totalVariationValeurDerniereAnnee = selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.variationValeurDerniereAnnee || 0), 0);
+    const totalXirrTotal = selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.total || 0), 0);
     
     // Recalculer les pourcentages à partir des totaux (numérateur/dénominateur)
+    const consolidatedLTV = totalValeur > 0 ? (totalCrd / totalValeur) * 100 : 0;
     const consolidatedRendementNet = totalFondPropre > 0 ? (totalNOI / totalFondPropre) * 100 : 0;
+    const consolidatedNoiSurLoyer = totalLoyer > 0 ? (totalNOI / totalLoyer) * 100 : 0;
     const consolidatedCOC = totalInvestmentAmount > 0 ? (totalCFNI / totalInvestmentAmount) * 100 : 0;
     
-    // Pour XIRR, c'est plus complexe car il faut les flux de trésorerie dans le temps
-    // Pour l'instant, on fait une moyenne pondérée par le montant investi
+    // DSCR et Yield Banque - moyennes pondérées par montant investi
+    const totalWeightedDSCR = selectedKPIs.reduce((sum, kpi) => {
+      const weight = (kpi.investmentAmount || 0);
+      return sum + (kpi.cocDetails?.dscr || 0) * weight;
+    }, 0);
+    const consolidatedDSCR = totalInvestmentAmount > 0 ? totalWeightedDSCR / totalInvestmentAmount : 0;
+    
+    const totalWeightedYieldBanque = selectedKPIs.reduce((sum, kpi) => {
+      const weight = (kpi.investmentAmount || 0);
+      return sum + (kpi.cocDetails?.yieldBanque || 0) * weight;
+    }, 0);
+    const consolidatedYieldBanque = totalInvestmentAmount > 0 ? totalWeightedYieldBanque / totalInvestmentAmount : 0;
+    
+    // Pour XIRR, moyenne pondérée par le montant investi
     const totalWeightedXIRR = selectedKPIs.reduce((sum, kpi) => {
       const weight = (kpi.investmentAmount || 0);
       return sum + (kpi.xirr || 0) * weight;
@@ -113,9 +161,32 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
 
     return {
       fondPropre: totalFondPropre,
+      fondPropreDetails: {
+        valeur: totalValeur,
+        crd: totalCrd,
+        ltv: consolidatedLTV
+      },
       rendementNet: consolidatedRendementNet,
+      rendementNetDetails: {
+        noi: totalNOI,
+        loyer: totalLoyer,
+        noiSurLoyer: consolidatedNoiSurLoyer
+      },
       coc: consolidatedCOC,
+      cocDetails: {
+        cfni: totalCFNI,
+        dscr: consolidatedDSCR,
+        yieldBanque: consolidatedYieldBanque
+      },
       xirr: consolidatedXIRR,
+      xirrDetails: {
+        years: 3,
+        totalCfni: totalCFNI,
+        cfniDerniereAnnee: totalCfniDerniereAnnee,
+        deltaValeur: totalDeltaValeur,
+        variationValeurDerniereAnnee: totalVariationValeurDerniereAnnee,
+        total: totalXirrTotal
+      },
       chartData
     };
   }, [selectedInvestments, kpiData]);
@@ -169,35 +240,92 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Fond Propre (2024)"
-          value={formatCurrency(consolidatedData.fondPropre)}
-          subtitle={`Total consolidé`}
-          icon={DollarSign}
-        />
-        <KPICard
-          title="Rendement Net (2024)"
-          value={formatPercentage(consolidatedData.rendementNet)}
-          subtitle={`Moyenne pondérée`}
-          icon={Percent}
-          variant={consolidatedData.rendementNet > 0 ? 'success' : 'default'}
-        />
-        <KPICard
-          title="COC (2024)"
-          value={formatPercentage(consolidatedData.coc)}
-          subtitle={`Moyenne`}
-          icon={TrendingUp}
-          variant={consolidatedData.coc > 0 ? 'success' : 'default'}
-        />
-        <KPICard
-          title="XIRR (3Y)"
-          value={formatPercentage(consolidatedData.xirr)}
-          subtitle={`Moyenne`}
-          icon={BarChart3}
-          variant={consolidatedData.xirr > 0 ? 'success' : 'default'}
-        />
+      {/* Performance KPI Cards - Exact same layout as individual investment */}
+      <div className="grid gap-4 md:grid-cols-4">
+        {/* Fond Propre */}
+        <div className="card-financial">
+          <div className="p-4">
+            <p className="text-sm text-muted-foreground font-bold mb-3">Fond Propre (2024)</p>
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col">
+                <p className="text-2xl font-bold financial-value">
+                  {formatCurrency(consolidatedData.fondPropre)}
+                </p>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <div>Valeur: {formatCurrency(consolidatedData.fondPropreDetails.valeur)}</div>
+                <div>CRD: {formatCurrency(consolidatedData.fondPropreDetails.crd)}</div>
+                <div>LTV: {consolidatedData.fondPropreDetails.ltv.toFixed(1)}%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Rendement Net */}
+        <div className="card-financial">
+          <div className="p-4">
+            <p className="text-sm text-muted-foreground font-bold mb-3">Rendement Net (2024)</p>
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col">
+                <p className={`text-2xl font-bold financial-value ${consolidatedData.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {consolidatedData.rendementNet >= 0 ? '+' : ''}{formatPercentage(consolidatedData.rendementNet)}
+                </p>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <div>NOI: {formatCurrency(consolidatedData.rendementNetDetails.noi)}</div>
+                <div>Loyer: {formatCurrency(consolidatedData.rendementNetDetails.loyer)}</div>
+                <div>NOI sur loyer: {consolidatedData.rendementNetDetails.noiSurLoyer.toFixed(1)}%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* COC (Cash on Cash) */}
+        <div className="card-financial">
+          <div className="p-4">
+            <p className="text-sm text-muted-foreground font-bold mb-3">COC (2024)</p>
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col">
+                <p className="text-2xl font-bold financial-value">
+                  {consolidatedData.coc >= 0 ? '+' : ''}{formatPercentage(consolidatedData.coc)}
+                </p>
+                <div className="text-sm text-muted-foreground mt-1">
+                  CFNI: {formatCurrency(consolidatedData.cocDetails.cfni)}
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <div>
+                  DSCR: {consolidatedData.cocDetails.dscr.toFixed(2)}
+                </div>
+                <div>Yield Banque: {consolidatedData.cocDetails.yieldBanque.toFixed(1)}%</div>
+                <div className="text-xs">Dernier CF: {formatCurrency(consolidatedData.cocDetails.cfni)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* XIRR */}
+        <div className="card-financial">
+          <div className="p-4">
+            <p className="text-sm text-muted-foreground font-bold mb-3">XIRR ({consolidatedData.xirrDetails.years}Y)</p>
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col">
+                <p className="text-2xl font-bold financial-value">
+                  {formatPercentage(consolidatedData.xirr)}
+                </p>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <div>
+                  CFNI: {formatCurrency(consolidatedData.xirrDetails.totalCfni)} ({consolidatedData.xirrDetails.cfniDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(consolidatedData.xirrDetails.cfniDerniereAnnee)})
+                </div>
+                <div>
+                  Valeur: {formatCurrency(consolidatedData.xirrDetails.deltaValeur)} ({consolidatedData.xirrDetails.variationValeurDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(consolidatedData.xirrDetails.variationValeurDerniereAnnee)})
+                </div>
+                <div>Total: {formatCurrency(consolidatedData.xirrDetails.total)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Section Synthèse */}
