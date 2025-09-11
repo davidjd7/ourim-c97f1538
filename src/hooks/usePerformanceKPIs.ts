@@ -416,16 +416,11 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
       // Calculate value difference between most recent and oldest date
       const deltaValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
       
-      // Calculate value variation for the latest year
-      const currentYearValorisation = valorisations
-        .filter(valo => new Date(valo.date).getFullYear() === currentYear)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-      
-      const previousYearValorisation = valorisations
-        .filter(valo => new Date(valo.date).getFullYear() === currentYear - 1)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-      
-      const variationValeurDerniereAnnee = (currentYearValorisation?.valeur || 0) - (previousYearValorisation?.valeur || 0);
+      // Calculate value variation between the 2 most recent valorisations (chronologically)
+      const sortedValorisations = [...valorisations].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const variationValeurDerniereAnnee = sortedValorisations.length >= 2 
+        ? sortedValorisations[sortedValorisations.length - 1].valeur - sortedValorisations[sortedValorisations.length - 2].valeur
+        : 0;
       
       // Total = somme de totalCfni + deltaValeur
       const total = totalCfni + deltaValeur;

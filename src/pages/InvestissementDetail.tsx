@@ -340,7 +340,7 @@ export default function InvestissementDetail() {
                     CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)} ({formatCurrency(kpis.xirrDetails.cfniDerniereAnnee)})
                   </div>
                   <div>
-                    Valeur: {formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)} ({kpis.xirrDetails.deltaValeur >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.deltaValeur)})
+                    Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)} ({kpis.xirrDetails.variationValeurDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)})
                   </div>
                   <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
                 </div>
