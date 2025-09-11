@@ -1057,7 +1057,7 @@ export function PerformanceTab({
                   <TableHead>Retrait Amort</TableHead>
                   <TableHead>Retrait Autres</TableHead>
                   <TableHead>NOI</TableHead>
-                  <TableHead>QP Loyer</TableHead>
+                  <TableHead>NOI sur loyer</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
