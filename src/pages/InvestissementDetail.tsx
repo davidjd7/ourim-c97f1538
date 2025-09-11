@@ -272,7 +272,7 @@ export default function InvestissementDetail() {
                 <div className="text-right text-xs text-muted-foreground">
                   <div>Valeur: {formatCurrency(kpis.fondPropreDetails.valeur)}</div>
                   <div>CRD: {formatCurrency(kpis.fondPropreDetails.crd)}</div>
-                  <div className={kpis.fondPropreDetails.ltv <= 70 ? 'text-green-600' : 'text-red-600'}>
+                  <div>
                     LTV: {kpis.fondPropreDetails.ltv.toFixed(1)}%
                   </div>
                 </div>
