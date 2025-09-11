@@ -3,7 +3,7 @@ import { useInvestments } from '@/contexts/InvestmentContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
 import { KPICard } from './KPICard';
 import { InvestmentChart } from './InvestmentChart';
-import { TrendingUp, Euro, Percent, BarChart3 } from 'lucide-react';
+import { TrendingUp, DollarSign, Percent, BarChart3 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -162,7 +162,7 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
           title="Fond Propre (2024)"
           value={formatCurrency(consolidatedData.fondPropre)}
           subtitle={`Total consolidé`}
-          icon={Euro}
+          icon={DollarSign}
         />
         <KPICard
           title="Rendement Net (2024)"
