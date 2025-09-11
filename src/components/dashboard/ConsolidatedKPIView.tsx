@@ -35,9 +35,12 @@ interface ConsolidatedData {
 
 function InvestmentKPIData({ investmentId, onDataLoaded }: { investmentId: string; onDataLoaded: (data: any) => void }) {
   const { kpis, loading } = usePerformanceKPIs(investmentId);
+  const { investments } = useInvestments();
+  
+  const investment = investments.find(inv => inv.id === investmentId);
   
   React.useEffect(() => {
-    if (!loading && kpis) {
+    if (!loading && kpis && investment) {
       onDataLoaded({
         fondPropre: Number(kpis.fondPropre ?? 0),
         rendementNet: Number(kpis.rendementNet ?? 0),
@@ -45,9 +48,10 @@ function InvestmentKPIData({ investmentId, onDataLoaded }: { investmentId: strin
         xirr: Number(kpis.xirr ?? 0),
         noi: Number(kpis.rendementNetDetails?.noi ?? 0),
         cfni: Number(kpis.xirrDetails?.totalCfni ?? 0),
+        investmentAmount: Number(investment.investmentAmount ?? 0), // Ajout du montant investi pour COC
       });
     }
-  }, [loading, kpis, onDataLoaded]);
+  }, [loading, kpis, investment, onDataLoaded]);
   
   return null;
 }
@@ -77,14 +81,23 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
       };
     }
 
+    // Sommer toutes les données en €
     const totalFondPropre = selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropre || 0), 0);
     const totalNOI = selectedKPIs.reduce((sum, kpi) => sum + (kpi.noi || 0), 0);
     const totalCFNI = selectedKPIs.reduce((sum, kpi) => sum + (kpi.cfni || 0), 0);
+    const totalInvestmentAmount = selectedKPIs.reduce((sum, kpi) => sum + (kpi.investmentAmount || 0), 0);
     
-    // Moyennes pondérées pour les pourcentages
-    const avgRendementNet = totalFondPropre > 0 ? (totalNOI / totalFondPropre) * 100 : 0;
-    const avgCOC = selectedKPIs.reduce((sum, kpi) => sum + (kpi.coc || 0), 0) / selectedKPIs.length;
-    const avgXIRR = selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirr || 0), 0) / selectedKPIs.length;
+    // Recalculer les pourcentages à partir des totaux (numérateur/dénominateur)
+    const consolidatedRendementNet = totalFondPropre > 0 ? (totalNOI / totalFondPropre) * 100 : 0;
+    const consolidatedCOC = totalInvestmentAmount > 0 ? (totalCFNI / totalInvestmentAmount) * 100 : 0;
+    
+    // Pour XIRR, c'est plus complexe car il faut les flux de trésorerie dans le temps
+    // Pour l'instant, on fait une moyenne pondérée par le montant investi
+    const totalWeightedXIRR = selectedKPIs.reduce((sum, kpi) => {
+      const weight = (kpi.investmentAmount || 0);
+      return sum + (kpi.xirr || 0) * weight;
+    }, 0);
+    const consolidatedXIRR = totalInvestmentAmount > 0 ? totalWeightedXIRR / totalInvestmentAmount : 0;
 
     // Données pour le tableau synthèse (années 2022-2024)
     const years = ['2022', '2023', '2024'];
@@ -92,17 +105,17 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
       date: `31/12/${year}`,
       fondPropre: totalFondPropre,
       noi: totalNOI,
-      rendementNet: avgRendementNet,
+      rendementNet: consolidatedRendementNet,
       cfni: totalCFNI,
-      cocNet: avgCOC,
+      cocNet: consolidatedCOC,
       cashFlow: totalCFNI
     }));
 
     return {
       fondPropre: totalFondPropre,
-      rendementNet: avgRendementNet,
-      coc: avgCOC,
-      xirr: avgXIRR,
+      rendementNet: consolidatedRendementNet,
+      coc: consolidatedCOC,
+      xirr: consolidatedXIRR,
       chartData
     };
   }, [selectedInvestments, kpiData]);
