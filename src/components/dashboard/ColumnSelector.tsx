@@ -132,44 +132,49 @@ export function ColumnSelector() {
           <Settings className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4 bg-card border shadow-lg z-50" align="end" side="bottom">
+      <PopoverContent className="w-[600px] p-4 bg-card border shadow-lg z-50" align="end" side="bottom">
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Configuration des colonnes</h4>
           <p className="text-xs text-muted-foreground">
             Glissez pour réorganiser • Cliquez pour masquer/afficher
           </p>
           
-          {visibleColumns.length > 0 && (
+          <div className="grid grid-cols-2 gap-6">
+            {/* Colonnes visibles - Colonne de gauche */}
             <div>
               <p className="text-xs text-muted-foreground mb-3 font-medium">Colonnes visibles</p>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={visibleColumns.map(col => col.key)}
-                  strategy={verticalListSortingStrategy}
+              {visibleColumns.length > 0 ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
                 >
-                  <div className="space-y-1">
-                    {visibleColumns.map((column) => (
-                      <SortableColumnItem
-                        key={column.key}
-                        column={column}
-                        onToggle={handleColumnToggle}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
+                  <SortableContext
+                    items={visibleColumns.map(col => col.key)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-1">
+                      {visibleColumns.map((column) => (
+                        <SortableColumnItem
+                          key={column.key}
+                          column={column}
+                          onToggle={handleColumnToggle}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <div className="text-xs text-muted-foreground italic py-4">
+                  Aucune colonne visible
+                </div>
+              )}
             </div>
-          )}
 
-          {hiddenColumns.length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <p className="text-xs text-muted-foreground mb-3 font-medium">Colonnes masquées</p>
+            {/* Colonnes masquées - Colonne de droite */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-3 font-medium">Colonnes masquées</p>
+              {hiddenColumns.length > 0 ? (
                 <div className="space-y-1">
                   {hiddenColumns.map((column) => (
                     <SortableColumnItem
@@ -180,9 +185,13 @@ export function ColumnSelector() {
                     />
                   ))}
                 </div>
-              </div>
-            </>
-          )}
+              ) : (
+                <div className="text-xs text-muted-foreground italic py-4">
+                  Aucune colonne masquée
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </PopoverContent>
     </Popover>
