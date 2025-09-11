@@ -1056,7 +1056,7 @@ export function PerformanceTab({
                   <TableHead>REX</TableHead>
                   <TableHead>Retrait Amort</TableHead>
                   <TableHead>Retrait Autres</TableHead>
-                  <TableHead>EBITDA</TableHead>
+                  <TableHead>NOI</TableHead>
                   <TableHead>QP Loyer</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
