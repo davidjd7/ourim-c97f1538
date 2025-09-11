@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GeneralTab } from '@/components/investments/tabs/GeneralTab';
 import { PerformanceTab } from '@/components/investments/tabs/PerformanceTab';
 import { DocumentsTab } from '@/components/investments/tabs/DocumentsTab';
-import { NotesTab } from '@/components/investments/tabs/NotesTab';
 import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
 
 import { useInvestments } from '@/contexts/InvestmentContext';
@@ -560,11 +559,10 @@ export default function InvestissementDetail() {
 
       {/* Tabs */}
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
 
@@ -612,9 +610,6 @@ export default function InvestissementDetail() {
           <DocumentsTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
         </TabsContent>
 
-        <TabsContent value="notes" className="mt-6">
-          <NotesTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
-        </TabsContent>
 
 
         <TabsContent value="historique" className="mt-6">

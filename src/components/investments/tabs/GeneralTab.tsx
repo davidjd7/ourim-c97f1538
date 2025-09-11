@@ -318,149 +318,36 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
         </Card>
 
 
-      {/* Section Bail */}
+      {/* Section Bail - Supprimée */}
+
+      {/* Section Notes */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Informations du Bail
+            Notes
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Première ligne: Activité - Ancienneté - Loyer HT.HC/m² */}
-          <div className="grid gap-6 md:grid-cols-3 mb-6">
-            <div>
-              <Label htmlFor="bailActivite">Activité</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailActivite"
-                  value={editData.bailActivite}
-                  onChange={(e) => handleDataChange({ ...editData, bailActivite: e.target.value })}
-                />
-              ) : (
-                <p className="font-medium">{data.bailActivite || 'Non défini'}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="bailAnciennete">Ancienneté (années)</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailAnciennete"
-                  type="number"
-                  value={editData.bailAnciennete}
-                  onChange={(e) => handleDataChange({ ...editData, bailAnciennete: Number(e.target.value) })}
-                />
-              ) : (
-                <p className="font-medium">{data.bailAnciennete} années</p>
-              )}
-            </div>
-
-            <div>
-              <Label>Loyer HT.HC/m²</Label>
-              <p className="font-medium financial-value">
-                {data.surface > 0 ? formatCurrency(data.bailLoyerHT / data.surface) : 'N/A'}
-              </p>
-            </div>
-          </div>
-
-          {/* Deuxième ligne: Date de prise d'effet - Next Break - Fin Bail */}
-          <div className="grid gap-6 md:grid-cols-3 mb-6">
-            <div>
-              <Label htmlFor="bailPriseEffet">Date de prise d'effet</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailPriseEffet"
-                  type="date"
-                  value={editData.bailPriseEffet}
-                  onChange={(e) => handleDataChange({ ...editData, bailPriseEffet: e.target.value })}
-                />
-              ) : (
-                <p className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {data.bailPriseEffet ? new Date(data.bailPriseEffet).toLocaleDateString('fr-FR') : 'Non défini'}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="bailNextBreak">Next Break</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailNextBreak"
-                  type="date"
-                  value={editData.bailNextBreak}
-                  onChange={(e) => handleDataChange({ ...editData, bailNextBreak: e.target.value })}
-                />
-              ) : (
-                <p className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {data.bailNextBreak ? new Date(data.bailNextBreak).toLocaleDateString('fr-FR') : 'Non défini'}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="bailFinBail">Fin Bail</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailFinBail"
-                  type="date"
-                  value={editData.bailFinBail}
-                  onChange={(e) => handleDataChange({ ...editData, bailFinBail: e.target.value })}
-                />
-              ) : (
-                <p className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {data.bailFinBail ? new Date(data.bailFinBail).toLocaleDateString('fr-FR') : 'Non défini'}
-                </p>
-              )}
-            </div>
-          </div>
-
-
-          {/* Section additionnelle pour les liens Google Maps */}
-          <div className="grid gap-6 md:grid-cols-2 mt-6 pt-6 border-t">
-            <div>
-              <Label htmlFor="bailGmapLink">Lien Google Maps</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailGmapLink"
-                  type="url"
-                  value={editData.bailGmapLink}
-                  onChange={(e) => handleDataChange({ ...editData, bailGmapLink: e.target.value })}
-                />
-              ) : (
-                <div className="flex items-center gap-2">
-                  {data.bailGmapLink ? (
-                    <a 
-                      href={data.bailGmapLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-primary hover:underline"
-                    >
-                      <Link className="h-4 w-4" />
-                      Voir sur Google Maps
-                    </a>
-                  ) : (
-                    <p className="text-muted-foreground">Non défini</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="bailGmapNote">Note Google Maps</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailGmapNote"
-                  value={editData.bailGmapNote}
-                  onChange={(e) => handleDataChange({ ...editData, bailGmapNote: e.target.value })}
-                />
-              ) : (
-                <p className="font-medium">{data.bailGmapNote || 'Aucune note'}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="description">Notes et commentaires</Label>
+            {isEditMode ? (
+              <Textarea
+                id="description"
+                value={editData.description}
+                onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
+                placeholder="Ajoutez vos notes sur cet investissement"
+                rows={6}
+              />
+            ) : (
+              <div className="mt-2 p-4 bg-muted/50 rounded-lg">
+                {data.description ? (
+                  <p className="text-muted-foreground whitespace-pre-wrap">{data.description}</p>
+                ) : (
+                  <p className="text-muted-foreground italic">Aucune note ajoutée</p>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
