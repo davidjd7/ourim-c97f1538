@@ -3,16 +3,21 @@ import { InvestmentTable } from '@/components/dashboard/InvestmentTable';
 import { ConsolidatedKPIView } from '@/components/dashboard/ConsolidatedKPIView';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Table } from 'lucide-react';
+import { useInvestments } from '@/contexts/InvestmentContext';
 
 type ViewMode = 'table' | 'kpi';
 
 export default function Investissements() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [selectedInvestments, setSelectedInvestments] = useState<Set<string>>(new Set());
+  const { investments } = useInvestments();
 
   const handleSelectedRowsChange = (selectedRows: Set<string>) => {
     setSelectedInvestments(selectedRows);
   };
+
+  const totalCount = investments.length;
+  const selectedCount = selectedInvestments.size;
 
   return (
     <div className="space-y-6">
@@ -25,23 +30,37 @@ export default function Investissements() {
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button 
-            variant={viewMode === 'table' ? 'default' : 'outline'} 
-            size="sm"
-            onClick={() => setViewMode('table')}
-          >
-            <Table className="h-4 w-4 mr-2" />
-            Vue Table
-          </Button>
-          <Button 
-            variant={viewMode === 'kpi' ? 'default' : 'outline'} 
-            size="sm"
-            onClick={() => setViewMode('kpi')}
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Vue KPI
-          </Button>
+        <div className="flex items-center gap-4">
+          {/* Counter */}
+          <div className="text-sm text-muted-foreground font-medium">
+            {selectedCount > 0 ? (
+              <span className="text-primary font-semibold">
+                {selectedCount} / {totalCount}
+              </span>
+            ) : (
+              <span>{totalCount} élément{totalCount > 1 ? 's' : ''}</span>
+            )}
+          </div>
+          
+          {/* View buttons */}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant={viewMode === 'table' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setViewMode('table')}
+            >
+              <Table className="h-4 w-4 mr-2" />
+              Vue Table
+            </Button>
+            <Button 
+              variant={viewMode === 'kpi' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setViewMode('kpi')}
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Vue KPI
+            </Button>
+          </div>
         </div>
       </div>
 
