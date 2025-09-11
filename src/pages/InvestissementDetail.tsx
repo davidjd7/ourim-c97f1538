@@ -364,55 +364,51 @@ export default function InvestissementDetail() {
           </Button>
           
           <div className="flex items-center gap-4">
-            <div>
-              {isEditMode ? (
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    value={tempEditData.name}
-                    onChange={(e) => handleDataChange({ name: e.target.value })}
-                    className="text-3xl font-bold bg-transparent border-b border-border focus:border-primary outline-none text-foreground"
-                  />
-                  <select
-                    value={tempEditData.type}
-                    onChange={(e) => handleDataChange({ type: e.target.value as 'IMMO' | 'PE' })}
-                    className="text-lg bg-transparent border-b border-border focus:border-primary outline-none text-muted-foreground"
-                  >
-                    <option value="IMMO">Investissement Immobilier</option>
-                    <option value="PE">Private Equity</option>
-                  </select>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <h1 className="text-3xl font-bold text-foreground">
-                        {isNewInvestment ? 'Nouvel Investissement' : investment!.name}
-                      </h1>
-                      <p className="text-lg text-muted-foreground">
-                        {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
-                      </p>
-                    </div>
-                    {/* Tags et Société à droite du nom */}
-                    {!isNewInvestment && (
-                      <div className="flex items-center gap-4">
-                        <InvestmentTags investmentId={investment!.id} />
-                         <div className="text-sm">
-                           <span className="text-muted-foreground">Société: </span>
-                           <span className="font-medium">
-                             {(() => {
-                               const companyId = tempEditData?.companyId;
-                               const foundCompany = companies?.find(c => c.id === companyId);
-                               return foundCompany?.name || 'Non défini';
-                             })()}
-                           </span>
-                         </div>
-                      </div>
-                    )}
+            <div className="flex items-center gap-4">
+              <div>
+                {isEditMode ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={tempEditData.name}
+                      onChange={(e) => handleDataChange({ name: e.target.value })}
+                      className="text-3xl font-bold bg-transparent border-b border-border focus:border-primary outline-none text-foreground"
+                    />
+                    {/* Type non modifiable, même place */}
+                    <p className="text-lg text-muted-foreground">
+                      {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+                    </p>
                   </div>
-                </>
+                ) : (
+                  <div>
+                    <h1 className="text-3xl font-bold text-foreground">
+                      {isNewInvestment ? 'Nouvel Investissement' : investment!.name}
+                    </h1>
+                    <p className="text-lg text-muted-foreground">
+                      {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Tags et Société à droite du nom - visibles en édition aussi */}
+              {!isNewInvestment && (
+                <div className="flex items-center gap-4">
+                  <InvestmentTags investmentId={investment!.id} />
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Société: </span>
+                    <span className="font-medium">
+                      {(() => {
+                        const companyId = tempEditData?.companyId;
+                        const foundCompany = companies?.find(c => c.id === companyId);
+                        return foundCompany?.name || 'Non défini';
+                      })()}
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
+          </div>
             
             {/* Status Progress commenté pour v2 
             {!isNewInvestment && !isEditMode && (
