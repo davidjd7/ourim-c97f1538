@@ -307,16 +307,16 @@ export default function InvestissementDetail() {
               <p className="text-sm text-muted-foreground font-bold mb-3">COC (2024)</p>
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
-                  <p className={`text-2xl font-bold financial-value ${kpis.coc >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className="text-2xl font-bold financial-value">
                     {kpis.coc >= 0 ? '+' : ''}{formatPercentage(kpis.coc)}
                   </p>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
                   <div>CFNI: {formatCurrency(kpis.cocDetails.cfni)}</div>
-                  <div className={kpis.cocDetails.dscr >= 1.2 ? 'text-green-600' : 'text-red-600'}>
+                  <div>
                     DSCR: {kpis.cocDetails.dscr.toFixed(2)}
                   </div>
-                  <div className={kpis.cocDetails.icr >= 2 ? 'text-green-600' : 'text-red-600'}>
+                  <div>
                     ICR: {kpis.cocDetails.icr.toFixed(2)}
                   </div>
                   <div>Yield Banque: {kpis.cocDetails.yieldBanque?.toFixed(1) || '0.0'}%</div>
@@ -331,15 +331,15 @@ export default function InvestissementDetail() {
               <p className="text-sm text-muted-foreground font-bold mb-3">XIRR ({kpis.xirrDetails.years}Y)</p>
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
-                  <p className={`text-2xl font-bold financial-value ${kpis.xirr >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className="text-2xl font-bold financial-value">
                     {formatPercentage(kpis.xirr)}
                   </p>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <div className={kpis.xirrDetails.totalCfni >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  <div>
                     CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)} ({formatCurrency(kpis.xirrDetails.cfniDerniereAnnee)})
                   </div>
-                  <div className={kpis.xirrDetails.deltaValeur >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  <div>
                     Valeur: {formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)} ({kpis.xirrDetails.deltaValeur >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.deltaValeur)})
                   </div>
                   <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
