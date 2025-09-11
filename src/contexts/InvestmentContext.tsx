@@ -14,10 +14,8 @@ export interface Investment {
     percentage: number;
   };
   companyId?: string;
-  companyName?: string;
   description?: string;
   investmentAmount?: number;
-  company?: string;
 }
 
 interface InvestmentContextType {
@@ -54,13 +52,11 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       name: dbRow.name,
       type: dbRow.type,
       dateInvestment: dbRow.investment_date,
-      lastCashflow: 0, // Calculate based on other fields if needed
-      lastVariation: { value: 0, percentage: 0 }, // Calculate based on historical data if needed
+      lastCashflow: 0, // TODO: Calculate dynamically from investment_cashflows
+      lastVariation: { value: 0, percentage: 0 }, // TODO: Calculate from valorisations
       companyId: dbRow.company_id,
-      companyName: '', // We'll populate this with a join later
       description: dbRow.description,
       investmentAmount: dbRow.investment_amount,
-      company: dbRow.company,
     };
   };
 
@@ -73,7 +69,6 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       company_id: investment.companyId || null,
       investment_date: investment.dateInvestment || null,
       investment_amount: investment.investmentAmount !== undefined ? investment.investmentAmount : null,
-      company: investment.company || null
     };
   };
 

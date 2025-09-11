@@ -316,7 +316,6 @@ export type Database = {
       }
       investments: {
         Row: {
-          company: string | null
           company_id: string | null
           created_at: string
           description: string | null
@@ -329,7 +328,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          company?: string | null
           company_id?: string | null
           created_at?: string
           description?: string | null
@@ -342,7 +340,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          company?: string | null
           company_id?: string | null
           created_at?: string
           description?: string | null

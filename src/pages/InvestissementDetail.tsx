@@ -387,7 +387,6 @@ export default function InvestissementDetail() {
                 investmentAmount: investment.investmentAmount || 0,
                 description: investment.description || '',
                 companyId: investment.companyId,
-                company: investment.company
               }}
               tempEditData={tempEditData}
               onDataChange={(newData) => setTempEditData({ ...tempEditData, ...newData })}

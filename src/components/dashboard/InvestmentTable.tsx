@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -21,15 +20,11 @@ import { ColumnSelector } from './ColumnSelector';
 function InvestmentKPIRow({ 
   investment, 
   onKpisLoaded,
-  visibleColumns,
-  isSelected,
-  onSelect 
+  visibleColumns 
 }: { 
   investment: any; 
   onKpisLoaded?: (id: string, data: any) => void;
   visibleColumns: Array<{ key: string; label: string; align?: 'left' | 'right'; type?: string }>;
-  isSelected: boolean;
-  onSelect: (checked: boolean) => void;
 }) {
   const { kpis, loading } = usePerformanceKPIs(investment.id);
   
@@ -209,13 +204,6 @@ function InvestmentKPIRow({
 
   return (
     <TableRow>
-      <TableCell>
-        <Checkbox 
-          checked={isSelected}
-          onCheckedChange={onSelect}
-          aria-label={`Sélectionner ${investment.name}`}
-        />
-      </TableCell>
       {visibleColumns.map((column) => (
         <TableCell 
           key={column.key} 
@@ -237,7 +225,6 @@ function InvestmentKPIRow({
   );
 }
 
-
 type SortKey = string;
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -246,11 +233,9 @@ export function InvestmentTable() {
   const { visibleColumns, isInitialized } = useColumnVisibility();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   
   // KPI map for sorting by computed values - now holds all KPI data
   const [kpiMap, setKpiMap] = useState<Record<string, any>>({});
-
 
   const handleKpisLoaded = (id: string, data: any) => {
     setKpiMap((prev) => {
@@ -325,41 +310,19 @@ export function InvestmentTable() {
     return null;
   };
 
-  const handleRowSelect = (investmentId: string, checked: boolean) => {
-    const newSelected = new Set(selectedRows);
-    if (checked) {
-      newSelected.add(investmentId);
-    } else {
-      newSelected.delete(investmentId);
-    }
-    setSelectedRows(newSelected);
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const allIds = new Set(sortedInvestments.map(inv => inv.id));
-      setSelectedRows(allIds);
-    } else {
-      setSelectedRows(new Set());
-    }
-  };
-
-  const isAllSelected = sortedInvestments.length > 0 && selectedRows.size === sortedInvestments.length;
-  const isIndeterminate = selectedRows.size > 0 && selectedRows.size < sortedInvestments.length;
-
-    if (!isInitialized) {
-      return (
-        <div className="card-financial">
-          <div className="p-6">
-            <div className="flex items-center justify-center h-32">
-              <div className="text-muted-foreground">Chargement...</div>
-            </div>
+  if (!isInitialized) {
+    return (
+      <div className="card-financial">
+        <div className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="text-muted-foreground">Chargement...</div>
           </div>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
-    return (
+  return (
     <div className="card-financial">
       <div className="p-6 border-b">
         <div className="flex items-center justify-between">
@@ -378,13 +341,6 @@ export function InvestmentTable() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[50px]">
-              <Checkbox 
-                checked={isAllSelected}
-                onCheckedChange={handleSelectAll}
-                aria-label="Sélectionner tout"
-              />
-            </TableHead>
             {visibleColumns.map((column) => (
               <TableHead 
                 key={column.key}
@@ -410,13 +366,11 @@ export function InvestmentTable() {
         </TableHeader>
         <TableBody>
           {sortedInvestments.map((investment) => (
-            <InvestmentKPIRow 
-              key={investment.id} 
+            <InvestmentKPIRow
+              key={investment.id}
               investment={investment} 
               onKpisLoaded={handleKpisLoaded}
               visibleColumns={visibleColumns}
-              isSelected={selectedRows.has(investment.id)}
-              onSelect={(checked) => handleRowSelect(investment.id, checked)}
             />
           ))}
         </TableBody>
