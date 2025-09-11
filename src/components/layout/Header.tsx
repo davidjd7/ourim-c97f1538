@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Building2, User, Menu, LogOut } from 'lucide-react';
+import { Search, Plus, Building2, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CompanyFilter } from '@/components/filters/CompanyFilter';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,21 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 
-interface HeaderProps {
-  onToggleSidebar?: () => void;
-  sidebarOpen?: boolean;
-}
-
-export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
+export function Header() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -38,16 +26,9 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        {/* Left section - CTA Actions */}
+        {/* Left section - Sidebar Toggle + CTA Actions */}
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggleSidebar}
-            className="md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+          <SidebarTrigger className="hover-scale" />
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -89,7 +70,6 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
 
         {/* Right section - Profile */}
         <div className="flex items-center gap-4">
-
           {/* Profile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
