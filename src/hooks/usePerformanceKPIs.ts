@@ -46,12 +46,12 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
   const [kpis, setKpis] = useState({
     fondPropre: 0,
     fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
-    dernierEarning: 0,
-    dernierEarningDetails: { flux: 0, varValeur: 0, varValeurPercentage: 0, year: 0 },
-    dernierFlux: 0,
-    dernierFluxDetails: { capRate: 0, coc: 0, yield: 0, fluxRate: 0, year: 0 },
+    rendementNet: 0,
+    rendementNetDetails: { ebitda: 0, loyer: 0, ebitdaSurLoyer: 0, year: 0 },
+    coc: 0,
+    cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
     xirr: 0,
-    xirrDetails: { totalEarning: 0, totalFlux: 0, totalGainValeur: 0, years: 0 }
+    xirrDetails: { totalCfni: 0, variationCfni: 0, deltaFP: 0, years: 0 }
   });
 
   // Helper functions (exact same as PerformanceTab)
@@ -329,19 +329,47 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
       const sortedCashflows = [...cashflows].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       const latestEBITDA = sortedCashflows.length > 0 ? calculateEBITDA(sortedCashflows[0]) : 0;
 
-      // Dernier Earning calculations (still using synthese flux)
-      const dernierFlux = latestSynthese?.flux || 0;
-      const dernierVarValeur = previousChartData ? (latestChartData?.valeur || 0) - (previousChartData?.valeur || 0) : 0;
-      const dernierEarning = dernierFlux + dernierVarValeur;
-      const variationPercentage = previousChartData && previousChartData.valeur !== 0 
-        ? (dernierVarValeur / previousChartData.valeur) * 100 
-        : 0;
-      const dernierEarningYear = latestChartData?.year || 0;
-      const dernierEarningDetails = {
-        flux: dernierFlux,
-        varValeur: dernierVarValeur,
-        varValeurPercentage: variationPercentage,
-        year: dernierEarningYear
+      // Dernier Earning calculations - Now renamed to Rendement Net
+      const rendementNet = latestSynthese?.valeur && latestSynthese.valeur > 0 ? (latestEBITDA / latestSynthese.valeur) * 100 : 0;
+      const ebitdaSurLoyer = bailLoyerHT && bailLoyerHT > 0 ? (latestEBITDA / bailLoyerHT) * 100 : 0;
+      const rendementNetYear = latestChartData?.year || 0;
+      const rendementNetDetails = {
+        ebitda: latestEBITDA,
+        loyer: bailLoyerHT || 0,
+        ebitdaSurLoyer: ebitdaSurLoyer,
+        year: rendementNetYear
+      };
+
+      // COC calculations with additional metrics
+      const latestImmobilisation = immobilisations.find(immo => 
+        sortedCashflows.length > 0 ? immo.date === sortedCashflows[0].date : false
+      );
+      const noiAjuste = latestEBITDA - (latestImmobilisation?.montant || 0);
+      
+      // Get latest debt flow data
+      const sortedDebtFlows = [...debtFlows].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const latestDebtFlow = sortedDebtFlows[0];
+      const rmbtInteret = latestDebtFlow?.rmbtInteret || 0;
+      const rmbtCapital = latestDebtFlow?.rmbtCapital || 0;
+      
+      const cfni = noiAjuste - rmbtInteret;
+      const cocCalculated = latestSynthese?.fp && latestSynthese.fp > 0 ? (cfni / latestSynthese.fp) * 100 : 0;
+      
+      // DSCR = NOI / (Rmbt Interet + Rmbt Capital)
+      const dscr = (rmbtInteret + rmbtCapital) > 0 ? noiAjuste / (rmbtInteret + rmbtCapital) : 0;
+      
+      // ICR = NOI / Rmbt Interet
+      const icr = rmbtInteret > 0 ? noiAjuste / rmbtInteret : 0;
+      
+      // Yield Banque = NOI / Dette
+      const yieldBanque = latestSynthese?.crd && latestSynthese.crd > 0 ? (noiAjuste / latestSynthese.crd) * 100 : 0;
+      
+      const cocDetails = {
+        cfni: cfni,
+        dscr: dscr,
+        icr: icr,
+        yieldBanque: yieldBanque,
+        year: rendementNetYear
       };
 
       // Dernier Flux details - Using most recent EBITDA instead of synthese flux
@@ -356,29 +384,66 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
         coc,
         yield: yield_,
         fluxRate: bailLoyerHT && bailLoyerHT > 0 ? (latestEBITDA / bailLoyerHT) * 100 : 0,
-        year: dernierEarningYear
+        year: rendementNetYear
       };
 
-      // XIRR details
-      const totalGainValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
-      const totalFlux = syntheseData.reduce((sum, item) => sum + (item.flux || 0), 0);
-      const totalEarning = totalGainValeur + totalFlux;
+      // XIRR details - Updated with CFNI calculations
+      // Calculate total CFNI across all periods
+      const totalCfni = syntheseData.reduce((sum, row) => {
+        const cashflowDate = cashflows.find(cf => cf.date === row.date);
+        const ebitdaDate = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+        const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+        const noiAjusteDate = ebitdaDate - (immobilisationDate?.montant || 0);
+        const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+        const rmbtInteretDate = debtFlowDate?.rmbtInteret || 0;
+        return sum + (noiAjusteDate - rmbtInteretDate);
+      }, 0);
+
+      // Calculate current and previous year CFNI for variation
+      const currentYear = rendementNetYear;
+      const currentYearCfni = syntheseData
+        .filter(row => new Date(row.date).getFullYear() === currentYear)
+        .reduce((sum, row) => {
+          const cashflowDate = cashflows.find(cf => cf.date === row.date);
+          const ebitdaDate = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+          const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+          const noiAjusteDate = ebitdaDate - (immobilisationDate?.montant || 0);
+          const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+          const rmbtInteretDate = debtFlowDate?.rmbtInteret || 0;
+          return sum + (noiAjusteDate - rmbtInteretDate);
+        }, 0);
+
+      const previousYearCfni = syntheseData
+        .filter(row => new Date(row.date).getFullYear() === currentYear - 1)
+        .reduce((sum, row) => {
+          const cashflowDate = cashflows.find(cf => cf.date === row.date);
+          const ebitdaDate = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+          const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+          const noiAjusteDate = ebitdaDate - (immobilisationDate?.montant || 0);
+          const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+          const rmbtInteretDate = debtFlowDate?.rmbtInteret || 0;
+          return sum + (noiAjusteDate - rmbtInteretDate);
+        }, 0);
+
+      const variationCfni = currentYearCfni - previousYearCfni;
+      const deltaFP = (latestSynthese?.fp || 0) - (oldestSynthese?.fp || 0);
+      
       const years = syntheseData.length > 1 ? Math.round((new Date(latestSynthese.date).getTime() - new Date(oldestSynthese.date).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
       
       const xirrDetails = {
-        totalEarning,
-        totalFlux,
-        totalGainValeur,
+        totalCfni,
+        variationCfni,
+        deltaFP,
         years
       };
 
       setKpis({
         fondPropre,
         fondPropreDetails,
-        dernierEarning,
-        dernierEarningDetails,
-        dernierFlux: latestEBITDA, // Use most recent EBITDA instead of synthese flux
-        dernierFluxDetails,
+        rendementNet,
+        rendementNetDetails,
+        coc: cocCalculated,
+        cocDetails,
         xirr,
         xirrDetails
       });
@@ -388,12 +453,12 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
       setKpis({ 
         fondPropre: 0,
         fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
-        dernierEarning: 0,
-        dernierEarningDetails: { flux: 0, varValeur: 0, varValeurPercentage: 0, year: 0 },
-        dernierFlux: 0,
-        dernierFluxDetails: { capRate: 0, coc: 0, yield: 0, fluxRate: 0, year: 0 },
+        rendementNet: 0,
+        rendementNetDetails: { ebitda: 0, loyer: 0, ebitdaSurLoyer: 0, year: 0 },
+        coc: 0,
+        cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
         xirr: 0,
-        xirrDetails: { totalEarning: 0, totalFlux: 0, totalGainValeur: 0, years: 0 }
+        xirrDetails: { totalCfni: 0, variationCfni: 0, deltaFP: 0, years: 0 }
       });
     } finally {
       setLoading(false);

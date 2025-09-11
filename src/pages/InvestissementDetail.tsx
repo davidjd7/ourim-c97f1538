@@ -590,69 +590,66 @@ export default function InvestissementDetail() {
                 </div>
               </div>
 
-              {/* Dernier Earning */}
-              <div className="card-financial">
-                <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">
-                        Dernier Earning {kpisLoading ? '' : `(${kpis.dernierEarningDetails.year})`}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <p className={`text-xl font-bold financial-value ${
-                          !kpisLoading && kpis.dernierEarning >= 0 ? 'text-success' : 'text-destructive'
-                        }`}>
-                          {kpisLoading ? '...' : (
-                            `${kpis.dernierEarning >= 0 ? '+' : ''}${formatCurrency(kpis.dernierEarning)}`
-                          )}
-                        </p>
-                        {!kpisLoading && kpis.dernierEarningDetails && (
-                          <div className="text-xs text-muted-foreground text-left">
-                            <div>Flux: {kpis.dernierEarningDetails.flux >= 0 ? '+' : ''}{formatCurrency(kpis.dernierEarningDetails.flux)}</div>
-                            <div>Var Valeur: {kpis.dernierEarningDetails.varValeur >= 0 ? '+' : ''}{formatCurrency(kpis.dernierEarningDetails.varValeur)} ({kpis.dernierEarningDetails.varValeurPercentage >= 0 ? '+' : ''}{kpis.dernierEarningDetails.varValeurPercentage.toFixed(1)}%)</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dernier Flux */}
-              <div className="card-financial">
-                <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
+               {/* Rendement Net */}
+               <div className="card-financial">
+                 <div className="p-4">
+                   <div className="flex items-center justify-between">
+                     <div className="flex-1">
                        <p className="text-sm text-muted-foreground">
-                         Dernier EBITDA {kpisLoading ? '' : `(${kpis.dernierFluxDetails.year})`}
+                         Rendement Net {kpisLoading ? '' : `(${kpis.rendementNetDetails.year})`}
                        </p>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className={`text-xl font-bold financial-value ${
-                            !kpisLoading && kpis.dernierFlux >= 0 ? 'text-success' : 'text-destructive'
-                          }`}>
-                            {kpisLoading ? '...' : (
-                              `${kpis.dernierFlux >= 0 ? '+' : ''}${formatCurrency(kpis.dernierFlux)}`
-                            )}
-                          </p>
-                          {!kpisLoading && investment.bailLoyerHT && kpis.dernierFluxDetails.fluxRate && (
-                            <p className="text-xs text-muted-foreground">
-                              {Math.round(kpis.dernierFluxDetails.fluxRate)}% du loyer
-                            </p>
-                          )}
-                        </div>
-                        {!kpisLoading && kpis.dernierFluxDetails && (
-                          <div className="text-xs text-muted-foreground text-left">
-                            <div>Cap Rate: {kpis.dernierFluxDetails.capRate >= 0 ? '+' : ''}{formatPercentage(kpis.dernierFluxDetails.capRate)}</div>
-                            <div>COC: {kpis.dernierFluxDetails.coc >= 0 ? '+' : ''}{formatPercentage(kpis.dernierFluxDetails.coc)}</div>
-                            <div>Yield Banque: {kpis.dernierFluxDetails.yield >= 0 ? '+' : ''}{formatPercentage(kpis.dernierFluxDetails.yield)}</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                       <div className="flex items-center justify-between">
+                         <p className={`text-xl font-bold financial-value ${
+                           !kpisLoading && kpis.rendementNet >= 0 ? 'text-success' : 'text-destructive'
+                         }`}>
+                           {kpisLoading ? '...' : (
+                             `${kpis.rendementNet >= 0 ? '+' : ''}${kpis.rendementNet.toFixed(1)}%`
+                           )}
+                         </p>
+                         {!kpisLoading && kpis.rendementNetDetails && (
+                           <div className="text-xs text-muted-foreground text-left">
+                             <div>EBITDA: {formatCurrency(kpis.rendementNetDetails.ebitda)}</div>
+                             <div>Loyer: {formatCurrency(kpis.rendementNetDetails.loyer)}</div>
+                             <div>{kpis.rendementNetDetails.ebitdaSurLoyer.toFixed(1)}% du loyer</div>
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+
+               {/* COC */}
+               <div className="card-financial">
+                 <div className="p-4">
+                   <div className="flex items-center justify-between">
+                     <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">
+                          COC {kpisLoading ? '' : `(${kpis.cocDetails.year})`}
+                        </p>
+                       <div className="flex items-center justify-between">
+                         <div>
+                           <p className={`text-xl font-bold financial-value ${
+                             !kpisLoading && kpis.coc >= 0 ? 'text-success' : 'text-destructive'
+                           }`}>
+                             {kpisLoading ? '...' : (
+                               `${kpis.coc >= 0 ? '+' : ''}${kpis.coc.toFixed(1)}%`
+                             )}
+                           </p>
+                         </div>
+                         {!kpisLoading && kpis.cocDetails && (
+                           <div className="text-xs text-muted-foreground text-left">
+                             <div>CFNI: {formatCurrency(kpis.cocDetails.cfni)}</div>
+                             <div>DSCR: {kpis.cocDetails.dscr.toFixed(2)}</div>
+                             <div>ICR: {kpis.cocDetails.icr.toFixed(2)}</div>
+                             <div>Yield Banque: {kpis.cocDetails.yieldBanque.toFixed(1)}%</div>
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
 
               {/* XIRR */}
               <div className="card-financial">
@@ -666,13 +663,12 @@ export default function InvestissementDetail() {
                         <p className="text-xl font-bold financial-value text-primary">
                           {kpisLoading ? '...' : formatPercentage(kpis.xirr)}
                         </p>
-                        {!kpisLoading && kpis.xirrDetails && (
-                          <div className="text-xs text-muted-foreground text-left">
-                            <div>Total: {kpis.xirrDetails.totalEarning >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.totalEarning)}</div>
-                            <div>Flux: {kpis.xirrDetails.totalFlux >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.totalFlux)}</div>
-                            <div>Valeur: {kpis.xirrDetails.totalGainValeur >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.totalGainValeur)}</div>
-                          </div>
-                        )}
+                         {!kpisLoading && kpis.xirrDetails && (
+                           <div className="text-xs text-muted-foreground text-left">
+                             <div>Flux: {formatCurrency(kpis.xirrDetails.totalCfni)} ({kpis.xirrDetails.variationCfni >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.variationCfni)})</div>
+                             <div>Valeur: {formatCurrency(kpis.xirrDetails.deltaFP)}</div>
+                           </div>
+                         )}
                       </div>
                     </div>
                   </div>
