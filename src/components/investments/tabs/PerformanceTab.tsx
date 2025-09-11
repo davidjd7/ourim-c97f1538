@@ -386,6 +386,7 @@ export function PerformanceTab({
           investment_id: investmentId,
           user_id: user?.id,
           date: row.date,
+          loyer: row.loyer,
           rex: row.rex,
           retrait_amort: row.retraitAmort,
           retrait_autres: row.retraitAutres
