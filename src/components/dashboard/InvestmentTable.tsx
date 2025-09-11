@@ -238,18 +238,6 @@ export function InvestmentTable() {
   // KPI map for sorting by computed values - now holds all KPI data
   const [kpiMap, setKpiMap] = useState<Record<string, any>>({});
 
-  // Don't render until columns are initialized to prevent layout shift
-  if (!isInitialized) {
-    return (
-      <div className="card-financial">
-        <div className="p-6">
-          <div className="flex items-center justify-center h-32">
-            <div className="text-muted-foreground">Chargement...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const handleKpisLoaded = (id: string, data: any) => {
     setKpiMap((prev) => {
@@ -324,7 +312,19 @@ export function InvestmentTable() {
     return null;
   };
 
-  return (
+    if (!isInitialized) {
+      return (
+        <div className="card-financial">
+          <div className="p-6">
+            <div className="flex items-center justify-center h-32">
+              <div className="text-muted-foreground">Chargement...</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
     <div className="card-financial">
       <div className="p-6 border-b">
         <div className="flex items-center justify-between">
