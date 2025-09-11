@@ -298,13 +298,13 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
               {isEditMode ? (
                 <Select
                   value={editData.companyId || ''}
-                  onValueChange={(value) => handleDataChange({ ...editData, companyId: value })}
+                  onValueChange={(value) => handleDataChange({ ...editData, companyId: value === 'none' ? '' : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner une société" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucune société</SelectItem>
+                    <SelectItem value="none">Aucune société</SelectItem>
                     {companies?.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.name}
