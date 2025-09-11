@@ -324,16 +324,17 @@ export function InvestmentTable() {
               Suivi et gestion des actifs investis
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <ColumnSelector />
-            <Button variant="outline" size="sm">
-              Voir tout
-            </Button>
-          </div>
+          <Button variant="outline" size="sm">
+            Voir tout
+          </Button>
         </div>
       </div>
 
-      <Table>
+      <div className="relative">
+        <div className="absolute top-3 right-4 z-10">
+          <ColumnSelector />
+        </div>
+        <Table>
         <TableHeader>
           <TableRow>
             {visibleColumns.map((column) => (
@@ -366,6 +367,7 @@ export function InvestmentTable() {
           ))}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }
