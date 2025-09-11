@@ -781,40 +781,6 @@ export function PerformanceTab({
 
   return <div className="space-y-6">
       
-      {/* Section Loyers */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Informations Loyers
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div>
-              <Label>Loyer HT.HC (annuel)</Label>
-              <p className="font-medium financial-value">
-                {formatCurrency(bailLoyerHT)}
-              </p>
-            </div>
-
-            <div>
-              <Label>Charge Non Récupérable (CNR)</Label>
-              <p className="font-medium financial-value">
-                {formatCurrency(bailCNR)}
-              </p>
-            </div>
-
-            <div>
-              <Label>Loyer net HT.HC (annuel)</Label>
-              <p className="font-medium financial-value text-primary">
-                {formatCurrency(bailLoyerHT - bailCNR)}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
       {/* Chart and Synthesis Section */}
       <Card>
         <CardHeader>
