@@ -31,54 +31,6 @@ interface InvestmentContextType {
 
 const InvestmentContext = createContext<InvestmentContextType | undefined>(undefined);
 
-const initialInvestments: Investment[] = [
-  {
-    id: '1',
-    name: 'Faisanderie Paris',
-    type: 'IMMO',
-    dateInvestment: '2023-03-15',
-    lastCashflow: 98084,
-    lastVariation: { value: 50000, percentage: 2.4 },
-    description: 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris',
-    investmentAmount: 2100000,
-  },
-  {
-    id: '2',
-    name: 'Robespierre Bagnolet',
-    type: 'IMMO',
-    dateInvestment: '2023-01-20',
-    lastCashflow: 70443,
-    lastVariation: { value: -15000, percentage: -1.4 },
-    investmentAmount: 1090000,
-  },
-  {
-    id: '3',
-    name: 'Général Leclerc Rosny',
-    type: 'IMMO',
-    dateInvestment: '2022-11-10',
-    lastCashflow: 112692,
-    lastVariation: { value: 80000, percentage: 5.0 },
-    investmentAmount: 1690000,
-  },
-  {
-    id: '4',
-    name: 'Commercial Montreuil',
-    type: 'IMMO',
-    dateInvestment: '2024-01-15',
-    lastCashflow: 0,
-    lastVariation: { value: 0, percentage: 0 },
-    investmentAmount: 0,
-  },
-  {
-    id: '5',
-    name: 'Bureaux La Défense',
-    type: 'IMMO',
-    dateInvestment: '',
-    lastCashflow: 0,
-    lastVariation: { value: 0, percentage: 0 },
-    investmentAmount: 0,
-  }
-];
 
 export function InvestmentProvider({ children }: { children: ReactNode }) {
   const [investments, setInvestments] = useState<Investment[]>([]);
@@ -177,31 +129,6 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
-  // Create initial sample investments for new users
-  const createInitialInvestments = async () => {
-    if (!user) return;
-
-    const sampleInvestments = initialInvestments.map(inv => ({
-      ...convertInvestmentToDb(inv),
-      user_id: user.id
-    }));
-
-    try {
-      const { data, error } = await supabase
-        .from('investments')
-        .insert(sampleInvestments)
-        .select('*');
-
-      if (error) throw error;
-
-      if (data) {
-        const convertedInvestments = data.map(convertDbToInvestment);
-        setInvestments(convertedInvestments);
-      }
-    } catch (error) {
-      console.error('Error creating initial investments:', error);
-    }
-  };
 
   const addInvestment = async (investmentData: Omit<Investment, 'id'>): Promise<Investment> => {
     if (!user) throw new Error('User not authenticated');
@@ -362,24 +289,9 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
   // Helper function to convert frontend field names to database field names
   const getDbFieldName = (frontendField: string): string => {
     const fieldMap: { [key: string]: string } = {
-      dateAcquisition: 'date_acquisition',
-      dateEntree: 'date_entree',
-      dureeBail: 'duree_bail',
-      bailNextBreak: 'bail_next_break',
-      bailGmapLink: 'bail_gmap_link',
-      bailGmapNote: 'bail_gmap_note',
-      bailLoyerHT: 'bail_loyer_ht',
-      bailCNR: 'bail_cnr',
-      bailPriseEffet: 'bail_prise_effet',
-      bailActivite: 'bail_activite',
-      bailAnciennete: 'bail_anciennete',
-      typeBail: 'type_bail',
-      netVendeur: 'net_vendeur',
-      honoNotaire: 'hono_notaire',
-      lastValue: 'last_value',
       investmentAmount: 'investment_amount',
-      notaryFees: 'notary_fees',
-      dateInvestment: 'investment_date'
+      dateInvestment: 'investment_date',
+      companyId: 'company_id'
     };
     return fieldMap[frontendField] || frontendField;
   };

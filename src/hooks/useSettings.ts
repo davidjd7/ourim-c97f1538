@@ -2,24 +2,10 @@ import { useState, useEffect } from 'react';
 
 interface Settings {
   currency: string;
-  fxRate: string;
-  notaryFees: number;
-  anthropicModel: string;
-  anthropicKey: string;
-  gmapsKey: string;
-  promptImmo: string;
-  promptPE: string;
 }
 
 const defaultSettings: Settings = {
-  currency: 'EUR',
-  fxRate: '',
-  notaryFees: 8.00,
-  anthropicModel: '',
-  anthropicKey: '',
-  gmapsKey: '',
-  promptImmo: '',
-  promptPE: ''
+  currency: 'EUR'
 };
 
 export function useSettings() {

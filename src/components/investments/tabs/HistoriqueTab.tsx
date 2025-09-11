@@ -136,18 +136,12 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
   const getFieldDisplayName = (fieldName: string): string => {
     const fieldMap: { [key: string]: string } = {
       name: 'Nom',
-      status: 'Statut',
-      price: 'Prix',
-      address: 'Adresse',
-      surface: 'Surface',
-      date_acquisition: 'Date d\'acquisition',
-      locataire: 'Locataire',
-      bail_loyer_ht: 'Loyer HT',
-      last_value: 'Dernière valeur',
-      tri: 'TRI',
+      description: 'Description',
+      type: 'Type',
       investment_amount: 'Montant d\'investissement',
-      notary_fees: 'Frais de notaire',
-      company_id: 'Société' // ← AJOUT IMPORTANT
+      investment_date: 'Date d\'investissement',
+      company_id: 'Société',
+      company: 'Société'
     };
     return fieldMap[fieldName] || fieldName;
   };

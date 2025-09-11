@@ -24,32 +24,6 @@ interface DetteTabProps {
   isEditMode?: boolean;
 }
 
-const mockDebts: Debt[] = [
-  {
-    id: '1',
-    bankName: 'BNP Paribas',
-    loanType: 'mortgage',
-    initialAmount: 1500000,
-    remainingAmount: 1350000,
-    interestRate: 2.8,
-    monthlyPayment: 6250,
-    startDate: '2023-03-15',
-    endDate: '2043-03-15',
-    status: 'active'
-  },
-  {
-    id: '2',
-    bankName: 'Crédit Agricole',
-    loanType: 'bridge',
-    initialAmount: 200000,
-    remainingAmount: 0,
-    interestRate: 3.5,
-    monthlyPayment: 2100,
-    startDate: '2023-01-01',
-    endDate: '2023-12-31',
-    status: 'paid'
-  }
-];
 
 const loanTypeConfig = {
   mortgage: { label: 'Prêt immobilier', className: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -65,7 +39,7 @@ const statusConfig = {
 
 export function DetteTab({ investmentId }: DetteTabProps) {
   const { canEdit } = useUserRole();
-  const [debts] = useState<Debt[]>(mockDebts);
+  const [debts] = useState<Debt[]>([]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {

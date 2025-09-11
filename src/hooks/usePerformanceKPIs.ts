@@ -40,14 +40,14 @@ interface ImmobilisationRow {
   note: string;
 }
 
-export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
+export function usePerformanceKPIs(investmentId: string) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState({
     fondPropre: 0,
     fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
     rendementNet: 0,
-    rendementNetDetails: { ebitda: 0, loyer: 0, ebitdaSurLoyer: 0, year: 0 },
+    rendementNetDetails: { ebitda: 0, loyer: 0, year: 0 },
     coc: 0,
     cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
     xirr: 0,
@@ -258,7 +258,7 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
           fondPropre: 0,
           fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
           rendementNet: 0,
-          rendementNetDetails: { ebitda: 0, loyer: 0, ebitdaSurLoyer: 0, year: 0 },
+          rendementNetDetails: { ebitda: 0, loyer: 0, year: 0 },
           coc: 0,
           cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
           xirr: 0,
@@ -331,12 +331,10 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
 
       // Dernier Earning calculations - Now renamed to Rendement Net
       const rendementNet = latestSynthese?.valeur && latestSynthese.valeur > 0 ? (latestEBITDA / latestSynthese.valeur) * 100 : 0;
-      const ebitdaSurLoyer = bailLoyerHT && bailLoyerHT > 0 ? (latestEBITDA / bailLoyerHT) * 100 : 0;
       const rendementNetYear = latestChartData?.year || 0;
       const rendementNetDetails = {
         ebitda: latestEBITDA,
-        loyer: bailLoyerHT || 0,
-        ebitdaSurLoyer: ebitdaSurLoyer,
+        loyer: 0,
         year: rendementNetYear
       };
 
@@ -383,7 +381,6 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
         capRate,
         coc,
         yield: yield_,
-        fluxRate: bailLoyerHT && bailLoyerHT > 0 ? (latestEBITDA / bailLoyerHT) * 100 : 0,
         year: rendementNetYear
       };
 
@@ -453,7 +450,7 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
         fondPropre: 0,
         fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
         rendementNet: 0,
-        rendementNetDetails: { ebitda: 0, loyer: 0, ebitdaSurLoyer: 0, year: 0 },
+        rendementNetDetails: { ebitda: 0, loyer: 0, year: 0 },
         coc: 0,
         cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
         xirr: 0,

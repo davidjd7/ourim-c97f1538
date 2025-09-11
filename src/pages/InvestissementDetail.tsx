@@ -33,8 +33,7 @@ export default function InvestissementDetail() {
   
   // Load performance KPIs for invested status
   const { kpis, loading: kpisLoading } = usePerformanceKPIs(
-    isNewInvestment ? '' : (id || ''), 
-    0 // No longer using bailLoyerHT, but hook still expects it
+    isNewInvestment ? '' : (id || '')
   );
 
   const [tempEditData, setTempEditData] = useState({
@@ -291,11 +290,6 @@ export default function InvestissementDetail() {
                 <div className="text-xs text-muted-foreground space-y-1">
                   <div>EBITDA: {formatCurrency(kpis.rendementNetDetails.ebitda)}</div>
                   <div>Loyer: {formatCurrency(kpis.rendementNetDetails.loyer || 0)}</div>
-                  {kpis.rendementNetDetails.ebitdaSurLoyer > 0 && (
-                    <div className={kpis.rendementNetDetails.ebitdaSurLoyer >= 100 ? 'text-green-600' : 'text-red-600'}>
-                      {kpis.rendementNetDetails.ebitdaSurLoyer.toFixed(1)}% du loyer
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

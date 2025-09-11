@@ -58,13 +58,9 @@ interface SyntheseRow {
 interface PerformanceTabProps {
   investmentId: string;
   isEditMode?: boolean;
-  bailLoyerHT?: number;
-  bailCNR?: number;
 }
 export function PerformanceTab({
-  investmentId,
-  bailLoyerHT = 0,
-  bailCNR = 0
+  investmentId
 }: PerformanceTabProps) {
   const {
     user
