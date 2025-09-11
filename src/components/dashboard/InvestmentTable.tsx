@@ -16,6 +16,7 @@ import { useInvestments } from '@/contexts/InvestmentContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
 import { useColumnVisibility } from '@/hooks/useColumnVisibility';
 import { ColumnSelector } from './ColumnSelector';
+import { InvestmentTags } from '@/components/investments/InvestmentTags';
 
 // Component for displaying KPI values for each investment
 function InvestmentKPIRow({ 
@@ -93,6 +94,8 @@ function InvestmentKPIRow({
         return investment.dateInvestment ? 
           new Date(investment.dateInvestment).toLocaleDateString('fr-FR') : 
           '-';
+      case 'tags':
+        return <InvestmentTags investmentId={investment.id} />;
       case 'fondPropre':
         return formatCurrency(kpis.fondPropre);
       case 'coc':
