@@ -285,7 +285,7 @@ export default function InvestissementDetail() {
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Rendement Net</p>
+                  <p className="text-sm text-muted-foreground">Rendement Net ({kpis.rendementNetDetails.year})</p>
                   <p className={`text-2xl font-bold financial-value ${kpis.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatPercentage(kpis.rendementNet)}
                   </p>
