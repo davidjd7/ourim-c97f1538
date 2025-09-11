@@ -153,9 +153,9 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
       date: `31/12/${year}`,
       fondPropre: totalFondPropre,
       noi: totalNOI,
-      rendementNet: consolidatedRendementNet,
+      rendementNet: totalFondPropre > 0 ? (totalNOI / totalFondPropre) * 100 : 0, // NOI ajusté / FP
       cfni: totalCFNI,
-      cocNet: consolidatedCOC,
+      cocNet: totalFondPropre > 0 ? (totalCFNI / totalFondPropre) * 100 : 0, // CFNI / FP
       cashFlow: totalCFNI
     }));
 
