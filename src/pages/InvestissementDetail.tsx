@@ -382,18 +382,22 @@ export default function InvestissementDetail() {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-3xl font-bold text-foreground">
-                    {isNewInvestment ? 'Nouvel Investissement' : investment!.name}
-                  </h1>
-                  <p className="text-lg text-muted-foreground">
-                    {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
-                  </p>
-                  {/* Tags */}
-                  {!isNewInvestment && (
-                    <div className="mt-2">
-                      <InvestmentTags investmentId={investment!.id} />
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <h1 className="text-3xl font-bold text-foreground">
+                        {isNewInvestment ? 'Nouvel Investissement' : investment!.name}
+                      </h1>
+                      <p className="text-lg text-muted-foreground">
+                        {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
+                      </p>
                     </div>
-                  )}
+                    {/* Tags à droite du nom */}
+                    {!isNewInvestment && (
+                      <div className="flex-shrink-0">
+                        <InvestmentTags investmentId={investment!.id} />
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>
