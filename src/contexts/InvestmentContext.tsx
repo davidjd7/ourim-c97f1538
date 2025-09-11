@@ -292,7 +292,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     return fieldMap[frontendField] || frontendField;
   };
 
-  const deleteInvestment = async (id: string) => {
+  async function deleteInvestment(id: string): Promise<void> {
     if (!user) throw new Error('User not authenticated');
 
     try {
@@ -329,7 +329,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       console.error('Failed to delete investment:', error);
       throw error;
     }
-  };
+  }
 
   const getInvestment = (id: string): Investment | undefined => {
     return investments.find(inv => inv.id === id);
