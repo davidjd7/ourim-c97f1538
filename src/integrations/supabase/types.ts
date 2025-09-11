@@ -83,6 +83,7 @@ export type Database = {
           date: string
           id: string
           investment_id: string
+          loyer: number | null
           retrait_amort: number | null
           retrait_autres: number | null
           rex: number | null
@@ -94,6 +95,7 @@ export type Database = {
           date: string
           id?: string
           investment_id: string
+          loyer?: number | null
           retrait_amort?: number | null
           retrait_autres?: number | null
           rex?: number | null
@@ -105,6 +107,7 @@ export type Database = {
           date?: string
           id?: string
           investment_id?: string
+          loyer?: number | null
           retrait_amort?: number | null
           retrait_autres?: number | null
           rex?: number | null

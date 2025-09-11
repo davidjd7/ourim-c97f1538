@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface CashflowRow {
   id?: string;
   date: string;
+  loyer: number;
   rex: number;
   retraitAmort: number;
   retraitAutres: number;
@@ -120,6 +121,7 @@ export function PerformanceTab({
       const formattedCashflows = cashflowData?.map(cf => ({
         id: cf.id,
         date: cf.date,
+        loyer: cf.loyer || 0,
         rex: cf.rex || 0,
         retraitAmort: cf.retrait_amort || 0,
         retraitAutres: cf.retrait_autres || 0
@@ -356,6 +358,7 @@ export function PerformanceTab({
   const addCashflow = () => {
     const newRow: CashflowRow = {
       date: new Date().toISOString().split('T')[0],
+      loyer: 0,
       rex: 0,
       retraitAmort: 0,
       retraitAutres: 0
@@ -374,6 +377,7 @@ export function PerformanceTab({
           error
         } = await supabase.from('investment_cashflows').update({
           date: row.date,
+          loyer: row.loyer,
           rex: row.rex,
           retrait_amort: row.retraitAmort,
           retrait_autres: row.retraitAutres
@@ -1082,6 +1086,7 @@ export function PerformanceTab({
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
+                  <TableHead>Loyer</TableHead>
                   <TableHead>REX</TableHead>
                   <TableHead>Retrait Amort</TableHead>
                   <TableHead>Retrait Autres</TableHead>
@@ -1100,9 +1105,18 @@ export function PerformanceTab({
                       date: e.target.value
                     }
                   })} /> : new Date(cashflow.date).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    <TableCell>
-                      {editingCashflow && editingCashflow.index === index ? <Input type="number" value={editingCashflow.row.rex} onChange={e => setEditingCashflow({
+                     </TableCell>
+                     <TableCell>
+                       {editingCashflow && editingCashflow.index === index ? <Input type="number" value={editingCashflow.row.loyer} onChange={e => setEditingCashflow({
+                     ...editingCashflow,
+                     row: {
+                       ...editingCashflow.row,
+                       loyer: parseFloat(e.target.value) || 0
+                     }
+                   })} /> : formatCurrency(cashflow.loyer)}
+                     </TableCell>
+                     <TableCell>
+                       {editingCashflow && editingCashflow.index === index ? <Input type="number" value={editingCashflow.row.rex} onChange={e => setEditingCashflow({
                     ...editingCashflow,
                     row: {
                       ...editingCashflow.row,
