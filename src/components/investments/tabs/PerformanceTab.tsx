@@ -887,15 +887,15 @@ export function PerformanceTab({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">Date</TableHead>
-                      <TableHead className="text-xs">Valeur</TableHead>
-                      <TableHead className="text-xs">CRD</TableHead>
-                      <TableHead className="text-xs">FP</TableHead>
-                      <TableHead className="text-xs">NOI ajusté</TableHead>
-                      <TableHead className="text-xs">Rendement net</TableHead>
-                      <TableHead className="text-xs">CFNI</TableHead>
-                      <TableHead className="text-xs">COC net</TableHead>
-                      <TableHead className="text-xs">CF</TableHead>
+                      <TableHead className="text-xs text-center">Date</TableHead>
+                      <TableHead className="text-xs text-center">Valeur</TableHead>
+                      <TableHead className="text-xs text-center">CRD</TableHead>
+                      <TableHead className="text-xs text-center">FP</TableHead>
+                      <TableHead className="text-xs text-center">NOI ajusté</TableHead>
+                      <TableHead className="text-xs text-center">Rendement net</TableHead>
+                      <TableHead className="text-xs text-center">CFNI</TableHead>
+                      <TableHead className="text-xs text-center">COC net</TableHead>
+                      <TableHead className="text-xs text-center">CF</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -923,31 +923,31 @@ export function PerformanceTab({
                         const cf = cfni - rmbtCapital;
                         
                         return <TableRow key={index}>
-                          <TableCell className="font-medium text-xs">
+                          <TableCell className="font-medium text-xs text-center">
                             {new Date(row.date).toLocaleDateString('fr-FR')}
                           </TableCell>
-                          <TableCell className="financial-value text-xs">
+                          <TableCell className="financial-value text-xs text-center">
                             {formatCurrency(row.valeur)}
                           </TableCell>
-                          <TableCell className="financial-value text-xs">
+                          <TableCell className="financial-value text-xs text-center">
                             {formatCurrency(row.crd)}
                           </TableCell>
-                          <TableCell className="financial-value font-medium text-xs">
+                          <TableCell className="financial-value font-medium text-xs text-center">
                             {formatCurrency(row.fp)}
                           </TableCell>
-                          <TableCell className={`financial-value text-xs ${noiAjuste >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          <TableCell className={`financial-value text-xs text-center ${noiAjuste >= 0 ? 'text-success' : 'text-destructive'}`}>
                             {noiAjuste >= 0 ? '+' : ''}{formatCurrency(noiAjuste)}
                           </TableCell>
-                          <TableCell className={`financial-value text-xs ${rendementNet >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          <TableCell className={`financial-value text-xs text-center ${rendementNet >= 0 ? 'text-success' : 'text-destructive'}`}>
                             {rendementNet.toFixed(1)}%
                           </TableCell>
-                          <TableCell className={`financial-value text-xs ${cfni >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          <TableCell className={`financial-value text-xs text-center ${cfni >= 0 ? 'text-success' : 'text-destructive'}`}>
                             {cfni >= 0 ? '+' : ''}{formatCurrency(cfni)}
                           </TableCell>
-                          <TableCell className={`financial-value text-xs ${cocNet >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          <TableCell className={`financial-value text-xs text-center ${cocNet >= 0 ? 'text-success' : 'text-destructive'}`}>
                             {cocNet.toFixed(1)}%
                           </TableCell>
-                          <TableCell className={`financial-value text-xs ${cf >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          <TableCell className={`financial-value text-xs text-center ${cf >= 0 ? 'text-success' : 'text-destructive'}`}>
                             {cf >= 0 ? '+' : ''}{formatCurrency(cf)}
                           </TableCell>
                         </TableRow>
@@ -957,47 +957,68 @@ export function PerformanceTab({
                             Aucune donnée disponible pour la synthèse
                           </TableCell>
                         </TableRow>}
-                     {/* Ligne Total */}
-                     {getSyntheseData().length > 0 && (() => {
-                       const syntheseData = getSyntheseData();
-                       
-                       // Calculer les totaux pour Flux, Var Valeur et Gain
-                       let totalFlux = 0;
-                       let totalVarValeur = 0;
-                       let totalGain = 0;
-                       
-                       syntheseData.forEach((row, index) => {
-                         totalFlux += row.flux;
-                         const varValeur = index > 0 ? row.valeur - syntheseData[index - 1].valeur : 0;
-                         totalVarValeur += varValeur;
-                         totalGain += row.flux + varValeur;
-                       });
-                       
-                       return (
-                         <TableRow className="border-t-2 border-border bg-muted/30">
-                           <TableCell className="font-bold text-xs">
-                             Total
-                           </TableCell>
-                           <TableCell className={`financial-value font-bold text-xs ${totalFlux >= 0 ? 'text-success' : 'text-destructive'}`}>
-                             {totalFlux >= 0 ? '+' : ''}{formatCurrency(totalFlux)}
-                           </TableCell>
-                           <TableCell className="financial-value text-xs">
-                             {/* Pas de total pour la valeur */}
-                           </TableCell>
-                           <TableCell className={`financial-value font-bold text-xs ${totalVarValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
-                             {totalVarValeur >= 0 ? '+' : ''}{formatCurrency(totalVarValeur)}
-                           </TableCell>
-                           <TableCell className={`financial-value font-bold text-xs ${totalGain >= 0 ? 'text-success' : 'text-destructive'}`}>
-                             {totalGain >= 0 ? '+' : ''}{formatCurrency(totalGain)}
-                           </TableCell>
-                           <TableCell className="financial-value text-xs">
-                             {/* Pas de total pour le CRD */}
-                           </TableCell>
-                           <TableCell className="financial-value text-xs">
-                             {/* Pas de total pour le FP */}
-                           </TableCell>
-                         </TableRow>
-                       );
+                      {/* Ligne Total */}
+                      {getSyntheseData().length > 0 && (() => {
+                        const syntheseData = getSyntheseData();
+                        
+                        // Calculer les totaux pour NOI ajusté, CFNI et CF seulement
+                        let totalNoiAjuste = 0;
+                        let totalCfni = 0;
+                        let totalCf = 0;
+                        
+                        syntheseData.forEach((row) => {
+                          // Calculs pour NOI ajusté (EBITDA - immobilisation)
+                          const cashflowDate = cashflows.find(cf => cf.date === row.date);
+                          const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+                          
+                          const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+                          const immobilisationAmount = immobilisationDate?.montant || 0;
+                          
+                          const noiAjuste = ebitda - immobilisationAmount;
+                          
+                          const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+                          const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+                          const rmbtCapital = debtFlowDate?.rmbtCapital || 0;
+                          
+                          const cfni = noiAjuste - rmbtInteret;
+                          const cf = cfni - rmbtCapital;
+                          
+                          totalNoiAjuste += noiAjuste;
+                          totalCfni += cfni;
+                          totalCf += cf;
+                        });
+                        
+                        return (
+                          <TableRow className="border-t-2 border-border bg-muted/30">
+                            <TableCell className="font-bold text-xs text-center">
+                              Total
+                            </TableCell>
+                            <TableCell className="financial-value text-xs text-center">
+                              {/* Pas de total pour la valeur */}
+                            </TableCell>
+                            <TableCell className="financial-value text-xs text-center">
+                              {/* Pas de total pour le CRD */}
+                            </TableCell>
+                            <TableCell className="financial-value text-xs text-center">
+                              {/* Pas de total pour le FP */}
+                            </TableCell>
+                            <TableCell className={`financial-value font-bold text-xs text-center ${totalNoiAjuste >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {totalNoiAjuste >= 0 ? '+' : ''}{formatCurrency(totalNoiAjuste)}
+                            </TableCell>
+                            <TableCell className="financial-value text-xs text-center">
+                              {/* Pas de total pour le rendement net */}
+                            </TableCell>
+                            <TableCell className={`financial-value font-bold text-xs text-center ${totalCfni >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {totalCfni >= 0 ? '+' : ''}{formatCurrency(totalCfni)}
+                            </TableCell>
+                            <TableCell className="financial-value text-xs text-center">
+                              {/* Pas de total pour le COC net */}
+                            </TableCell>
+                            <TableCell className={`financial-value font-bold text-xs text-center ${totalCf >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {totalCf >= 0 ? '+' : ''}{formatCurrency(totalCf)}
+                            </TableCell>
+                          </TableRow>
+                        );
                      })()}
                    </TableBody>
                  </Table>
