@@ -259,7 +259,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2">
             <div>
               <Label htmlFor="dateInvestment">Date investissement</Label>
               {isEditMode ? (
@@ -289,35 +289,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
               ) : (
                 <p className="font-medium financial-value">
                   {data.investmentAmount ? formatCurrency(data.investmentAmount) : 'Non défini'}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="companyId">Société</Label>
-              {isEditMode ? (
-                <Select
-                  value={editData.companyId || ''}
-                  onValueChange={(value) => handleDataChange({ ...editData, companyId: value === 'none' ? '' : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une société" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucune société</SelectItem>
-                    {companies?.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="font-medium">
-                  {(() => {
-                    const foundCompany = companies?.find(c => c.id === data.companyId);
-                    return foundCompany?.name || 'Non définie';
-                  })()}
                 </p>
               )}
             </div>
