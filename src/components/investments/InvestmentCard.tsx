@@ -8,16 +8,12 @@ interface InvestmentCardProps {
     id: string;
     name: string;
     type: 'IMMO' | 'PE';
-    surface?: number;
-    bailLoyerHT?: number;
-    bailCNR?: number;
-    lastValue?: number;
-    price?: number;
     investmentAmount?: number;
-    notaryFees?: number;
-    netVendeur?: number;
-    agent?: number;
-    honoNotaire?: number;
+    lastCashflow?: number;
+    lastVariation?: {
+      value: number;
+      percentage: number;
+    };
   };
 }
 
@@ -35,24 +31,6 @@ export function InvestmentCard({ investment }: InvestmentCardProps) {
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
-  };
-
-  const calculateRendementAllIn = () => {
-    // Utiliser la même formule que dans la section Présentation Vente
-    if (investment.bailLoyerHT && investment.netVendeur && 
-        investment.netVendeur > 0 &&
-        (investment.agent !== undefined) && 
-        (investment.honoNotaire !== undefined)) {
-      
-      const loyerNet = investment.bailLoyerHT - (investment.bailCNR || 0);
-      const prixAllIn = investment.netVendeur * (1 + investment.agent + investment.honoNotaire);
-      
-      if (prixAllIn > 0) {
-        return (loyerNet / prixAllIn) * 100;
-      }
-    }
-    
-    return null;
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -78,56 +56,26 @@ export function InvestmentCard({ investment }: InvestmentCardProps) {
       </CardHeader>
       
       <CardContent className="px-3 pb-3 space-y-1">
-        {investment.bailLoyerHT && investment.bailLoyerHT > 0 && (
+        {investment.investmentAmount && investment.investmentAmount > 0 && (
           <div className="text-xs text-muted-foreground">
-            <span className="font-medium">Loyer HT: </span>
-            <span className="financial-value">{formatCurrency(investment.bailLoyerHT)}</span>
+            <span className="font-medium">Montant Investi: </span>
+            <span className="financial-value">{formatCurrency(investment.investmentAmount)}</span>
           </div>
         )}
         
-        {(() => {
-          // Calculer le prix all-in si les données sont disponibles
-          let displayValue = investment.lastValue;
-          
-          if (!displayValue && investment.netVendeur && 
-              investment.netVendeur > 0 &&
-              (investment.agent !== undefined) && 
-              (investment.honoNotaire !== undefined)) {
-            displayValue = investment.netVendeur * (1 + investment.agent + investment.honoNotaire);
-          }
-          
-          if (!displayValue && investment.price && investment.price > 0) {
-            displayValue = investment.price;
-          }
-          
-          return displayValue && displayValue > 0 && (
-            <div className="text-xs text-muted-foreground">
-              <span className="font-medium">Prix All In: </span>
-              <span className="financial-value">
-                {formatCurrency(displayValue)}
-              </span>
-            </div>
-          );
-        })()}
+        <div className="text-xs text-muted-foreground">
+          <span className="font-medium">Cashflow: </span>
+          <span className="financial-value">
+            {formatCurrency(investment.lastCashflow || 0)}
+          </span>
+        </div>
         
-        {(() => {
-          const rendement = calculateRendementAllIn();
-          return rendement !== null && (
-            <div className="text-xs text-muted-foreground">
-              <span className="font-medium">Rdmt All in: </span>
-              <span className={`font-semibold ${rendement >= 5 ? 'text-success' : rendement >= 3 ? 'text-warning' : 'text-muted-foreground'}`}>
-                {formatPercentage(rendement)}
-              </span>
-            </div>
-          );
-        })()}
-        
-        {investment.surface && investment.surface > 0 && (
-          <div className="text-xs text-muted-foreground">
-            <span className="font-medium">Surface: </span>
-            <span>{investment.surface} m²</span>
-          </div>
-        )}
+        <div className="text-xs text-muted-foreground">
+          <span className="font-medium">Variation: </span>
+          <span className={`font-semibold ${(investment.lastVariation?.percentage || 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {formatPercentage(investment.lastVariation?.percentage || 0)}
+          </span>
+        </div>
       </CardContent>
     </Card>
   );

@@ -7,10 +7,7 @@ export interface Investment {
   id: string;
   name: string;
   type: 'IMMO' | 'PE';
-  status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
   dateInvestment?: string;
-  lastValue: number;
-  lastTRI: number;
   lastCashflow: number;
   lastVariation: {
     value: number;
@@ -18,37 +15,8 @@ export interface Investment {
   };
   companyId?: string;
   companyName?: string;
-  // General tab fields
-  address?: string;
-  surface?: number;
-  price?: number;
   description?: string;
   investmentAmount?: number;
-  acquisitionDate?: string;
-  dateAcquisition?: string;
-  notaryFees?: number;
-  renovationBudget?: number;
-  // Bail fields
-  locataire?: string;
-  dateEntree?: string;
-  typeBail?: string;
-  dureeBail?: number;
-  bailNextBreak?: string;
-  bailGmapLink?: string;
-  bailGmapNote?: string;
-  bailLoyerHT?: number;
-  bailCNR?: number;
-  bailPriseEffet?: string;
-  bailActivite?: string;
-  bailAnciennete?: number;
-  // Présentation Vente fields
-  netVendeur?: number;
-  agent?: number;
-  honoNotaire?: number;
-  // Kanban card fields
-  rentAmount?: number;
-  priceNV?: number;
-  tri?: number;
   company?: string;
 }
 
@@ -68,123 +36,47 @@ const initialInvestments: Investment[] = [
     id: '1',
     name: 'Faisanderie Paris',
     type: 'IMMO',
-    status: 'DUE_DIL', // Changed to DUE_DIL to match the user's scenario
     dateInvestment: '2023-03-15',
-    lastValue: 2170000,
-    lastTRI: 6.8,
     lastCashflow: 98084,
     lastVariation: { value: 50000, percentage: 2.4 },
-    // Additional fields with default values
-    address: '12 rue de la Faisanderie, 75016 Paris',
-    surface: 85,
-    price: 2100000,
     description: 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris',
     investmentAmount: 2100000,
-    acquisitionDate: '2023-03-15',
-    dateAcquisition: '2023-03-15',
-    notaryFees: 168000,
-    renovationBudget: 50000,
-    locataire: 'SCI Faisanderie',
-    dateEntree: '2023-04-01',
-    typeBail: 'Commercial',
-    dureeBail: 9,
-    bailNextBreak: '2028-01-01',
-    bailGmapLink: 'https://maps.google.com/?q=12+rue+de+la+Faisanderie+75016+Paris',
-    bailGmapNote: 'Proche métro Trocadéro',
-    bailLoyerHT: 12500,
-    bailCNR: 500,
-    bailPriseEffet: '2023-01-01',
-    bailActivite: 'Bureau',
-    bailAnciennete: 5,
-    netVendeur: 2100000,
-    agent: 0.03,
-    honoNotaire: 0.08,
-    // Mock data for Kanban cards
-    rentAmount: 150000,
-    priceNV: 2100000,
-    tri: 6.8
   },
   {
     id: '2',
     name: 'Robespierre Bagnolet',
     type: 'IMMO',
-    status: 'INVESTI',
     dateInvestment: '2023-01-20',
-    lastValue: 1090000,
-    lastTRI: 7.2,
     lastCashflow: 70443,
     lastVariation: { value: -15000, percentage: -1.4 },
     investmentAmount: 1090000,
-    acquisitionDate: '2023-01-20',
-    notaryFees: 87200,
-    renovationBudget: 0,
-    // Mock data for Kanban cards
-    address: 'Avenue Robespierre, Bagnolet',
-    surface: 231,
-    rentAmount: 80000,
-    priceNV: 1090000,
-    tri: 7.2
   },
   {
     id: '3',
     name: 'Général Leclerc Rosny',
     type: 'IMMO',
-    status: 'INVESTI',
     dateInvestment: '2022-11-10',
-    lastValue: 1690000,
-    lastTRI: 8.1,
     lastCashflow: 112692,
     lastVariation: { value: 80000, percentage: 5.0 },
     investmentAmount: 1690000,
-    acquisitionDate: '2022-11-10',
-    notaryFees: 135200,
-    renovationBudget: 25000,
-    // Mock data for Kanban cards
-    address: 'Avenue du Général Leclerc, Rosny',
-    surface: 626,
-    rentAmount: 124000,
-    priceNV: 1690000,
-    tri: 8.1
   },
   {
     id: '4',
     name: 'Commercial Montreuil',
     type: 'IMMO',
-    status: 'INVESTI',
     dateInvestment: '2024-01-15',
-    lastValue: 1200000,
-    lastTRI: 0,
     lastCashflow: 0,
     lastVariation: { value: 0, percentage: 0 },
     investmentAmount: 0,
-    acquisitionDate: '',
-    notaryFees: 0,
-    renovationBudget: 0,
-    // Mock data for Kanban cards
-    address: 'Centre commercial, Montreuil',
-    surface: 450,
-    rentAmount: 95000,
-    priceNV: 1200000
   },
   {
     id: '5',
     name: 'Bureaux La Défense',
     type: 'IMMO',
-    status: 'DROP',
     dateInvestment: '',
-    lastValue: 0,
-    lastTRI: 0,
     lastCashflow: 0,
     lastVariation: { value: 0, percentage: 0 },
     investmentAmount: 0,
-    acquisitionDate: '',
-    notaryFees: 0,
-    renovationBudget: 0,
-    // Mock data for Kanban cards
-    address: 'Tour CB21, La Défense',
-    surface: 2100,
-    rentAmount: 280000,
-    priceNV: 4500000
   }
 ];
 
@@ -209,42 +101,14 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       id: dbRow.id,
       name: dbRow.name,
       type: dbRow.type,
-      status: dbRow.status,
       dateInvestment: dbRow.investment_date,
-      lastValue: dbRow.last_value || 0,
-      lastTRI: dbRow.tri || 0,
       lastCashflow: 0, // Calculate based on other fields if needed
       lastVariation: { value: 0, percentage: 0 }, // Calculate based on historical data if needed
       companyId: dbRow.company_id,
       companyName: '', // We'll populate this with a join later
-      address: dbRow.address,
-      surface: dbRow.surface,
-      price: dbRow.price,
       description: dbRow.description,
       investmentAmount: dbRow.investment_amount,
-      acquisitionDate: dbRow.date_acquisition,
-      dateAcquisition: dbRow.date_acquisition,
-      notaryFees: dbRow.notary_fees,
-      locataire: dbRow.locataire,
-      dateEntree: dbRow.date_entree,
-      typeBail: dbRow.type_bail,
-      dureeBail: dbRow.duree_bail,
-      bailNextBreak: dbRow.bail_next_break,
-      bailGmapLink: dbRow.bail_gmap_link,
-      bailGmapNote: dbRow.bail_gmap_note,
-      bailLoyerHT: dbRow.bail_loyer_ht,
-      bailCNR: dbRow.bail_cnr,
-      bailPriseEffet: dbRow.bail_prise_effet,
-      bailActivite: dbRow.bail_activite,
-      bailAnciennete: dbRow.bail_anciennete,
-      netVendeur: dbRow.net_vendeur,
-      agent: dbRow.agent,
-      honoNotaire: dbRow.hono_notaire,
       company: dbRow.company,
-      tri: dbRow.tri || 0,
-      // Calculated fields for Kanban
-      rentAmount: dbRow.bail_loyer_ht * 12 || 0,
-      priceNV: dbRow.price || 0
     };
   };
 
@@ -253,33 +117,10 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     return {
       name: investment.name,
       type: investment.type,
-      status: investment.status,
-      address: investment.address || null,
-      surface: investment.surface !== undefined ? investment.surface : null,
-      price: investment.price !== undefined ? investment.price : null,
       description: investment.description || null,
       company_id: investment.companyId || null,
-      date_acquisition: investment.dateAcquisition || null,
-      locataire: investment.locataire || null,
-      date_entree: investment.dateEntree || null,
-      type_bail: investment.typeBail || null,
-      duree_bail: investment.dureeBail !== undefined ? investment.dureeBail : null,
-      bail_next_break: investment.bailNextBreak || null,
-      bail_gmap_link: investment.bailGmapLink || null,
-      bail_gmap_note: investment.bailGmapNote || null,
-      bail_loyer_ht: investment.bailLoyerHT !== undefined ? investment.bailLoyerHT : null,
-      bail_cnr: investment.bailCNR !== undefined ? investment.bailCNR : null,
-      bail_prise_effet: investment.bailPriseEffet || null,
-      bail_activite: investment.bailActivite || null,
-      bail_anciennete: investment.bailAnciennete !== undefined ? investment.bailAnciennete : null,
-      net_vendeur: investment.netVendeur !== undefined ? investment.netVendeur : null,
-      agent: investment.agent !== undefined ? investment.agent : null,
-      hono_notaire: investment.honoNotaire !== undefined ? investment.honoNotaire : null,
-      last_value: investment.lastValue !== undefined ? investment.lastValue : null,
-      tri: investment.tri !== undefined ? investment.tri : null,
       investment_date: investment.dateInvestment || null,
       investment_amount: investment.investmentAmount !== undefined ? investment.investmentAmount : null,
-      notary_fees: investment.notaryFees !== undefined ? investment.notaryFees : null,
       company: investment.company || null
     };
   };

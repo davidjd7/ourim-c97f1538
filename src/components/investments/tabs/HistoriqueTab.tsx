@@ -265,7 +265,7 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
                 <SelectContent>
                   <SelectItem value="all">Tous les événements</SelectItem>
                   <SelectItem value="creation">Créations</SelectItem>
-                  <SelectItem value="status_change">Changements de statut</SelectItem>
+                  <SelectItem value="company_change">Changements de société</SelectItem>
                   <SelectItem value="value_update">Mises à jour valeur</SelectItem>
                   <SelectItem value="edit">Modifications</SelectItem>
                 </SelectContent>

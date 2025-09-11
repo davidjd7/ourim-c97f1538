@@ -34,118 +34,28 @@ export default function InvestissementDetail() {
   // Load performance KPIs for invested status
   const { kpis, loading: kpisLoading } = usePerformanceKPIs(
     isNewInvestment ? '' : (id || ''), 
-    investment?.bailLoyerHT
+    0 // No longer using bailLoyerHT
   );
-  
-  // Force re-render when investment data changes
-  useEffect(() => {
-    if (investment && !isEditMode) {
-      // Update tempEditData with fresh investment data when not in edit mode
-      setTempEditData({
-        name: investment.name,
-        type: investment.type,
-        status: investment.status,
-        address: investment.address || '',
-        surface: investment.surface || 0,
-        price: investment.price || 0,
-        dateAcquisition: investment.dateAcquisition || '',
-        description: investment.description || '',
-        // Investment fields
-        dateInvestment: investment.dateInvestment || '',
-        investmentAmount: investment.investmentAmount || 0,
-        notaryFees: investment.notaryFees || 0,
-        companyId: investment.companyId || undefined,
-        // Bail fields
-        locataire: investment.locataire || '',
-        dateEntree: investment.dateEntree || '',
-        typeBail: investment.typeBail || '',
-        dureeBail: investment.dureeBail || 0,
-        bailNextBreak: investment.bailNextBreak || '',
-        bailGmapLink: investment.bailGmapLink || '',
-        bailGmapNote: investment.bailGmapNote || '',
-        bailLoyerHT: investment.bailLoyerHT || 0,
-        bailCNR: investment.bailCNR || 0,
-        bailPriseEffet: investment.bailPriseEffet || '',
-        bailActivite: investment.bailActivite || '',
-        bailAnciennete: investment.bailAnciennete || 0,
-        // Présentation Vente fields
-        netVendeur: investment.netVendeur || 0,
-        agent: investment.agent || 0,
-        honoNotaire: investment.honoNotaire || 0.08
-      });
-    }
-  }, [investment, isEditMode]);
 
-  // Initialize state before any conditional returns
   const [tempEditData, setTempEditData] = useState({
-    name: investment?.name || (isNewInvestment ? '' : ''),
-    type: investment?.type || investmentType,
-    status: investment?.status || 'INVESTI',
-    address: investment?.address || '',
-    surface: investment?.surface || 0,
-    price: investment?.price || 0,
-    dateAcquisition: investment?.dateAcquisition || '',
-    description: investment?.description || '',
-    // Investment fields
-    dateInvestment: investment?.dateInvestment || '',
-    investmentAmount: investment?.investmentAmount || 0,
-    notaryFees: investment?.notaryFees || 0,
-    // Bail fields
-    locataire: investment?.locataire || '',
-    dateEntree: investment?.dateEntree || '',
-    typeBail: investment?.typeBail || '',
-    dureeBail: investment?.dureeBail || 0,
-    bailNextBreak: investment?.bailNextBreak || '',
-    bailGmapLink: investment?.bailGmapLink || '',
-    bailGmapNote: investment?.bailGmapNote || '',
-    bailLoyerHT: investment?.bailLoyerHT || 0,
-    bailCNR: investment?.bailCNR || 0,
-    bailPriseEffet: investment?.bailPriseEffet || '',
-    bailActivite: investment?.bailActivite || '',
-    bailAnciennete: investment?.bailAnciennete || 0,
-    // Présentation Vente fields
-    netVendeur: investment?.netVendeur || 0,
-    agent: investment?.agent || 0,
-    honoNotaire: investment?.honoNotaire || 0.08,
-    // Company field
-    companyId: investment?.companyId || undefined
+    name: '',
+    type: 'IMMO' as 'IMMO' | 'PE',
+    dateInvestment: '',
+    investmentAmount: 0,
+    description: '',
+    companyId: '',
   });
 
-  // Update tempEditData when investment changes - must be before conditional return
+  // Update tempEditData when investment changes
   useEffect(() => {
     if (investment && !isNewInvestment) {
       setTempEditData({
         name: investment.name,
         type: investment.type,
-        status: investment.status,
-        address: investment.address || '',
-        surface: investment.surface || 0,
-        price: investment.price || 0,
-        dateAcquisition: investment.dateAcquisition || '',
-        description: investment.description || '',
-        // Investment fields
         dateInvestment: investment.dateInvestment || '',
         investmentAmount: investment.investmentAmount || 0,
-        notaryFees: investment.notaryFees || 0,
-        // Bail fields
-        locataire: investment.locataire || '',
-        dateEntree: investment.dateEntree || '',
-        typeBail: investment.typeBail || '',
-        dureeBail: investment.dureeBail || 0,
-        bailNextBreak: investment.bailNextBreak || '',
-        bailGmapLink: investment.bailGmapLink || '',
-        bailGmapNote: investment.bailGmapNote || '',
-        bailLoyerHT: investment.bailLoyerHT || 0,
-        bailCNR: investment.bailCNR || 0,
-        bailPriseEffet: investment.bailPriseEffet || '',
-        bailActivite: investment.bailActivite || '',
-        bailAnciennete: investment.bailAnciennete || 0,
-        // Présentation Vente fields
-        netVendeur: investment.netVendeur || 0,
-        agent: investment.agent || 0,
-        honoNotaire: investment.honoNotaire || 0.08,
-        // Company field
-        companyId: investment.companyId || undefined
+        description: investment.description || '',
+        companyId: investment.companyId || '',
       });
     }
   }, [investment, isNewInvestment]);
@@ -157,7 +67,6 @@ export default function InvestissementDetail() {
       </div>
     );
   }
-
 
   const handleDataChange = (updates: any) => {
     setTempEditData(prev => ({ ...prev, ...updates }));
@@ -172,44 +81,18 @@ export default function InvestissementDetail() {
       
       if (isNewInvestment) {
         // Create new investment
-        const newInvestment = await addInvestment({
+        const newInvestmentData = {
           name: tempEditData.name,
           type: tempEditData.type,
-          status: tempEditData.status || 'INVESTI',
-          address: tempEditData.address,
-          surface: tempEditData.surface,
-          price: tempEditData.price,
-          dateAcquisition: tempEditData.dateAcquisition,
-          description: tempEditData.description,
-          // Investment fields
           dateInvestment: tempEditData.dateInvestment,
           investmentAmount: tempEditData.investmentAmount,
-          notaryFees: tempEditData.notaryFees,
-          // Bail fields
-          locataire: tempEditData.locataire,
-          dateEntree: tempEditData.dateEntree,
-          typeBail: tempEditData.typeBail,
-          dureeBail: tempEditData.dureeBail,
-          bailNextBreak: tempEditData.bailNextBreak,
-          bailGmapLink: tempEditData.bailGmapLink,
-          bailGmapNote: tempEditData.bailGmapNote,
-          bailLoyerHT: tempEditData.bailLoyerHT,
-          bailCNR: tempEditData.bailCNR,
-          bailPriseEffet: tempEditData.bailPriseEffet,
-          bailActivite: tempEditData.bailActivite,
-          bailAnciennete: tempEditData.bailAnciennete,
-          // Présentation Vente fields
-          netVendeur: tempEditData.netVendeur,
-          agent: tempEditData.agent,
-          honoNotaire: tempEditData.honoNotaire,
-          // Company field
+          description: tempEditData.description,
           companyId: tempEditData.companyId,
-          // Default values
-          lastValue: 0,
-          lastTRI: 0,
           lastCashflow: 0,
-          lastVariation: { value: 0, percentage: 0 }
-        });
+          lastVariation: { value: 0, percentage: 0 },
+        };
+        
+        const newInvestment = await addInvestment(newInvestmentData);
         
         toast({
           title: "Investissement créé",
@@ -222,38 +105,14 @@ export default function InvestissementDetail() {
         // Update existing investment
         console.log('Updating investment with companyId:', tempEditData.companyId);
         
-        await updateInvestment(investment!.id, {
-        name: tempEditData.name,
-        type: tempEditData.type,
-        status: tempEditData.status,
-        address: tempEditData.address,
-        surface: tempEditData.surface,
-        price: tempEditData.price,
-        dateAcquisition: tempEditData.dateAcquisition,
-        description: tempEditData.description,
-        // Investment fields
-        dateInvestment: tempEditData.dateInvestment,
-        investmentAmount: tempEditData.investmentAmount,
-        notaryFees: tempEditData.notaryFees,
-        // Company field - CRITICAL
-        companyId: tempEditData.companyId,
-        // Bail fields
-        locataire: tempEditData.locataire,
-        dateEntree: tempEditData.dateEntree,
-        typeBail: tempEditData.typeBail,
-        dureeBail: tempEditData.dureeBail,
-        bailNextBreak: tempEditData.bailNextBreak,
-        bailGmapLink: tempEditData.bailGmapLink,
-        bailGmapNote: tempEditData.bailGmapNote,
-        bailLoyerHT: tempEditData.bailLoyerHT,
-        bailCNR: tempEditData.bailCNR,
-        bailPriseEffet: tempEditData.bailPriseEffet,
-        bailActivite: tempEditData.bailActivite,
-        bailAnciennete: tempEditData.bailAnciennete,
-        // Présentation Vente fields
-        netVendeur: tempEditData.netVendeur,
-        agent: tempEditData.agent,
-          honoNotaire: tempEditData.honoNotaire
+        // Save changes with only supported fields
+        await updateInvestment(id!, {
+          name: tempEditData.name,
+          type: tempEditData.type,
+          dateInvestment: tempEditData.dateInvestment,
+          investmentAmount: tempEditData.investmentAmount,
+          description: tempEditData.description,
+          companyId: tempEditData.companyId,
         });
         
         console.log('Investment updated successfully');
@@ -280,46 +139,13 @@ export default function InvestissementDetail() {
       setTempEditData({
         name: investment!.name,
         type: investment!.type,
-        address: investment!.address || '',
-        surface: investment!.surface || 0,
-        price: investment!.price || 0,
-        dateAcquisition: investment!.dateAcquisition || '',
-        description: investment!.description || '',
-        // Bail fields
-        locataire: investment!.locataire || '',
-        dateEntree: investment!.dateEntree || '',
-        typeBail: investment!.typeBail || '',
-        dureeBail: investment!.dureeBail || 0,
-        bailNextBreak: investment!.bailNextBreak || '',
-        bailGmapLink: investment!.bailGmapLink || '',
-        bailGmapNote: investment!.bailGmapNote || '',
-        bailLoyerHT: investment!.bailLoyerHT || 0,
-        bailCNR: investment!.bailCNR || 0,
-        bailPriseEffet: investment!.bailPriseEffet || '',
-        bailActivite: investment!.bailActivite || '',
-        bailAnciennete: investment!.bailAnciennete || 0,
-        // Présentation Vente fields
-        netVendeur: investment!.netVendeur || 0,
-        agent: investment!.agent || 0,
-        honoNotaire: investment!.honoNotaire || 0.08,
-        // Investment fields
-        status: investment!.status,
         dateInvestment: investment!.dateInvestment || '',
         investmentAmount: investment!.investmentAmount || 0,
-        notaryFees: investment!.notaryFees || 0,
-        // Company field
-        companyId: investment!.companyId || undefined
+        description: investment!.description || '',
+        companyId: investment!.companyId || '',
       });
       setIsEditMode(false);
     }
-  };
-
-  const statusConfig = {
-    RECU: { label: 'Reçu', className: 'status-recu' },
-    DUE_DIL: { label: 'Due Dil', className: 'status-due-dil' },
-    INVESTI: { label: 'Investi', className: 'status-investi' },
-    VENDU: { label: 'Vendu', className: 'status-vendu' },
-    DROP: { label: 'Drop', className: 'status-drop' }
   };
 
   const formatCurrency = (amount: number) => {
@@ -410,18 +236,6 @@ export default function InvestissementDetail() {
         </div>
         
         <div className="flex items-center gap-2">
-          {/* Status Actions commenté pour v2
-          {!isNewInvestment && !isEditMode && (
-            <StatusActions 
-              currentStatus={investment!.status}
-              onStatusChange={handleStatusChange}
-              netVendeur={investment!.netVendeur}
-              agent={investment!.agent}
-              honoNotaire={investment!.honoNotaire}
-            />
-          )}
-          */}
-          
           {isEditMode ? (
             <>
               <Button onClick={handleSaveChanges} size="sm">
@@ -442,113 +256,63 @@ export default function InvestissementDetail() {
         </div>
       </div>
 
-      {/* Performance KPI Cards - Uniform display for all assets */}
+      {/* Performance KPI Cards - Simplified display */}
       {!isNewInvestment && (
         <div className="grid gap-4 md:grid-cols-4">
-          {/* Fond Propre */}
+          {/* Montant Investi */}
           <div className="card-financial">
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">
-                    Fond Propre {kpisLoading ? '' : `(${kpis.fondPropreDetails?.year || 'N/A'})`}
+                  <p className="text-sm text-muted-foreground">Montant Investi</p>
+                  <p className="text-2xl font-bold financial-value">
+                    {formatCurrency(investment!.investmentAmount || 0)}
                   </p>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xl font-bold financial-value">
-                      {kpisLoading ? '...' : formatCurrency(kpis.fondPropre || 0)}
-                    </p>
-                    {!kpisLoading && kpis.fondPropreDetails && (
-                      <div className="text-xs text-muted-foreground text-left">
-                        <div>Valeur: {formatCurrency(kpis.fondPropreDetails.valeur)}</div>
-                        <div>CRD: {formatCurrency(kpis.fondPropreDetails.crd)}</div>
-                        <div>LTV: {formatPercentage(kpis.fondPropreDetails.ltv)}</div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Rendement Net */}
+          {/* Cashflow */}
           <div className="card-financial">
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">
-                    Rendement Net {kpisLoading ? '' : `(${kpis.rendementNetDetails?.year || 'N/A'})`}
+                  <p className="text-sm text-muted-foreground">Cashflow</p>
+                  <p className="text-2xl font-bold financial-value">
+                    {formatCurrency(investment!.lastCashflow || 0)}
                   </p>
-                  <div className="flex items-center justify-between">
-                    <p className={`text-xl font-bold financial-value ${
-                      !kpisLoading && (kpis.rendementNet || 0) >= 0 ? 'text-success' : 'text-destructive'
-                    }`}>
-                      {kpisLoading ? '...' : (
-                        `${(kpis.rendementNet || 0) >= 0 ? '+' : ''}${(kpis.rendementNet || 0).toFixed(1)}%`
-                      )}
-                    </p>
-                    {!kpisLoading && kpis.rendementNetDetails && (
-                      <div className="text-xs text-muted-foreground text-left">
-                        <div>EBITDA: {formatCurrency(kpis.rendementNetDetails.ebitda)}</div>
-                        <div>Loyer: {formatCurrency(kpis.rendementNetDetails.loyer)}</div>
-                        <div>{kpis.rendementNetDetails.ebitdaSurLoyer.toFixed(1)}% du loyer</div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* COC */}
+          {/* Variation */}
           <div className="card-financial">
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">
-                    COC {kpisLoading ? '' : `(${kpis.cocDetails?.year || 'N/A'})`}
+                  <p className="text-sm text-muted-foreground">Variation</p>
+                  <p className="text-2xl font-bold financial-value">
+                    {formatCurrency(investment!.lastVariation?.value || 0)}
                   </p>
-                  <div className="flex items-center justify-between">
-                    <p className={`text-xl font-bold financial-value ${
-                      !kpisLoading && (kpis.coc || 0) >= 0 ? 'text-success' : 'text-destructive'
-                    }`}>
-                      {kpisLoading ? '...' : (
-                        `${(kpis.coc || 0) >= 0 ? '+' : ''}${(kpis.coc || 0).toFixed(1)}%`
-                      )}
-                    </p>
-                    {!kpisLoading && kpis.cocDetails && (
-                      <div className="text-xs text-muted-foreground text-left">
-                        <div>CFNI: {formatCurrency(kpis.cocDetails.cfni)}</div>
-                        <div>DSCR: {kpis.cocDetails.dscr.toFixed(2)}</div>
-                        <div>ICR: {kpis.cocDetails.icr.toFixed(2)}</div>
-                        <div>Yield Banque: {kpis.cocDetails.yieldBanque.toFixed(1)}%</div>
-                      </div>
-                    )}
-                  </div>
+                  <p className={`text-sm ${(investment!.lastVariation?.percentage || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatPercentage(investment!.lastVariation?.percentage || 0)}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* XIRR */}
+          {/* Type */}
           <div className="card-financial">
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">
-                    XIRR {kpisLoading ? '' : `(${kpis.xirrDetails?.years || 'N/A'}Y)`}
+                  <p className="text-sm text-muted-foreground">Type</p>
+                  <p className="text-2xl font-bold">
+                    {investment!.type === 'IMMO' ? 'Immobilier' : 'Private Equity'}
                   </p>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xl font-bold financial-value text-primary">
-                      {kpisLoading ? '...' : formatPercentage(kpis.xirr || 0)}
-                    </p>
-                    {!kpisLoading && kpis.xirrDetails && (
-                      <div className="text-xs text-muted-foreground text-left">
-                        <div>CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)} ({formatCurrency(kpis.xirrDetails.cfniDerniereAnnee)})</div>
-                        <div>Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)} ({kpis.xirrDetails.variationValeurDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)})</div>
-                        <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
@@ -564,55 +328,45 @@ export default function InvestissementDetail() {
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="general" className="mt-6">
-          <GeneralTab 
-            investmentId={isNewInvestment ? '' : investment!.id}
-            isEditMode={isEditMode}
-            investmentData={{
-              ...(isNewInvestment ? {
-                id: '',
-                name: tempEditData.name,
-                type: tempEditData.type,
-                status: 'INVESTI',
-                lastValue: 0,
-                lastTRI: 0,
-                lastCashflow: 0,
-                lastVariation: { value: 0, percentage: 0 }
-              } : investment!),
-              dateInvestment: (isNewInvestment ? '' : investment?.dateInvestment) || '',
-              address: tempEditData.address || '',
-              surface: tempEditData.surface || 0,
-              description: (isNewInvestment ? '' : investment?.description) || '',
-              investmentAmount: (isNewInvestment ? 0 : investment?.investmentAmount) || 0,
-              acquisitionDate: (isNewInvestment ? '' : investment?.acquisitionDate) || '',
-              notaryFees: (isNewInvestment ? 0 : investment?.notaryFees) || 0,
-              renovationBudget: (isNewInvestment ? 0 : investment?.renovationBudget) || 0,
-              // Company field - CRITICAL for display - Utiliser tempEditData comme source de vérité
-              companyId: tempEditData.companyId
-            }}
-            tempEditData={tempEditData}
-            onDataChange={handleDataChange}
-          />
+        
+        <TabsContent value="general" className="space-y-4">
+          {!isNewInvestment ? (
+            <GeneralTab 
+              investmentId={investment.id} 
+              isEditMode={isEditMode}
+              investmentData={{
+                id: investment.id,
+                name: investment.name,
+                type: investment.type,
+                dateInvestment: investment.dateInvestment || '',
+                investmentAmount: investment.investmentAmount || 0,
+                description: investment.description || '',
+                companyId: investment.companyId,
+                company: investment.company
+              }}
+              tempEditData={tempEditData}
+              onDataChange={(newData) => setTempEditData({ ...tempEditData, ...newData })}
+            />
+          ) : (
+            <GeneralTab 
+              investmentId="nouveau"
+              isEditMode={true}
+              tempEditData={tempEditData}
+              onDataChange={(newData) => setTempEditData({ ...tempEditData, ...newData })}
+            />
+          )}
         </TabsContent>
-
-        <TabsContent value="performance" className="mt-6">
-          <PerformanceTab 
-            investmentId={isNewInvestment ? '' : investment!.id} 
-            isEditMode={isEditMode}
-            bailLoyerHT={tempEditData.bailLoyerHT}
-            bailCNR={tempEditData.bailCNR}
-          />
+        
+        <TabsContent value="performance" className="space-y-4">
+          <PerformanceTab investmentId={isNewInvestment ? '' : id!} />
         </TabsContent>
-
-        <TabsContent value="documents" className="mt-6">
-          <DocumentsTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
+        
+        <TabsContent value="documents" className="space-y-4">
+          <DocumentsTab investmentId={isNewInvestment ? '' : id!} />
         </TabsContent>
-
-
-
-        <TabsContent value="historique" className="mt-6">
-          <HistoriqueTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />
+        
+        <TabsContent value="historique" className="space-y-4">
+          <HistoriqueTab investmentId={isNewInvestment ? '' : id!} />
         </TabsContent>
       </Tabs>
     </div>

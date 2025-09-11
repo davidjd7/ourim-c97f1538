@@ -5,11 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Building, MapPin, Calendar, FileText, Link, Calculator, Settings, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Calendar, FileText, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
-import { useSettings } from '@/hooks/useSettings';
 import { useCompanies } from '@/contexts/CompanyContext';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,31 +26,11 @@ interface Note {
 interface GeneralData {
   name: string;
   type: 'IMMO' | 'PE';
-  status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
   dateInvestment: string;
-  address: string;
-  surface: number;
   description: string;
   investmentAmount: number;
-  acquisitionDate: string;
-  notaryFees: number;
-  renovationBudget: number;
   companyId?: string;
   company?: string;
-  // Bail fields
-  bailPriseEffet: string;
-  bailActivite: string;
-  bailAnciennete: number;
-  bailNextBreak: string;
-  bailFinBail: string;
-  bailGmapLink: string;
-  bailGmapNote: string;
-  bailLoyerHT: number;
-  bailCNR: number;
-  // Présentation Vente fields
-  netVendeur: number;
-  agent: number;
-  honoNotaire: number; // Ce sera géré via les paramètres plus tard
 }
 
 interface GeneralTabProps {
@@ -63,75 +40,18 @@ interface GeneralTabProps {
     id: string | undefined;
     name: string;
     type: 'IMMO' | 'PE';
-    status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
     dateInvestment: string;
-    address: string;
-    surface: number;
     description?: string;
     investmentAmount: number;
-    acquisitionDate: string;
-    notaryFees: number;
-    renovationBudget: number;
-    companyId?: string;  // Added this field
+    companyId?: string;
     company?: string;
-    // Bail fields
-    bailPriseEffet?: string;
-    bailActivite?: string;
-    bailAnciennete?: number;
-    bailNextBreak?: string;
-    bailFinBail?: string;
-    bailGmapLink?: string;
-    bailGmapNote?: string;
-    bailLoyerHT?: number;
-    bailCNR?: number;
-    // Présentation Vente fields
-    netVendeur?: number;
-    agent?: number;
-    honoNotaire?: number;
   };
   tempEditData?: any;
   onDataChange?: (data: any) => void;
 }
 
-const mockGeneralData: GeneralData = {
-  name: 'Faisanderie Paris',
-  type: 'IMMO',
-  status: 'DUE_DIL', // Changé de INVESTI à DUE_DIL pour refléter l'état actuel
-  dateInvestment: '2023-03-15',
-  address: '12 rue de la Faisanderie, 75016 Paris',
-  surface: 250,
-  description: 'Appartement haussmannien de standing dans le 16ème arrondissement de Paris. Situé au 3ème étage avec ascenseur, vue dégagée sur jardins privatifs.',
-  investmentAmount: 0, // Sera mis à jour quand le statut passe à INVESTI
-  acquisitionDate: '2023-03-15',
-  notaryFees: 168000,
-  renovationBudget: 50000,
-  // Bail mock data
-  bailPriseEffet: '2023-01-01',
-  bailActivite: 'Bureau',
-  bailAnciennete: 5,
-  bailNextBreak: '2028-01-01',
-  bailFinBail: '2032-01-01',
-  bailGmapLink: 'https://maps.google.com/?q=12+rue+de+la+Faisanderie+75016+Paris',
-  bailGmapNote: 'Proche métro Trocadéro',
-  bailLoyerHT: 12500,
-  bailCNR: 500,
-  // Présentation Vente mock data
-  netVendeur: 2100000,
-  agent: 0.03, // 3%
-  honoNotaire: 0.08 // 8% - sera géré par les paramètres plus tard
-};
-
-const statusConfig = {
-  RECU: { label: 'Reçu', className: 'status-recu' },
-  DUE_DIL: { label: 'Due Dil', className: 'status-due-dil' },
-  INVESTI: { label: 'Investi', className: 'status-investi' },
-  VENDU: { label: 'Vendu', className: 'status-vendu' },
-  DROP: { label: 'Drop', className: 'status-drop' }
-};
-
 export function GeneralTab({ investmentId, isEditMode = false, investmentData, tempEditData, onDataChange }: GeneralTabProps) {
   const { canEdit, userRole } = useUserRole();
-  const settings = useSettings();
   const { companies } = useCompanies();
   const { user } = useAuth();
   
@@ -141,10 +61,11 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [newNote, setNewNote] = useState({ title: '', content: '', isPrivate: false });
   const [notesLoading, setNotesLoading] = useState(true);
+
   // Load notes from Supabase
   useEffect(() => {
     const loadNotes = async () => {
-      if (!user || !investmentId) return;
+      if (!user || !investmentId || investmentId === 'nouveau') return;
 
       try {
         const { data, error } = await supabase
@@ -273,43 +194,28 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     setNewNote({ title: '', content: '', isPrivate: false });
   };
 
-  // Utiliser les données passées en prop ou les données mock par défaut
+  // Use passed data or default values
   const initialData = investmentData ? {
     name: investmentData.name,
     type: investmentData.type,
-    status: investmentData.status,
     dateInvestment: investmentData.dateInvestment,
-    address: investmentData.address,
-    surface: investmentData.surface,
     description: investmentData.description || '',
     investmentAmount: investmentData.investmentAmount,
-    acquisitionDate: investmentData.acquisitionDate,
-    notaryFees: investmentData.notaryFees,
-    renovationBudget: investmentData.renovationBudget,
-    companyId: investmentData.companyId, // ← AJOUT CRUCIAL
+    companyId: investmentData.companyId,
     company: investmentData.company,
-    // Bail fields avec valeurs par défaut
-    bailPriseEffet: investmentData.bailPriseEffet || '',
-    bailActivite: investmentData.bailActivite || '',
-    bailAnciennete: investmentData.bailAnciennete || 0,
-    bailNextBreak: investmentData.bailNextBreak || '',
-    bailFinBail: investmentData.bailFinBail || '',
-    bailGmapLink: investmentData.bailGmapLink || '',
-    bailGmapNote: investmentData.bailGmapNote || '',
-    bailLoyerHT: investmentData.bailLoyerHT || 0,
-    bailCNR: investmentData.bailCNR || 0,
-    // Présentation Vente fields avec valeurs par défaut - utiliser les paramètres pour honoNotaire
-    netVendeur: investmentData.netVendeur || 0,
-    agent: investmentData.agent || 0,
-    honoNotaire: settings.notaryFees / 100 // Convertir en décimal depuis les paramètres
   } : {
-    ...mockGeneralData,
-    honoNotaire: settings.notaryFees / 100 // Utiliser la valeur des paramètres
+    name: '',
+    type: 'IMMO' as 'IMMO' | 'PE',
+    dateInvestment: '',
+    description: '',
+    investmentAmount: 0,
+    companyId: '',
+    company: '',
   };
   
   const [data, setData] = useState<GeneralData>(initialData);
   
-  // En mode édition, utiliser tempEditData du parent, sinon utiliser l'état local
+  // In edit mode, use tempEditData from parent, otherwise use local state
   const editData = isEditMode && tempEditData ? tempEditData : data;
   
   const handleDataChange = (newData: any) => {
@@ -318,40 +224,21 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     }
   };
 
-  // Synchroniser avec les données externes quand elles changent
+  // Sync with external data when it changes
   React.useEffect(() => {
     if (investmentData) {
       const newData = {
         name: investmentData.name,
         type: investmentData.type,
-        status: investmentData.status,
         dateInvestment: investmentData.dateInvestment,
-        address: investmentData.address,
-        surface: investmentData.surface,
         description: investmentData.description || '',
         investmentAmount: investmentData.investmentAmount,
-        acquisitionDate: investmentData.acquisitionDate,
-        notaryFees: investmentData.notaryFees,
-        renovationBudget: investmentData.renovationBudget,
+        companyId: investmentData.companyId,
         company: investmentData.company,
-        // Bail fields avec valeurs par défaut
-        bailPriseEffet: investmentData.bailPriseEffet || '',
-        bailActivite: investmentData.bailActivite || '',
-        bailAnciennete: investmentData.bailAnciennete || 0,
-        bailNextBreak: investmentData.bailNextBreak || '',
-        bailFinBail: investmentData.bailFinBail || '',
-        bailGmapLink: investmentData.bailGmapLink || '',
-        bailGmapNote: investmentData.bailGmapNote || '',
-        bailLoyerHT: investmentData.bailLoyerHT || 0,
-        bailCNR: investmentData.bailCNR || 0,
-        // Présentation Vente fields avec valeurs par défaut - utiliser les paramètres pour honoNotaire
-        netVendeur: investmentData.netVendeur || 0,
-        agent: investmentData.agent || 0,
-        honoNotaire: settings.notaryFees / 100 // Utiliser la valeur des paramètres
       };
       setData(newData);
     }
-  }, [investmentData, settings.notaryFees]); // Ajouter settings.notaryFees comme dépendance
+  }, [investmentData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -365,94 +252,99 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     <div className="space-y-6">
       {/* Section Informations d'Investissement */}
       <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Informations d'Investissement
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-4">
-              <div>
-                <Label htmlFor="dateInvestment">Date investissement</Label>
-                {isEditMode ? (
-                  <Input
-                    id="dateInvestment"
-                    type="date"
-                    value={editData.dateInvestment}
-                    onChange={(e) => handleDataChange({ ...editData, dateInvestment: e.target.value })}
-                  />
-                ) : (
-                  <p className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {data.dateInvestment ? new Date(data.dateInvestment).toLocaleDateString('fr-FR') : 'Non défini'}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="investmentAmount">Montant Investi</Label>
-                {isEditMode ? (
-                  <Input
-                    id="investmentAmount"
-                    type="number"
-                    value={editData.investmentAmount}
-                    onChange={(e) => handleDataChange({ ...editData, investmentAmount: Number(e.target.value) })}
-                  />
-                ) : (
-                  <p className="font-medium financial-value">
-                    {data.investmentAmount ? formatCurrency(data.investmentAmount) : 'Non défini'}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="notaryFees">Coût Investissement</Label>
-                {isEditMode ? (
-                  <Input
-                    id="notaryFees"
-                    type="number"
-                    value={editData.notaryFees}
-                    onChange={(e) => handleDataChange({ ...editData, notaryFees: Number(e.target.value) })}
-                  />
-                ) : (
-                  <p className="font-medium financial-value">
-                    {data.notaryFees ? formatCurrency(data.notaryFees) : 'Non défini'}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="investAllIn">Invest All in</Label>
-                <p className="font-medium financial-value text-primary">
-                  {formatCurrency((isEditMode ? editData.investmentAmount : data.investmentAmount) + (isEditMode ? editData.notaryFees : data.notaryFees))}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Label htmlFor="description">Description générale</Label>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Informations d'Investissement
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-3">
+            <div>
+              <Label htmlFor="dateInvestment">Date investissement</Label>
               {isEditMode ? (
-                <Textarea
-                  id="description"
-                  value={editData.description}
-                  onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
-                  placeholder="Description générale de l'investissement"
-                  rows={4}
+                <Input
+                  id="dateInvestment"
+                  type="date"
+                  value={editData.dateInvestment}
+                  onChange={(e) => handleDataChange({ ...editData, dateInvestment: e.target.value })}
                 />
               ) : (
-                <div className="mt-2">
-                  {data.description ? (
-                    <p className="text-muted-foreground whitespace-pre-wrap">{data.description}</p>
-                  ) : (
-                    <p className="text-muted-foreground italic">Aucune description ajoutée</p>
-                  )}
-                </div>
+                <p className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {data.dateInvestment ? new Date(data.dateInvestment).toLocaleDateString('fr-FR') : 'Non défini'}
+                </p>
               )}
             </div>
-          </CardContent>
-        </Card>
 
+            <div>
+              <Label htmlFor="investmentAmount">Montant Investi</Label>
+              {isEditMode ? (
+                <Input
+                  id="investmentAmount"
+                  type="number"
+                  value={editData.investmentAmount}
+                  onChange={(e) => handleDataChange({ ...editData, investmentAmount: Number(e.target.value) })}
+                />
+              ) : (
+                <p className="font-medium financial-value">
+                  {data.investmentAmount ? formatCurrency(data.investmentAmount) : 'Non défini'}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="companyId">Société</Label>
+              {isEditMode ? (
+                <Select
+                  value={editData.companyId || ''}
+                  onValueChange={(value) => handleDataChange({ ...editData, companyId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une société" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Aucune société</SelectItem>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="font-medium">
+                  {(() => {
+                    const foundCompany = companies?.find(c => c.id === data.companyId);
+                    return foundCompany?.name || 'Non définie';
+                  })()}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <Label htmlFor="description">Description générale</Label>
+            {isEditMode ? (
+              <Textarea
+                id="description"
+                value={editData.description}
+                onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
+                placeholder="Description générale de l'investissement"
+                rows={4}
+              />
+            ) : (
+              <div className="mt-2">
+                {data.description ? (
+                  <p className="text-muted-foreground whitespace-pre-wrap">{data.description}</p>
+                ) : (
+                  <p className="text-muted-foreground italic">Aucune description ajoutée</p>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Section Notes */}
       <Card>
@@ -461,7 +353,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             <FileText className="h-5 w-5" />
             Notes
           </CardTitle>
-          {canEdit && (
+          {canEdit && investmentId !== 'nouveau' && (
             <Button 
               size="sm" 
               onClick={() => setIsAddingNote(true)}
@@ -499,76 +391,69 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                     Note privée (visible uniquement par les admins)
                   </label>
                 )}
-                 <div className="flex gap-2">
-                   <Button onClick={editingNote ? handleUpdateNote : handleAddNote} size="sm">
-                     {editingNote ? 'Modifier' : 'Enregistrer'}
-                   </Button>
-                   <Button 
-                     variant="outline" 
-                     size="sm" 
-                     onClick={handleCancelEdit}
-                   >
-                     Annuler
-                   </Button>
-                 </div>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    onClick={editingNote ? handleUpdateNote : handleAddNote}
+                    disabled={!newNote.title.trim() || !newNote.content.trim()}
+                  >
+                    {editingNote ? 'Modifier' : 'Ajouter'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                    Annuler
+                  </Button>
+                </div>
               </div>
             </div>
           )}
 
           {/* Notes List */}
           <div className="space-y-4">
-            {filteredNotes.map((note) => (
-              <div key={note.id} className="border rounded-lg p-4 hover:bg-accent/20 transition-colors">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium">{note.title}</h3>
-                    {note.is_private && (
-                      <Badge variant="secondary" className="text-xs">
-                        Privée
-                      </Badge>
+            {notesLoading ? (
+              <p className="text-muted-foreground">Chargement des notes...</p>
+            ) : filteredNotes.length === 0 ? (
+              <p className="text-muted-foreground italic">Aucune note ajoutée</p>
+            ) : (
+              filteredNotes.map((note) => (
+                <div key={note.id} className="border rounded-lg p-4 bg-card">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{note.title}</h4>
+                      {note.is_private && (
+                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                          Privé
+                        </span>
+                      )}
+                    </div>
+                    {canEdit && (
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditNote(note.id)}
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteNote(note.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     )}
                   </div>
-                   {canEdit && (
-                     <div className="flex gap-1">
-                       <Button variant="ghost" size="sm" onClick={() => handleEditNote(note.id)}>
-                         <Edit2 className="h-4 w-4" />
-                       </Button>
-                       <Button 
-                         variant="ghost" 
-                         size="sm" 
-                         className="text-destructive hover:text-destructive"
-                         onClick={() => handleDeleteNote(note.id)}
-                       >
-                         <Trash2 className="h-4 w-4" />
-                       </Button>
-                     </div>
-                   )}
+                  <p className="text-muted-foreground whitespace-pre-wrap mb-2">{note.content}</p>
+                  <div className="text-xs text-muted-foreground">
+                    Par {note.author} • {new Date(note.created_at).toLocaleDateString('fr-FR')}
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap mb-3">
-                  {note.content}
-                </p>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Par {note.author}</span>
-                  <span>
-                    {new Date(note.updated_at).toLocaleDateString('fr-FR')} à {' '}
-                    {new Date(note.updated_at).toLocaleTimeString('fr-FR', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {filteredNotes.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                Aucune note disponible
-              </div>
+              ))
             )}
-           </div>
+          </div>
         </CardContent>
       </Card>
-
-      {/* Section Notes */}
     </div>
   );
 }
