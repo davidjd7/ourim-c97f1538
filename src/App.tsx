@@ -32,6 +32,7 @@ const App = () => (
               </MainLayout>
             </ProtectedRoute>
           } />
+          {/* 
           <Route path="/pipeline-immo" element={
             <ProtectedRoute>
               <MainLayout>
@@ -46,6 +47,7 @@ const App = () => (
               </MainLayout>
             </ProtectedRoute>
           } />
+          */}
           <Route path="/investissements" element={
             <ProtectedRoute>
               <MainLayout>

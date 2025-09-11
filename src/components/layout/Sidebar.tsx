@@ -25,6 +25,7 @@ const navigation = [
     href: '/',
     icon: LayoutDashboard,
   },
+  /*
   {
     name: 'Pipeline Immobilier',
     href: '/pipeline-immo',
@@ -35,6 +36,7 @@ const navigation = [
     href: '/pipeline-pe',
     icon: TrendingUp,
   },
+  */
   {
     name: 'Investissements',
     href: '/investissements',

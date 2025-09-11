@@ -439,7 +439,7 @@ export default function InvestissementDetail() {
               )}
             </div>
             
-            {/* Minimal Status Progress et Tags à droite du nom */}
+            {/* Status Progress commenté pour v2 
             {!isNewInvestment && !isEditMode && (
               <div className="flex items-center gap-3">
                 <MinimalStatusProgress 
@@ -453,11 +453,12 @@ export default function InvestissementDetail() {
                 <InvestmentTags investmentId={investment!.id} />
               </div>
             )}
+            */}
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          {/* Status Actions à gauche du bouton Modifier */}
+          {/* Status Actions commenté pour v2
           {!isNewInvestment && !isEditMode && (
             <StatusActions 
               currentStatus={investment!.status}
@@ -467,6 +468,7 @@ export default function InvestissementDetail() {
               honoNotaire={investment!.honoNotaire}
             />
           )}
+          */}
           
           {isEditMode ? (
             <>
