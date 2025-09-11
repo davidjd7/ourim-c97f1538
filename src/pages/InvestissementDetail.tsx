@@ -288,8 +288,9 @@ export default function InvestissementDetail() {
                   </p>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <div>EBITDA: {formatCurrency(kpis.rendementNetDetails.ebitda)}</div>
+                  <div>NOI: {formatCurrency(kpis.rendementNetDetails.noi)}</div>
                   <div>Loyer: {formatCurrency(kpis.rendementNetDetails.loyer || 0)}</div>
+                  <div>NOI sur loyer: {kpis.rendementNetDetails.noiSurLoyer?.toFixed(1) || '0.0'}%</div>
                 </div>
               </div>
             </div>
