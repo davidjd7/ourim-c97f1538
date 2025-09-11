@@ -302,26 +302,6 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
           )}
         </CardContent>
       </Card>
-
-      {/* AI Assistant Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Assistant IA
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-primary-lighter/50 border border-primary-lighter rounded-lg p-4">
-            <p className="text-sm text-primary mb-3">
-              L'assistant IA peut analyser vos documents et répondre à vos questions sur cet investissement.
-            </p>
-            <Button variant="outline" size="sm" disabled>
-              Lancer l'analyse (Bientôt disponible)
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
