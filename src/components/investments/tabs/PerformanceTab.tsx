@@ -772,7 +772,103 @@ export function PerformanceTab({
 
   // Total Earning = Total Gain Valeur + Total Flux
   const totalEarning = totalGainValeur + totalFlux;
+
+  // Additional KPI calculations
+  const latestYear = latestSynthese ? new Date(latestSynthese.date).getFullYear() : new Date().getFullYear();
+  
+  // 2e KPI - Rendement net
+  const rendementNet = latestSynthese?.valeur && latestSynthese.valeur > 0 ? (latestEBITDA / latestSynthese.valeur) * 100 : 0;
+  const ebitdaSurLoyer = bailLoyerHT && bailLoyerHT > 0 ? (latestEBITDA / bailLoyerHT) * 100 : 0;
+
+  // 3e KPI - COC
+  const latestImmobilisation = immobilisations.find(immo => latestCashflow ? immo.date === latestCashflow.date : false);
+  const latestNoiAjuste = latestEBITDA - (latestImmobilisation?.montant || 0);
+  const latestCfni = latestNoiAjuste - latestRmbtInteret;
+  const cocLatest = latestSynthese?.fp && latestSynthese.fp > 0 ? (latestCfni / latestSynthese.fp) * 100 : 0;
+  
+  // DSCR = NOI / (Rmbt Interet + Rmbt Capital)
+  const latestRmbtCapital = latestDebtFlow?.rmbtCapital || 0;
+  const dscr = (latestRmbtInteret + latestRmbtCapital) > 0 ? latestNoiAjuste / (latestRmbtInteret + latestRmbtCapital) : 0;
+  
+  // ICR = NOI / Rmbt Interet  
+  const icrNew = latestRmbtInteret > 0 ? latestNoiAjuste / latestRmbtInteret : 0;
+  
+  // Yield Banque = NOI / Dette
+  const yieldBanque = latestSynthese?.crd && latestSynthese.crd > 0 ? (latestNoiAjuste / latestSynthese.crd) * 100 : 0;
+
+  // XIRR KPI calculations
+  const totalCfni = syntheseData.reduce((sum, row) => {
+    const cashflowDate = cashflows.find(cf => cf.date === row.date);
+    const ebitdaDate = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+    const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+    const noiAjuste = ebitdaDate - (immobilisationDate?.montant || 0);
+    const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+    const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+    return sum + (noiAjuste - rmbtInteret);
+  }, 0);
+
+  // Variation CFNI dernière année
+  const currentYearCfni = syntheseData
+    .filter(row => new Date(row.date).getFullYear() === latestYear)
+    .reduce((sum, row) => {
+      const cashflowDate = cashflows.find(cf => cf.date === row.date);
+      const ebitdaDate = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+      const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+      const noiAjuste = ebitdaDate - (immobilisationDate?.montant || 0);
+      const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+      const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+      return sum + (noiAjuste - rmbtInteret);
+    }, 0);
+
+  const previousYearCfni = syntheseData
+    .filter(row => new Date(row.date).getFullYear() === latestYear - 1)
+    .reduce((sum, row) => {
+      const cashflowDate = cashflows.find(cf => cf.date === row.date);
+      const ebitdaDate = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+      const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+      const noiAjuste = ebitdaDate - (immobilisationDate?.montant || 0);
+      const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+      const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+      return sum + (noiAjuste - rmbtInteret);
+    }, 0);
+
+  const variationCfni = currentYearCfni - previousYearCfni;
+  const deltaFP = (latestSynthese?.fp || 0) - (oldestSynthese?.fp || 0);
+
   return <div className="space-y-6">
+      
+      {/* KPI Section */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <KPICard
+          title="Fond Propre"
+          value={formatCurrency(fondPropre)}
+          icon={DollarSign}
+        />
+        
+        <KPICard
+          title={`Rendement Net (${latestYear})`}
+          value={`${rendementNet.toFixed(1)}%`}
+          icon={TrendingUp}
+          trend={rendementNet >= 0 ? {value: rendementNet, direction: "up" as const} : {value: Math.abs(rendementNet), direction: "down" as const}}
+          subtitle={`EBITDA: ${formatCurrency(latestEBITDA)} • Loyer: ${formatCurrency(bailLoyerHT)} • ${ebitdaSurLoyer.toFixed(1)}% du loyer`}
+        />
+        
+        <KPICard
+          title={`COC (${latestYear})`}
+          value={`${cocLatest.toFixed(1)}%`}
+          icon={Target}
+          trend={cocLatest >= 0 ? {value: cocLatest, direction: "up" as const} : {value: Math.abs(cocLatest), direction: "down" as const}}
+          subtitle={`CFNI: ${formatCurrency(latestCfni)} • DSCR: ${dscr.toFixed(2)} • ICR: ${icrNew.toFixed(2)} • Yield Banque: ${yieldBanque.toFixed(1)}%`}
+        />
+        
+        <KPICard
+          title="XIRR"
+          value={`${xirr.toFixed(1)}%`}
+          icon={BarChart3}
+          trend={xirr >= 0 ? {value: xirr, direction: "up" as const} : {value: Math.abs(xirr), direction: "down" as const}}
+          subtitle={`Flux: ${formatCurrency(totalCfni)} (${variationCfni >= 0 ? '+' : ''}${formatCurrency(variationCfni)}) • Valeur: ${formatCurrency(deltaFP)}`}
+        />
+      </div>
 
       {/* Chart and Synthesis Section */}
       <Card>
