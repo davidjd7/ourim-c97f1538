@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { InvestmentTags } from '@/components/investments/InvestmentTags';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -221,13 +222,32 @@ export default function InvestissementDetail() {
                 <InvestmentTags investmentId={investment!.id} />
                 <div className="text-sm">
                   <span className="text-muted-foreground">Société: </span>
-                  <span className="font-medium">
-                    {(() => {
-                      const companyId = tempEditData?.companyId;
-                      const foundCompany = companies?.find(c => c.id === companyId);
-                      return foundCompany?.name || 'Non défini';
-                    })()}
-                  </span>
+                  {isEditMode ? (
+                    <Select
+                      value={tempEditData?.companyId || ''}
+                      onValueChange={(value) => handleDataChange({ companyId: value === 'none' ? '' : value })}
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Sélectionner une société" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Aucune société</SelectItem>
+                        {companies?.map((company) => (
+                          <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <span className="font-medium">
+                      {(() => {
+                        const companyId = tempEditData?.companyId;
+                        const foundCompany = companies?.find(c => c.id === companyId);
+                        return foundCompany?.name || 'Non défini';
+                      })()}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
