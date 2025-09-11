@@ -59,7 +59,7 @@ export function AppSidebar() {
           </div>
           {!isCollapsed && (
             <div className="animate-fade-in">
-              <h2 className="text-lg font-semibold text-foreground">Family Office</h2>
+              <h2 className="text-lg font-semibold text-foreground">Ourim</h2>
               <p className="text-xs text-muted-foreground">Gestion d'investissements</p>
             </div>
           )}
@@ -101,7 +101,7 @@ export function AppSidebar() {
               Version 1.0
             </p>
             <p className="text-xs text-primary/80">
-              Family Office
+              Ourim
             </p>
           </div>
         )}
