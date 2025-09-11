@@ -888,49 +888,75 @@ export function PerformanceTab({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-xs">Date</TableHead>
-                      <TableHead className="text-xs">Flux</TableHead>
                       <TableHead className="text-xs">Valeur</TableHead>
-                      <TableHead className="text-xs">Var Valeur</TableHead>
-                      <TableHead className="text-xs">Gain</TableHead>
                       <TableHead className="text-xs">CRD</TableHead>
                       <TableHead className="text-xs">FP</TableHead>
+                      <TableHead className="text-xs">NOI ajusté</TableHead>
+                      <TableHead className="text-xs">Rendement net</TableHead>
+                      <TableHead className="text-xs">CFNI</TableHead>
+                      <TableHead className="text-xs">COC net</TableHead>
+                      <TableHead className="text-xs">CF</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                      {getSyntheseData().map((row, index) => {
-                       const syntheseData = getSyntheseData();
-                       const varValeur = index > 0 ? row.valeur - syntheseData[index - 1].valeur : 0;
-                       const gain = row.flux + varValeur;
-                       
-                       return <TableRow key={index}>
-                         <TableCell className="font-medium text-xs">
-                           {new Date(row.date).toLocaleDateString('fr-FR')}
-                         </TableCell>
-                          <TableCell className={`financial-value text-xs ${row.flux >= 0 ? 'text-success' : 'text-destructive'}`}>
-                            {row.flux >= 0 ? '+' : ''}{formatCurrency(row.flux)}
+                        const syntheseData = getSyntheseData();
+                        
+                        // Calculs pour NOI ajusté (EBITDA - immobilisation)
+                        const cashflowDate = cashflows.find(cf => cf.date === row.date);
+                        const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+                        
+                        const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+                        const immobilisationAmount = immobilisationDate?.montant || 0;
+                        
+                        const noiAjuste = ebitda - immobilisationAmount;
+                        
+                        // Calculs pour les autres métriques
+                        const rendementNet = row.valeur > 0 ? (noiAjuste / row.valeur) * 100 : 0;
+                        
+                        const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+                        const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+                        const rmbtCapital = debtFlowDate?.rmbtCapital || 0;
+                        
+                        const cfni = noiAjuste - rmbtInteret;
+                        const cocNet = row.fp > 0 ? (cfni / row.fp) * 100 : 0;
+                        const cf = cfni - rmbtCapital;
+                        
+                        return <TableRow key={index}>
+                          <TableCell className="font-medium text-xs">
+                            {new Date(row.date).toLocaleDateString('fr-FR')}
                           </TableCell>
-                         <TableCell className="financial-value text-xs">
-                           {formatCurrency(row.valeur)}
-                         </TableCell>
-                         <TableCell className={`financial-value text-xs ${varValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
-                           {varValeur >= 0 ? '+' : ''}{formatCurrency(varValeur)}
-                         </TableCell>
-                         <TableCell className={`financial-value font-medium text-xs ${gain >= 0 ? 'text-success' : 'text-destructive'}`}>
-                           {gain >= 0 ? '+' : ''}{formatCurrency(gain)}
-                         </TableCell>
-                         <TableCell className="financial-value text-xs">
-                           {formatCurrency(row.crd)}
-                         </TableCell>
-                         <TableCell className="financial-value font-medium text-xs">
-                           {formatCurrency(row.fp)}
-                         </TableCell>
-                       </TableRow>
-                     })}
-                     {getSyntheseData().length === 0 && <TableRow>
-                         <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-xs">
-                           Aucune donnée disponible pour la synthèse
-                         </TableCell>
-                       </TableRow>}
+                          <TableCell className="financial-value text-xs">
+                            {formatCurrency(row.valeur)}
+                          </TableCell>
+                          <TableCell className="financial-value text-xs">
+                            {formatCurrency(row.crd)}
+                          </TableCell>
+                          <TableCell className="financial-value font-medium text-xs">
+                            {formatCurrency(row.fp)}
+                          </TableCell>
+                          <TableCell className={`financial-value text-xs ${noiAjuste >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {noiAjuste >= 0 ? '+' : ''}{formatCurrency(noiAjuste)}
+                          </TableCell>
+                          <TableCell className={`financial-value text-xs ${rendementNet >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {rendementNet.toFixed(1)}%
+                          </TableCell>
+                          <TableCell className={`financial-value text-xs ${cfni >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {cfni >= 0 ? '+' : ''}{formatCurrency(cfni)}
+                          </TableCell>
+                          <TableCell className={`financial-value text-xs ${cocNet >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {cocNet.toFixed(1)}%
+                          </TableCell>
+                          <TableCell className={`financial-value text-xs ${cf >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {cf >= 0 ? '+' : ''}{formatCurrency(cf)}
+                          </TableCell>
+                        </TableRow>
+                      })}
+                      {getSyntheseData().length === 0 && <TableRow>
+                          <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-xs">
+                            Aucune donnée disponible pour la synthèse
+                          </TableCell>
+                        </TableRow>}
                      {/* Ligne Total */}
                      {getSyntheseData().length > 0 && (() => {
                        const syntheseData = getSyntheseData();
