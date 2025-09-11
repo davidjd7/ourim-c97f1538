@@ -372,7 +372,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-4">
               <div>
                 <Label htmlFor="dateInvestment">Date investissement</Label>
                 {isEditMode ? (
@@ -430,7 +430,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
               </div>
             </div>
 
-            <div className="col-span-2">
+            <div className="mt-6">
               <Label htmlFor="description">Description générale</Label>
               {isEditMode ? (
                 <Textarea
@@ -441,7 +441,7 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                   rows={4}
                 />
               ) : (
-                <div className="mt-2 p-4 bg-muted/50 rounded-lg">
+                <div className="mt-2">
                   {data.description ? (
                     <p className="text-muted-foreground whitespace-pre-wrap">{data.description}</p>
                   ) : (
