@@ -1112,11 +1112,11 @@ export function PerformanceTab({
                        {calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? '+' : ''}
                        {formatCurrency(calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow))}
                      </TableCell>
-                     <TableCell className="financial-value font-medium">
-                       {bailLoyerHT && bailLoyerHT > 0 
-                         ? `${((calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) / bailLoyerHT) * 100).toFixed(1)}%` 
-                         : 'N/A'}
-                     </TableCell>
+                      <TableCell className="financial-value font-medium">
+                        {cashflow.loyer && cashflow.loyer > 0 
+                          ? `${((calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) / cashflow.loyer) * 100).toFixed(1)}%` 
+                          : 'N/A'}
+                      </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {editingCashflow && editingCashflow.index === index ? <Button size="sm" variant="ghost" onClick={() => saveCashflow(editingCashflow.row)} className="h-8 w-8 p-0">
