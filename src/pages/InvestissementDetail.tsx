@@ -397,16 +397,16 @@ export default function InvestissementDetail() {
                     {!isNewInvestment && (
                       <div className="flex items-center gap-4">
                         <InvestmentTags investmentId={investment!.id} />
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Société: </span>
-                          <span className="font-medium">
-                            {(() => {
-                              const companyId = tempEditData?.companyId;
-                              const foundCompany = companies.find(c => c.id === companyId);
-                              return foundCompany?.name || 'Non défini';
-                            })()}
-                          </span>
-                        </div>
+                         <div className="text-sm">
+                           <span className="text-muted-foreground">Société: </span>
+                           <span className="font-medium">
+                             {(() => {
+                               const companyId = tempEditData?.companyId;
+                               const foundCompany = companies?.find(c => c.id === companyId);
+                               return foundCompany?.name || 'Non défini';
+                             })()}
+                           </span>
+                         </div>
                       </div>
                     )}
                   </div>
