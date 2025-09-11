@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,7 +15,7 @@ import { useInvestments } from '@/contexts/InvestmentContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
 
 // Component for displaying KPI values for each investment
-function InvestmentKPIRow({ investment }: { investment: any }) {
+function InvestmentKPIRow({ investment, onKpisLoaded }: { investment: any; onKpisLoaded?: (id: string, data: { fondPropre: number; coc: number; totalCfni: number; xirr: number }) => void }) {
   const { kpis, loading } = usePerformanceKPIs(investment.id);
   
   const formatCurrency = (amount: number) => {
@@ -30,6 +30,18 @@ function InvestmentKPIRow({ investment }: { investment: any }) {
     return `${value.toFixed(1)}%`;
   };
 
+  useEffect(() => {
+    if (!loading && kpis) {
+      const data = {
+        fondPropre: Number(kpis.fondPropre ?? 0),
+        coc: Number(kpis.coc ?? 0),
+        totalCfni: Number(kpis.xirrDetails?.totalCfni ?? 0),
+        xirr: Number(kpis.xirr ?? 0),
+      };
+      onKpisLoaded?.(investment.id, data);
+    }
+  }, [loading, kpis, investment.id, onKpisLoaded]);
+  
   const navigate = useNavigate();
 
   return (
@@ -110,6 +122,25 @@ export function InvestmentTable() {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   
+  // KPI map for sorting by computed values
+  const [kpiMap, setKpiMap] = useState<Record<string, { fondPropre: number; coc: number; totalCfni: number; xirr: number }>>({});
+
+  const handleKpisLoaded = (id: string, data: { fondPropre: number; coc: number; totalCfni: number; xirr: number }) => {
+    setKpiMap((prev) => {
+      const prevData = prev[id];
+      if (
+        prevData &&
+        prevData.fondPropre === data.fondPropre &&
+        prevData.coc === data.coc &&
+        prevData.totalCfni === data.totalCfni &&
+        prevData.xirr === data.xirr
+      ) {
+        return prev;
+      }
+      return { ...prev, [id]: data };
+    });
+  };
+
   // Show all assets since they're all invested now
   const investedAssets = investments;
 
@@ -151,13 +182,23 @@ export function InvestmentTable() {
           aValue = a.dateInvestment ? new Date(a.dateInvestment) : new Date(0);
           bValue = b.dateInvestment ? new Date(b.dateInvestment) : new Date(0);
           break;
-        // Pour les KPIs, nous utiliserons les valeurs par défaut car nous ne pouvons pas accéder aux hooks ici
+        // Pour les KPIs, utiliser les données collectées depuis les lignes
         case 'fondPropre':
+          aValue = kpiMap[a.id]?.fondPropre ?? Number.NEGATIVE_INFINITY;
+          bValue = kpiMap[b.id]?.fondPropre ?? Number.NEGATIVE_INFINITY;
+          break;
         case 'coc':
+          aValue = kpiMap[a.id]?.coc ?? Number.NEGATIVE_INFINITY;
+          bValue = kpiMap[b.id]?.coc ?? Number.NEGATIVE_INFINITY;
+          break;
         case 'totalCfni':
+          aValue = kpiMap[a.id]?.totalCfni ?? Number.NEGATIVE_INFINITY;
+          bValue = kpiMap[b.id]?.totalCfni ?? Number.NEGATIVE_INFINITY;
+          break;
         case 'xirr':
-          // Ces valeurs seront triées côté rendu pour éviter les problèmes avec les hooks
-          return 0;
+          aValue = kpiMap[a.id]?.xirr ?? Number.NEGATIVE_INFINITY;
+          bValue = kpiMap[b.id]?.xirr ?? Number.NEGATIVE_INFINITY;
+          break;
         default:
           return 0;
       }
@@ -166,7 +207,7 @@ export function InvestmentTable() {
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [investedAssets, sortKey, sortDirection]);
+  }, [investedAssets, sortKey, sortDirection, kpiMap]);
 
   const getSortIcon = (key: SortKey) => {
     if (sortKey !== key) return null;
@@ -262,7 +303,7 @@ export function InvestmentTable() {
         </TableHeader>
         <TableBody>
           {sortedInvestments.map((investment) => (
-            <InvestmentKPIRow key={investment.id} investment={investment} />
+            <InvestmentKPIRow key={investment.id} investment={investment} onKpisLoaded={handleKpisLoaded} />
           ))}
         </TableBody>
       </Table>
