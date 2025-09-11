@@ -231,12 +231,25 @@ type SortDirection = 'asc' | 'desc' | null;
 
 export function InvestmentTable() {
   const { investments } = useInvestments();
-  const { visibleColumns } = useColumnVisibility();
+  const { visibleColumns, isInitialized } = useColumnVisibility();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   
   // KPI map for sorting by computed values - now holds all KPI data
   const [kpiMap, setKpiMap] = useState<Record<string, any>>({});
+
+  // Don't render until columns are initialized to prevent layout shift
+  if (!isInitialized) {
+    return (
+      <div className="card-financial">
+        <div className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="text-muted-foreground">Chargement...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleKpisLoaded = (id: string, data: any) => {
     setKpiMap((prev) => {

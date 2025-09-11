@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Settings, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,9 +11,15 @@ import { useColumnVisibility } from '@/hooks/useColumnVisibility';
 
 export function ColumnSelector() {
   const { visibleColumns, hiddenColumns, updateColumnVisibility } = useColumnVisibility();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleColumnToggle = (key: string, visible: boolean) => {
+    updateColumnVisibility(key, visible);
+    // Keep the popover open for multiple selections
+  };
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
           <Settings className="h-4 w-4" />
@@ -31,7 +37,7 @@ export function ColumnSelector() {
                   <div
                     key={column.key}
                     className="flex items-center justify-between py-1 px-2 rounded hover:bg-muted/50 cursor-pointer"
-                    onClick={() => updateColumnVisibility(column.key, false)}
+                    onClick={() => handleColumnToggle(column.key, false)}
                   >
                     <span className="text-sm">{column.label}</span>
                     <Check className="h-4 w-4 text-success" />
@@ -51,7 +57,7 @@ export function ColumnSelector() {
                     <div
                       key={column.key}
                       className="flex items-center justify-between py-1 px-2 rounded hover:bg-muted/50 cursor-pointer"
-                      onClick={() => updateColumnVisibility(column.key, true)}
+                      onClick={() => handleColumnToggle(column.key, true)}
                     >
                       <span className="text-sm text-muted-foreground">{column.label}</span>
                       <div className="h-4 w-4" />

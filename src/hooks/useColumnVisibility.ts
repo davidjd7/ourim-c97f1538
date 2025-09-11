@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface ColumnConfig {
   key: string;
@@ -32,6 +32,7 @@ const STORAGE_KEY = 'investment-table-columns';
 
 export function useColumnVisibility() {
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -49,16 +50,24 @@ export function useColumnVisibility() {
         console.error('Error loading column visibility:', error);
       }
     }
+    setIsInitialized(true);
   }, []);
 
-  // Save to localStorage when columns change
-  const updateColumnVisibility = (key: string, visible: boolean) => {
-    const updatedColumns = columns.map(col => 
-      col.key === key ? { ...col, visible } : col
-    );
-    setColumns(updatedColumns);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedColumns));
-  };
+  // Save to localStorage when columns change (but only after initialization)
+  const updateColumnVisibility = useCallback((key: string, visible: boolean) => {
+    setColumns(currentColumns => {
+      const updatedColumns = currentColumns.map(col => 
+        col.key === key ? { ...col, visible } : col
+      );
+      
+      // Save to localStorage
+      if (isInitialized) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedColumns));
+      }
+      
+      return updatedColumns;
+    });
+  }, [isInitialized]);
 
   const visibleColumns = columns.filter(col => col.visible);
   const hiddenColumns = columns.filter(col => !col.visible);
@@ -68,5 +77,6 @@ export function useColumnVisibility() {
     visibleColumns,
     hiddenColumns,
     updateColumnVisibility,
+    isInitialized,
   };
 }
