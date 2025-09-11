@@ -23,6 +23,7 @@ interface InvestmentContextType {
   filteredInvestments: Investment[];
   updateInvestment: (id: string, updates: Partial<Investment>) => Promise<void>;
   addInvestment: (investment: Omit<Investment, 'id'>) => Promise<Investment>;
+  deleteInvestment: (id: string) => Promise<void>;
   getInvestment: (id: string) => Investment | undefined;
   loading: boolean;
 }
@@ -291,6 +292,45 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     return fieldMap[frontendField] || frontendField;
   };
 
+  const deleteInvestment = async (id: string) => {
+    if (!user) throw new Error('User not authenticated');
+
+    try {
+      console.info('Deleting investment:', id);
+      
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('investments')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setInvestments(prev => prev.filter(inv => inv.id !== id));
+
+      // Record deletion in history
+      try {
+        await supabase
+          .from('investment_history')
+          .insert({
+            investment_id: id,
+            user_id: user.id,
+            field_name: 'deletion',
+            old_value: null,
+            new_value: null,
+            action_type: 'delete'
+          });
+      } catch (historyError) {
+        console.error('Error recording investment deletion history:', historyError);
+      }
+    } catch (error) {
+      console.error('Failed to delete investment:', error);
+      throw error;
+    }
+  };
+
   const getInvestment = (id: string): Investment | undefined => {
     return investments.find(inv => inv.id === id);
   };
@@ -301,6 +341,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       filteredInvestments,
       updateInvestment,
       addInvestment,
+      deleteInvestment,
       getInvestment,
       loading
     }}>

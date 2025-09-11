@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, Edit, Save, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { InvestmentTags } from '@/components/investments/InvestmentTags';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,7 +38,7 @@ export default function InvestissementDetail() {
   const investmentType = location.state?.type || 'IMMO';
   
   const [isEditMode, setIsEditMode] = useState(isNewInvestment);
-  const { investments, updateInvestment, getInvestment, addInvestment } = useInvestments();
+  const { investments, updateInvestment, getInvestment, addInvestment, deleteInvestment } = useInvestments();
 
   // Get investment from global context (null for new investments)
   const investment = isNewInvestment ? null : getInvestment(id || '');
@@ -126,6 +137,28 @@ export default function InvestissementDetail() {
       toast({
         title: "Erreur",
         description: "Erreur lors de la sauvegarde des modifications.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteInvestment = async () => {
+    if (!investment) return;
+    
+    try {
+      await deleteInvestment(investment.id);
+      
+      toast({
+        title: "Investissement supprimé",
+        description: "L'investissement a été supprimé avec succès.",
+      });
+      
+      // Navigate back to investments page
+      navigate('/investissements');
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression de l'investissement.",
         variant: "destructive"
       });
     }
@@ -267,10 +300,37 @@ export default function InvestissementDetail() {
               </Button>
             </>
            ) : (
-             <Button onClick={() => setIsEditMode(true)} variant="outline" size="sm">
-               <Edit className="h-4 w-4 mr-2" />
-               {isNewInvestment ? 'Créer' : 'Modifier'}
-             </Button>
+             <>
+               <Button onClick={() => setIsEditMode(true)} variant="outline" size="sm">
+                 <Edit className="h-4 w-4 mr-2" />
+                 {isNewInvestment ? 'Créer' : 'Modifier'}
+               </Button>
+               {!isNewInvestment && (
+                 <AlertDialog>
+                   <AlertDialogTrigger asChild>
+                     <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                       <Trash2 className="h-4 w-4 mr-2" />
+                       Supprimer
+                     </Button>
+                   </AlertDialogTrigger>
+                   <AlertDialogContent>
+                     <AlertDialogHeader>
+                       <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                       <AlertDialogDescription>
+                         Êtes-vous sûr de vouloir supprimer l'investissement "{investment?.name}" ?
+                         Cette action est irréversible et supprimera toutes les données associées.
+                       </AlertDialogDescription>
+                     </AlertDialogHeader>
+                     <AlertDialogFooter>
+                       <AlertDialogCancel>Annuler</AlertDialogCancel>
+                       <AlertDialogAction onClick={handleDeleteInvestment} className="bg-destructive hover:bg-destructive/90">
+                         Supprimer définitivement
+                       </AlertDialogAction>
+                     </AlertDialogFooter>
+                   </AlertDialogContent>
+                 </AlertDialog>
+               )}
+             </>
            )}
         </div>
       </div>
