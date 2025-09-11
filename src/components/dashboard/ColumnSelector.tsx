@@ -33,6 +33,7 @@ interface SortableColumnItemProps {
     key: string;
     label: string;
     visible: boolean;
+    required?: boolean;
   };
   onToggle: (key: string, visible: boolean) => void;
   isDragDisabled?: boolean;
@@ -54,17 +55,19 @@ function SortableColumnItem({ column, onToggle, isDragDisabled = false }: Sortab
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const isInteractive = !column.required;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center justify-between py-2 px-2 rounded hover:bg-muted/50 cursor-pointer group ${
+      className={`flex items-center justify-between py-2 px-2 rounded group ${
         isDragging ? 'bg-muted/50 shadow-md' : ''
-      }`}
-      onClick={() => onToggle(column.key, !column.visible)}
+      } ${isInteractive ? 'hover:bg-muted/50 cursor-pointer' : 'opacity-75'}`}
+      onClick={isInteractive ? () => onToggle(column.key, !column.visible) : undefined}
     >
       <div className="flex items-center gap-2 flex-1">
-        {!isDragDisabled && (
+        {!isDragDisabled && isInteractive && (
           <div
             {...attributes}
             {...listeners}
@@ -74,12 +77,19 @@ function SortableColumnItem({ column, onToggle, isDragDisabled = false }: Sortab
             <GripVertical className="h-3 w-3 text-muted-foreground" />
           </div>
         )}
-        <span className={`text-sm ${column.visible ? '' : 'text-muted-foreground'}`}>
+        <span className={`text-sm flex items-center gap-2 ${
+          column.visible ? '' : 'text-muted-foreground'
+        }`}>
           {column.label}
+          {column.required && (
+            <span className="text-xs text-primary font-medium px-1.5 py-0.5 bg-primary/10 rounded">
+              Obligatoire
+            </span>
+          )}
         </span>
       </div>
       {column.visible ? (
-        <Check className="h-4 w-4 text-success" />
+        <Check className={`h-4 w-4 text-success ${!isInteractive ? 'opacity-50' : ''}`} />
       ) : (
         <div className="h-4 w-4" />
       )}

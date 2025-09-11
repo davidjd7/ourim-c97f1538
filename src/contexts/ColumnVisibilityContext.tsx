@@ -8,10 +8,11 @@ export interface ColumnConfig {
   align?: 'left' | 'right';
   type?: 'currency' | 'percentage' | 'text' | 'date';
   order?: number;
+  required?: boolean; // Colonne obligatoire, ne peut pas être masquée
 }
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
-  { key: 'name', label: 'Nom', visible: true, sortable: true, align: 'left', type: 'text', order: 0 },
+  { key: 'name', label: 'Nom', visible: true, sortable: true, align: 'left', type: 'text', order: 0, required: true },
   { key: 'type', label: 'Type', visible: true, sortable: true, align: 'left', type: 'text', order: 1 },
   { key: 'dateInvestment', label: "Date d'investissement", visible: true, sortable: true, align: 'left', type: 'date', order: 2 },
   { key: 'tags', label: 'Tags', visible: true, sortable: false, align: 'left', type: 'text', order: 3 },
@@ -70,6 +71,12 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
 
   const updateColumnVisibility = useCallback((key: string, visible: boolean) => {
     setColumns((current) => {
+      // Empêcher la modification des colonnes obligatoires
+      const column = current.find(col => col.key === key);
+      if (column?.required) {
+        return current; // Ne pas modifier les colonnes obligatoires
+      }
+      
       const updated = current.map((col) => (col.key === key ? { ...col, visible } : col));
       if (isInitialized) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
