@@ -469,6 +469,27 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                 )}
               </div>
             </div>
+
+            <div className="col-span-2">
+              <Label htmlFor="description">Description générale</Label>
+              {isEditMode ? (
+                <Textarea
+                  id="description"
+                  value={editData.description}
+                  onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
+                  placeholder="Description générale de l'investissement"
+                  rows={4}
+                />
+              ) : (
+                <div className="mt-2 p-4 bg-muted/50 rounded-lg">
+                  {data.description ? (
+                    <p className="text-muted-foreground whitespace-pre-wrap">{data.description}</p>
+                  ) : (
+                    <p className="text-muted-foreground italic">Aucune description ajoutée</p>
+                  )}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -583,35 +604,11 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                 Aucune note disponible
               </div>
             )}
-          </div>
-
-          <Separator className="my-6" />
-
-          {/* Description Section */}
-          <div>
-            <Label htmlFor="description">Description générale</Label>
-            {isEditMode ? (
-              <Textarea
-                id="description"
-                value={editData.description}
-                onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
-                placeholder="Description générale de l'investissement"
-                rows={4}
-              />
-            ) : (
-              <div className="mt-2 p-4 bg-muted/50 rounded-lg">
-                {data.description ? (
-                  <p className="text-muted-foreground whitespace-pre-wrap">{data.description}</p>
-                ) : (
-                  <p className="text-muted-foreground italic">Aucune description ajoutée</p>
-                )}
-              </div>
-            )}
-          </div>
+           </div>
         </CardContent>
       </Card>
 
-      {/* Section Présentation Vente - Supprimée */}
+      {/* Section Notes */}
     </div>
   );
 }
