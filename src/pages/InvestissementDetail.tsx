@@ -262,7 +262,7 @@ export default function InvestissementDetail() {
           {/* Fond Propre */}
           <div className="card-financial">
             <div className="p-4">
-              <p className="text-sm text-muted-foreground font-bold mb-3">Fond Propre</p>
+              <p className="text-sm text-muted-foreground font-bold mb-3">Fond Propre (2024)</p>
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
                   <p className={`text-2xl font-bold financial-value ${kpis.fondPropre >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -281,19 +281,19 @@ export default function InvestissementDetail() {
           {/* Rendement Net */}
           <div className="card-financial">
             <div className="p-4">
-              <p className="text-sm text-muted-foreground font-bold mb-3">Rendement Net ({kpis.rendementNetDetails.year})</p>
+              <p className="text-sm text-muted-foreground font-bold mb-3">Rendement Net (2024)</p>
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
                   <p className={`text-2xl font-bold financial-value ${kpis.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatPercentage(kpis.rendementNet)}
+                    {kpis.rendementNet >= 0 ? '+' : ''}{formatPercentage(kpis.rendementNet)}
                   </p>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1 text-right">
                   <div>EBITDA: {formatCurrency(kpis.rendementNetDetails.ebitda)}</div>
-                  <div>Année: {kpis.rendementNetDetails.year}</div>
+                  <div>Loyer: {formatCurrency(kpis.rendementNetDetails.loyer || 0)}</div>
                   {kpis.rendementNetDetails.ebitdaSurLoyer > 0 && (
                     <div className={kpis.rendementNetDetails.ebitdaSurLoyer >= 100 ? 'text-green-600' : 'text-red-600'}>
-                      Ratio: {kpis.rendementNetDetails.ebitdaSurLoyer.toFixed(1)}%
+                      {kpis.rendementNetDetails.ebitdaSurLoyer.toFixed(1)}% du loyer
                     </div>
                   )}
                 </div>
@@ -304,11 +304,11 @@ export default function InvestissementDetail() {
           {/* COC (Cash on Cash) */}
           <div className="card-financial">
             <div className="p-4">
-              <p className="text-sm text-muted-foreground font-bold mb-3">COC</p>
+              <p className="text-sm text-muted-foreground font-bold mb-3">COC (2024)</p>
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
                   <p className={`text-2xl font-bold financial-value ${kpis.coc >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatPercentage(kpis.coc)}
+                    {kpis.coc >= 0 ? '+' : ''}{formatPercentage(kpis.coc)}
                   </p>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1 text-right">
@@ -319,6 +319,7 @@ export default function InvestissementDetail() {
                   <div className={kpis.cocDetails.icr >= 2 ? 'text-green-600' : 'text-red-600'}>
                     ICR: {kpis.cocDetails.icr.toFixed(2)}
                   </div>
+                  <div>Yield Banque: {kpis.cocDetails.yieldBanque?.toFixed(1) || '0.0'}%</div>
                 </div>
               </div>
             </div>
@@ -327,7 +328,7 @@ export default function InvestissementDetail() {
           {/* XIRR */}
           <div className="card-financial">
             <div className="p-4">
-              <p className="text-sm text-muted-foreground font-bold mb-3">XIRR</p>
+              <p className="text-sm text-muted-foreground font-bold mb-3">XIRR ({kpis.xirrDetails.years}Y)</p>
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
                   <p className={`text-2xl font-bold financial-value ${kpis.xirr >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -336,12 +337,12 @@ export default function InvestissementDetail() {
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1 text-right">
                   <div className={kpis.xirrDetails.totalCfni >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)}
+                    CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)} ({formatCurrency(kpis.xirrDetails.cfniDerniereAnnee)})
                   </div>
                   <div className={kpis.xirrDetails.deltaValeur >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    Δ Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)}
+                    Valeur: {formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)} ({kpis.xirrDetails.deltaValeur >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.deltaValeur)})
                   </div>
-                  <div>Durée: {kpis.xirrDetails.years} ans</div>
+                  <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
                 </div>
               </div>
             </div>
