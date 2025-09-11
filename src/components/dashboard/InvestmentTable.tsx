@@ -262,9 +262,6 @@ export function InvestmentTable() {
     });
   };
 
-  // Show all assets since they're all invested now
-  const investedAssets = investments;
-
   const handleSort = (key: SortKey) => {
     // Check if column is sortable
     const column = visibleColumns.find(col => col.key === key);
@@ -288,9 +285,9 @@ export function InvestmentTable() {
   };
 
   const sortedInvestments = useMemo(() => {
-    if (!sortKey || !sortDirection) return investedAssets;
+    if (!sortKey || !sortDirection) return investments;
 
-    return [...investedAssets].sort((a, b) => {
+    return [...investments].sort((a, b) => {
       let aValue: any;
       let bValue: any;
 
@@ -318,7 +315,7 @@ export function InvestmentTable() {
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [investedAssets, sortKey, sortDirection, kpiMap]);
+  }, [investments, sortKey, sortDirection, kpiMap]);
 
   const getSortIcon = (key: SortKey) => {
     if (sortKey !== key) return null;
