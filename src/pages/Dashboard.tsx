@@ -152,64 +152,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Pipeline Overview */}
-      <div className="space-y-3">
-        <h2 className="text-xl font-semibold text-foreground">Pipelines</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pipeline Immobilier */}
-          <div className="card-financial p-6">
-            <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Building className="h-5 w-5 text-primary" />
-              Pipeline Immobilier
-            </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="text-center p-3 rounded-lg bg-blue-50">
-                <div className="text-2xl font-bold text-blue-600">3</div>
-                <div className="text-xs text-blue-600">Reçu</div>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-orange-50">
-                <div className="text-2xl font-bold text-orange-600">2</div>
-                <div className="text-xs text-orange-600">Due Dil</div>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-success-lighter">
-                <div className="text-2xl font-bold text-success">8</div>
-                <div className="text-xs text-success">Investi</div>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-purple-50">
-                <div className="text-2xl font-bold text-purple-600">1</div>
-                <div className="text-xs text-purple-600">Vendu</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Pipeline PE */}
-          <div className="card-financial p-6">
-            <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Pipeline Private Equity
-            </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="text-center p-3 rounded-lg bg-blue-50">
-                <div className="text-2xl font-bold text-blue-600">2</div>
-                <div className="text-xs text-blue-600">Reçu</div>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-orange-50">
-                <div className="text-2xl font-bold text-orange-600">1</div>
-                <div className="text-xs text-orange-600">Due Dil</div>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-success-lighter">
-                <div className="text-2xl font-bold text-success">4</div>
-                <div className="text-xs text-success">Investi</div>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-purple-50">
-                <div className="text-2xl font-bold text-purple-600">0</div>
-                <div className="text-xs text-purple-600">Vendu</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -101,19 +101,12 @@ function InvestmentKPIRow({ investment }: { investment: any }) {
   );
 }
 
-const statusConfig = {
-  RECU: { label: 'Reçu', className: 'status-recu' },
-  DUE_DIL: { label: 'Due Dil', className: 'status-due-dil' },
-  INVESTI: { label: 'Investi', className: 'status-investi' },
-  VENDU: { label: 'Vendu', className: 'status-vendu' },
-  DROP: { label: 'Drop', className: 'status-drop' }
-};
 
 export function InvestmentTable() {
   const { investments } = useInvestments();
   
-  // Filter to show only invested assets (not pipeline)
-  const investedAssets = investments.filter(inv => inv.status === 'INVESTI');
+  // Show all assets since they're all invested now
+  const investedAssets = investments;
 
   return (
     <div className="card-financial">
@@ -122,7 +115,7 @@ export function InvestmentTable() {
           <div>
             <h3 className="text-lg font-semibold">Investissements</h3>
             <p className="text-sm text-muted-foreground">
-              Vue d'ensemble des actifs investis
+              Suivi et gestion des actifs investis
             </p>
           </div>
           <Button variant="outline" size="sm">

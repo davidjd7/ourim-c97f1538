@@ -6,8 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
-import PipelineImmo from "./pages/PipelineImmo";
-import PipelinePE from "./pages/PipelinePE";
 import Investissements from "./pages/Investissements";
 import InvestissementDetail from "./pages/InvestissementDetail";
 import Dettes from "./pages/Dettes";
@@ -32,22 +30,6 @@ const App = () => (
               </MainLayout>
             </ProtectedRoute>
           } />
-          {/* 
-          <Route path="/pipeline-immo" element={
-            <ProtectedRoute>
-              <MainLayout>
-                <PipelineImmo />
-              </MainLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/pipeline-pe" element={
-            <ProtectedRoute>
-              <MainLayout>
-                <PipelinePE />
-              </MainLayout>
-            </ProtectedRoute>
-          } />
-          */}
           <Route path="/investissements" element={
             <ProtectedRoute>
               <MainLayout>

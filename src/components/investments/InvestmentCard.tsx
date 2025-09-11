@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +8,6 @@ interface InvestmentCardProps {
     id: string;
     name: string;
     type: 'IMMO' | 'PE';
-    status: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP';
     surface?: number;
     bailLoyerHT?: number;
     bailCNR?: number;
@@ -20,12 +19,10 @@ interface InvestmentCardProps {
     agent?: number;
     honoNotaire?: number;
   };
-  onDragStart?: (e: React.DragEvent, investmentId: string) => void;
 }
 
-export function InvestmentCard({ investment, onDragStart }: InvestmentCardProps) {
+export function InvestmentCard({ investment }: InvestmentCardProps) {
   const navigate = useNavigate();
-  const [isDragging, setIsDragging] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -58,34 +55,13 @@ export function InvestmentCard({ investment, onDragStart }: InvestmentCardProps)
     return null;
   };
 
-  const handleDragStart = (e: React.DragEvent) => {
-    setIsDragging(true);
-    e.dataTransfer.setData('text/plain', investment.id);
-    e.dataTransfer.effectAllowed = 'move';
-    if (onDragStart) {
-      onDragStart(e, investment.id);
-    }
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
-
   const handleClick = (e: React.MouseEvent) => {
-    // Only navigate if not in the middle of a drag
-    if (!isDragging) {
-      navigate(`/investissement/${investment.id}`);
-    }
+    navigate(`/investissement/${investment.id}`);
   };
 
   return (
     <Card 
-      className={`card-financial transition-all duration-200 cursor-grab active:cursor-grabbing hover:shadow-md ${
-        isDragging ? 'opacity-50 scale-95 rotate-3' : ''
-      }`}
-      draggable
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      className="card-financial transition-all duration-200 cursor-pointer hover:shadow-md"
       onClick={handleClick}
     >
       <CardHeader className="pb-2 px-3 pt-3">

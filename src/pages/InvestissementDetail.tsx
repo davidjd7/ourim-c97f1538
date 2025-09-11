@@ -3,8 +3,6 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { MinimalStatusProgress, StatusActions } from '@/components/investments/MinimalStatusProgress';
-import { StatusProgress } from '@/components/investments/StatusProgress';
 import { InvestmentTags } from '@/components/investments/InvestmentTags';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GeneralTab } from '@/components/investments/tabs/GeneralTab';
@@ -159,45 +157,6 @@ export default function InvestissementDetail() {
     );
   }
 
-  const handleStatusChange = async (newStatus: 'RECU' | 'DUE_DIL' | 'INVESTI' | 'VENDU' | 'DROP', data?: any) => {
-    // Préserver TOUTES les données existantes en commençant par l'investissement complet
-    const updates: any = { 
-      ...investment, // Commencer par toutes les données de l'investissement
-      ...tempEditData, // Appliquer les modifications en cours
-      status: newStatus // Puis le nouveau statut
-    };
-    
-    // Si on passe au statut INVESTI, mettre à jour les données financières
-    if (newStatus === 'INVESTI' && data) {
-      updates.investmentAmount = data.amount;
-      updates.notaryFees = data.cost;
-      updates.dateInvestment = data.date?.toISOString()?.split('T')[0];
-      updates.companyId = data.company; // Utiliser companyId plutôt que company
-    }
-    
-    try {
-      await updateInvestment(investment.id, updates);
-      
-      // Forcer la mise à jour complète de tempEditData avec toutes les nouvelles données
-      setTempEditData(prev => ({
-        ...prev,
-        ...updates,
-        // S'assurer que companyId est bien propagé
-        companyId: updates.companyId || prev.companyId
-      }));
-      
-      toast({
-        title: "Statut mis à jour", 
-        description: "Le statut a été mis à jour avec succès.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la mise à jour du statut.",
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleDataChange = (updates: any) => {
     setTempEditData(prev => ({ ...prev, ...updates }));
@@ -379,13 +338,8 @@ export default function InvestissementDetail() {
       return '/'; // Go to dashboard for new investments
     }
     
-    if (investment!.status === 'RECU' || investment!.status === 'DUE_DIL') {
-      return investment!.type === 'IMMO' ? '/pipeline-immo' : '/pipeline-pe';
-    } else if (investment!.status === 'INVESTI') {
-      return '/investissements';
-    }
-    // Pour les autres statuts (VENDU, DROP), retour à la page d'accueil
-    return '/';
+    // All assets go to investments page
+    return '/investissements';
   };
 
   const handleBackClick = () => {
@@ -679,26 +633,131 @@ export default function InvestissementDetail() {
           );
         }
 
-        // Default: no KPIs for other statuses
-        return null;
+            <div className="grid gap-4 md:grid-cols-4">
+              {/* Fond Propre */}
+              <div className="card-financial">
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">
+                        Fond Propre {kpisLoading ? '' : `(${kpis.fondPropreDetails.year})`}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xl font-bold financial-value">
+                            {kpisLoading ? '...' : formatCurrency(kpis.fondPropre)}
+                          </p>
+                        </div>
+                        {!kpisLoading && kpis.fondPropreDetails && (
+                          <div className="text-xs text-muted-foreground text-left">
+                            <div>Valeur: {formatCurrency(kpis.fondPropreDetails.valeur)}</div>
+                            <div>CRD: {formatCurrency(kpis.fondPropreDetails.crd)}</div>
+                            <div>LTV: {kpis.fondPropreDetails.ltv.toFixed(1)}%</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+                {/* Rendement Net */}
+                <div className="card-financial">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">
+                          Rendement Net {kpisLoading ? '' : `(${kpis.rendementNetDetails.year})`}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className={`text-xl font-bold financial-value ${
+                            !kpisLoading && kpis.rendementNet >= 0 ? 'text-success' : 'text-destructive'
+                          }`}>
+                            {kpisLoading ? '...' : (
+                              `${kpis.rendementNet >= 0 ? '+' : ''}${kpis.rendementNet.toFixed(1)}%`
+                            )}
+                          </p>
+                          {!kpisLoading && kpis.rendementNetDetails && (
+                            <div className="text-xs text-muted-foreground text-left">
+                              <div>EBITDA: {formatCurrency(kpis.rendementNetDetails.ebitda)}</div>
+                              <div>Loyer: {formatCurrency(kpis.rendementNetDetails.loyer)}</div>
+                              <div>{kpis.rendementNetDetails.ebitdaSurLoyer.toFixed(1)}% du loyer</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* COC */}
+                <div className="card-financial">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                         <p className="text-sm text-muted-foreground">
+                           COC {kpisLoading ? '' : `(${kpis.cocDetails.year})`}
+                         </p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className={`text-xl font-bold financial-value ${
+                              !kpisLoading && kpis.coc >= 0 ? 'text-success' : 'text-destructive'
+                            }`}>
+                              {kpisLoading ? '...' : (
+                                `${kpis.coc >= 0 ? '+' : ''}${kpis.coc.toFixed(1)}%`
+                              )}
+                            </p>
+                          </div>
+                          {!kpisLoading && kpis.cocDetails && (
+                            <div className="text-xs text-muted-foreground text-left">
+                              <div>CFNI: {formatCurrency(kpis.cocDetails.cfni)}</div>
+                              <div>DSCR: {kpis.cocDetails.dscr.toFixed(2)}</div>
+                              <div>ICR: {kpis.cocDetails.icr.toFixed(2)}</div>
+                              <div>Yield Banque: {kpis.cocDetails.yieldBanque.toFixed(1)}%</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              {/* XIRR */}
+              <div className="card-financial">
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">
+                        XIRR {kpisLoading ? '' : `(${kpis.xirrDetails.years}Y)`}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xl font-bold financial-value text-primary">
+                          {kpisLoading ? '...' : formatPercentage(kpis.xirr)}
+                        </p>
+                          {!kpisLoading && kpis.xirrDetails && (
+                            <div className="text-xs text-muted-foreground text-left">
+                              <div>CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)} ({formatCurrency(kpis.xirrDetails.cfniDerniereAnnee)})</div>
+                              <div>Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)} ({kpis.xirrDetails.variationValeurDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)})</div>
+                              <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
       })()}
 
       {/* Tabs */}
       <Tabs defaultValue="general" className="w-full">
-        {(() => {
-          // Determine if Performance tab should be shown
-          const showAdvancedTabs = !isNewInvestment && investment!.status !== 'RECU' && investment!.status !== 'DUE_DIL';
-          
-          return (
-            <TabsList className={`grid w-full ${showAdvancedTabs ? 'grid-cols-5' : 'grid-cols-4'}`}>
-              <TabsTrigger value="general">Général</TabsTrigger>
-              {showAdvancedTabs && <TabsTrigger value="performance">Performance</TabsTrigger>}
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="historique">Historique</TabsTrigger>
-            </TabsList>
-          );
-        })()}
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="general">Général</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="historique">Historique</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="general" className="mt-6">
           <GeneralTab 
@@ -731,15 +790,13 @@ export default function InvestissementDetail() {
           />
         </TabsContent>
 
-        {!isNewInvestment && investment!.status !== 'RECU' && investment!.status !== 'DUE_DIL' && (
-          <TabsContent value="performance" className="mt-6">
-            <PerformanceTab 
-              investmentId={investment!.id} 
-              isEditMode={isEditMode}
-              bailLoyerHT={tempEditData.bailLoyerHT}
-            />
-          </TabsContent>
-        )}
+        <TabsContent value="performance" className="mt-6">
+          <PerformanceTab 
+            investmentId={isNewInvestment ? '' : investment!.id} 
+            isEditMode={isEditMode}
+            bailLoyerHT={tempEditData.bailLoyerHT}
+          />
+        </TabsContent>
 
         <TabsContent value="documents" className="mt-6">
           <DocumentsTab investmentId={isNewInvestment ? '' : investment!.id} isEditMode={isEditMode} />

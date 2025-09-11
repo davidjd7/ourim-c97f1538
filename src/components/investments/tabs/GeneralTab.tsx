@@ -208,9 +208,8 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
 
   return (
     <div className="space-y-6">
-      {/* Section Informations d'Investissement - uniquement si status = INVESTI */}
-      {(isEditMode ? editData.status : data.status) === 'INVESTI' && (
-        <Card>
+      {/* Section Informations d'Investissement */}
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
@@ -317,7 +316,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             </div>
           </CardContent>
         </Card>
-      )}
 
       <Card>
         <CardHeader>
