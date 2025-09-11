@@ -330,11 +330,7 @@ export function InvestmentTable() {
         </div>
       </div>
 
-      <div className="relative">
-        <div className="absolute top-3 right-4 z-10">
-          <ColumnSelector />
-        </div>
-        <Table>
+      <Table>
         <TableHeader>
           <TableRow>
             {visibleColumns.map((column) => (
@@ -353,7 +349,11 @@ export function InvestmentTable() {
                 </div>
               </TableHead>
             ))}
-            <TableHead className="w-[50px]"></TableHead>
+            <TableHead className="w-[50px]">
+              <div className="flex justify-center">
+                <ColumnSelector />
+              </div>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -367,7 +367,6 @@ export function InvestmentTable() {
           ))}
         </TableBody>
       </Table>
-      </div>
     </div>
   );
 }
