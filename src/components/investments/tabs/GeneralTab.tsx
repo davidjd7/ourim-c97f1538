@@ -1,14 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Building, MapPin, Calendar, FileText, Link, Calculator, Settings } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Building, MapPin, Calendar, FileText, Link, Calculator, Settings, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useSettings } from '@/hooks/useSettings';
 import { useCompanies } from '@/contexts/CompanyContext';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Note {
+  id: string;
+  investment_id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  is_private: boolean;
+  author: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface GeneralData {
   name: string;
@@ -114,10 +130,149 @@ const statusConfig = {
 };
 
 export function GeneralTab({ investmentId, isEditMode = false, investmentData, tempEditData, onDataChange }: GeneralTabProps) {
-  const { canEdit } = useUserRole();
+  const { canEdit, userRole } = useUserRole();
   const settings = useSettings();
   const { companies } = useCompanies();
+  const { user } = useAuth();
   
+  // Notes state
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [editingNote, setEditingNote] = useState<string | null>(null);
+  const [newNote, setNewNote] = useState({ title: '', content: '', isPrivate: false });
+  const [notesLoading, setNotesLoading] = useState(true);
+  // Load notes from Supabase
+  useEffect(() => {
+    const loadNotes = async () => {
+      if (!user || !investmentId) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('notes')
+          .select('*')
+          .eq('investment_id', investmentId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setNotes(data || []);
+      } catch (error) {
+        console.error('Error loading notes:', error);
+      } finally {
+        setNotesLoading(false);
+      }
+    };
+
+    loadNotes();
+  }, [user, investmentId]);
+
+  const filteredNotes = notes.filter(note => {
+    if (note.is_private && userRole !== 'admin') {
+      return false;
+    }
+    return true;
+  });
+
+  const handleAddNote = async () => {
+    if (!user || !newNote.title.trim() || !newNote.content.trim()) return;
+
+    try {
+      const noteData = {
+        investment_id: investmentId,
+        user_id: user.id,
+        title: newNote.title.trim(),
+        content: newNote.content.trim(),
+        is_private: newNote.isPrivate,
+        author: userRole === 'admin' ? 'D. Dahan' : 'A. Dahan'
+      };
+
+      const { data, error } = await supabase
+        .from('notes')
+        .insert([noteData])
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setNotes([data, ...notes]);
+        setNewNote({ title: '', content: '', isPrivate: false });
+        setIsAddingNote(false);
+      }
+    } catch (error) {
+      console.error('Error adding note:', error);
+    }
+  };
+
+  const handleEditNote = (noteId: string) => {
+    const noteToEdit = notes.find(note => note.id === noteId);
+    if (noteToEdit) {
+      setNewNote({
+        title: noteToEdit.title,
+        content: noteToEdit.content,
+        isPrivate: noteToEdit.is_private
+      });
+      setEditingNote(noteId);
+      setIsAddingNote(true);
+    }
+  };
+
+  const handleUpdateNote = async () => {
+    if (!user || !editingNote || !newNote.title.trim() || !newNote.content.trim()) return;
+
+    try {
+      const updateData = {
+        title: newNote.title.trim(),
+        content: newNote.content.trim(),
+        is_private: newNote.isPrivate
+      };
+
+      const { data, error } = await supabase
+        .from('notes')
+        .update(updateData)
+        .eq('id', editingNote)
+        .eq('user_id', user.id)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setNotes(notes.map(note => 
+          note.id === editingNote ? data : note
+        ));
+        setNewNote({ title: '', content: '', isPrivate: false });
+        setEditingNote(null);
+        setIsAddingNote(false);
+      }
+    } catch (error) {
+      console.error('Error updating note:', error);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', noteId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setNotes(notes.filter(note => note.id !== noteId));
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsAddingNote(false);
+    setEditingNote(null);
+    setNewNote({ title: '', content: '', isPrivate: false });
+  };
+
   // Utiliser les données passées en prop ou les données mock par défaut
   const initialData = investmentData ? {
     name: investmentData.name,
@@ -318,33 +473,137 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
         </Card>
 
 
-      {/* Section Bail - Supprimée */}
-
       {/* Section Notes */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Notes
           </CardTitle>
+          {canEdit && (
+            <Button 
+              size="sm" 
+              onClick={() => setIsAddingNote(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
+          {/* Add Note Form */}
+          {isAddingNote && (
+            <div className="mb-6 p-4 border rounded-lg bg-accent/20">
+              <div className="space-y-3">
+                <Input
+                  placeholder="Titre de la note..."
+                  value={newNote.title}
+                  onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
+                />
+                <Textarea
+                  placeholder="Contenu de la note..."
+                  value={newNote.content}
+                  onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
+                  rows={4}
+                />
+                {userRole === 'admin' && (
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={newNote.isPrivate}
+                      onChange={(e) => setNewNote({ ...newNote, isPrivate: e.target.checked })}
+                      className="rounded border-border"
+                    />
+                    Note privée (visible uniquement par les admins)
+                  </label>
+                )}
+                 <div className="flex gap-2">
+                   <Button onClick={editingNote ? handleUpdateNote : handleAddNote} size="sm">
+                     {editingNote ? 'Modifier' : 'Enregistrer'}
+                   </Button>
+                   <Button 
+                     variant="outline" 
+                     size="sm" 
+                     onClick={handleCancelEdit}
+                   >
+                     Annuler
+                   </Button>
+                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Notes List */}
+          <div className="space-y-4">
+            {filteredNotes.map((note) => (
+              <div key={note.id} className="border rounded-lg p-4 hover:bg-accent/20 transition-colors">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium">{note.title}</h3>
+                    {note.is_private && (
+                      <Badge variant="secondary" className="text-xs">
+                        Privée
+                      </Badge>
+                    )}
+                  </div>
+                   {canEdit && (
+                     <div className="flex gap-1">
+                       <Button variant="ghost" size="sm" onClick={() => handleEditNote(note.id)}>
+                         <Edit2 className="h-4 w-4" />
+                       </Button>
+                       <Button 
+                         variant="ghost" 
+                         size="sm" 
+                         className="text-destructive hover:text-destructive"
+                         onClick={() => handleDeleteNote(note.id)}
+                       >
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   )}
+                </div>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap mb-3">
+                  {note.content}
+                </p>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Par {note.author}</span>
+                  <span>
+                    {new Date(note.updated_at).toLocaleDateString('fr-FR')} à {' '}
+                    {new Date(note.updated_at).toLocaleTimeString('fr-FR', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {filteredNotes.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                Aucune note disponible
+              </div>
+            )}
+          </div>
+
+          <Separator className="my-6" />
+
+          {/* Description Section */}
           <div>
-            <Label htmlFor="description">Notes et commentaires</Label>
+            <Label htmlFor="description">Description générale</Label>
             {isEditMode ? (
               <Textarea
                 id="description"
                 value={editData.description}
                 onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
-                placeholder="Ajoutez vos notes sur cet investissement"
-                rows={6}
+                placeholder="Description générale de l'investissement"
+                rows={4}
               />
             ) : (
               <div className="mt-2 p-4 bg-muted/50 rounded-lg">
                 {data.description ? (
                   <p className="text-muted-foreground whitespace-pre-wrap">{data.description}</p>
                 ) : (
-                  <p className="text-muted-foreground italic">Aucune note ajoutée</p>
+                  <p className="text-muted-foreground italic">Aucune description ajoutée</p>
                 )}
               </div>
             )}
