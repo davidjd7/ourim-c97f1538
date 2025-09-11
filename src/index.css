@@ -245,6 +245,19 @@
     @apply ring-2 ring-primary ring-opacity-50 bg-primary/5;
   }
 
+  /* Column drag and drop */
+  .column-drag-handle {
+    @apply cursor-grab hover:cursor-grabbing transition-colors;
+  }
+
+  .column-drag-handle:active {
+    @apply cursor-grabbing;
+  }
+
+  .column-item-dragging {
+    @apply bg-muted/50 shadow-md scale-105;
+  }
+
   /* Card drag states */
   .cursor-grab {
     cursor: grab;

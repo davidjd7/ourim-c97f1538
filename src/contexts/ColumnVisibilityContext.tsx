@@ -7,25 +7,26 @@ export interface ColumnConfig {
   sortable: boolean;
   align?: 'left' | 'right';
   type?: 'currency' | 'percentage' | 'text' | 'date';
+  order?: number;
 }
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
-  { key: 'name', label: 'Nom', visible: true, sortable: true, align: 'left', type: 'text' },
-  { key: 'type', label: 'Type', visible: true, sortable: true, align: 'left', type: 'text' },
-  { key: 'dateInvestment', label: "Date d'investissement", visible: true, sortable: true, align: 'left', type: 'date' },
-  { key: 'fondPropre', label: 'Fond Propre', visible: true, sortable: true, align: 'right', type: 'currency' },
-  { key: 'coc', label: 'COC', visible: true, sortable: true, align: 'right', type: 'percentage' },
-  { key: 'totalCfni', label: 'Total CFNI', visible: true, sortable: true, align: 'right', type: 'currency' },
-  { key: 'xirr', label: 'XIRR', visible: true, sortable: true, align: 'right', type: 'percentage' },
+  { key: 'name', label: 'Nom', visible: true, sortable: true, align: 'left', type: 'text', order: 0 },
+  { key: 'type', label: 'Type', visible: true, sortable: true, align: 'left', type: 'text', order: 1 },
+  { key: 'dateInvestment', label: "Date d'investissement", visible: true, sortable: true, align: 'left', type: 'date', order: 2 },
+  { key: 'fondPropre', label: 'Fond Propre', visible: true, sortable: true, align: 'right', type: 'currency', order: 3 },
+  { key: 'coc', label: 'COC', visible: true, sortable: true, align: 'right', type: 'percentage', order: 4 },
+  { key: 'totalCfni', label: 'Total CFNI', visible: true, sortable: true, align: 'right', type: 'currency', order: 5 },
+  { key: 'xirr', label: 'XIRR', visible: true, sortable: true, align: 'right', type: 'percentage', order: 6 },
   // Nouvelles colonnes (masquées par défaut)
-  { key: 'totalVarValeur', label: 'Total Var valeur', visible: false, sortable: true, align: 'right', type: 'currency' },
-  { key: 'lastVarValeur', label: 'Last Var. Valeur', visible: false, sortable: true, align: 'right', type: 'currency' },
-  { key: 'lastCfni', label: 'Last CFNI', visible: false, sortable: true, align: 'right', type: 'currency' },
-  { key: 'ltv', label: 'LTV', visible: false, sortable: true, align: 'right', type: 'percentage' },
-  { key: 'crd', label: 'CRD', visible: false, sortable: true, align: 'right', type: 'currency' },
-  { key: 'noi', label: 'NOI', visible: false, sortable: true, align: 'right', type: 'currency' },
-  { key: 'loyer', label: 'Loyer', visible: false, sortable: true, align: 'right', type: 'currency' },
-  { key: 'rendementNet', label: 'Rendement Net', visible: false, sortable: true, align: 'right', type: 'percentage' },
+  { key: 'totalVarValeur', label: 'Total Var valeur', visible: false, sortable: true, align: 'right', type: 'currency', order: 7 },
+  { key: 'lastVarValeur', label: 'Last Var. Valeur', visible: false, sortable: true, align: 'right', type: 'currency', order: 8 },
+  { key: 'lastCfni', label: 'Last CFNI', visible: false, sortable: true, align: 'right', type: 'currency', order: 9 },
+  { key: 'ltv', label: 'LTV', visible: false, sortable: true, align: 'right', type: 'percentage', order: 10 },
+  { key: 'crd', label: 'CRD', visible: false, sortable: true, align: 'right', type: 'currency', order: 11 },
+  { key: 'noi', label: 'NOI', visible: false, sortable: true, align: 'right', type: 'currency', order: 12 },
+  { key: 'loyer', label: 'Loyer', visible: false, sortable: true, align: 'right', type: 'currency', order: 13 },
+  { key: 'rendementNet', label: 'Rendement Net', visible: false, sortable: true, align: 'right', type: 'percentage', order: 14 },
 ];
 
 const STORAGE_KEY = 'investment-table-columns';
@@ -35,6 +36,7 @@ interface ColumnVisibilityContextValue {
   visibleColumns: ColumnConfig[];
   hiddenColumns: ColumnConfig[];
   updateColumnVisibility: (key: string, visible: boolean) => void;
+  reorderColumns: (oldIndex: number, newIndex: number) => void;
   isInitialized: boolean;
 }
 
@@ -52,8 +54,10 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
         const storedColumns: ColumnConfig[] = JSON.parse(stored);
         const mergedColumns = DEFAULT_COLUMNS.map((defaultCol) => {
           const storedCol = storedColumns.find((c) => c.key === defaultCol.key);
-          return storedCol ? { ...defaultCol, visible: storedCol.visible } : defaultCol;
+          return storedCol ? { ...defaultCol, visible: storedCol.visible, order: storedCol.order ?? defaultCol.order } : defaultCol;
         });
+        // Sort by order
+        mergedColumns.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setColumns(mergedColumns);
       }
     } catch (e) {
@@ -73,13 +77,30 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
     });
   }, [isInitialized]);
 
+  const reorderColumns = useCallback((oldIndex: number, newIndex: number) => {
+    setColumns((current) => {
+      const newColumns = [...current];
+      const [reorderedColumn] = newColumns.splice(oldIndex, 1);
+      newColumns.splice(newIndex, 0, reorderedColumn);
+      
+      // Update order values
+      const updatedColumns = newColumns.map((col, index) => ({ ...col, order: index }));
+      
+      if (isInitialized) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedColumns));
+      }
+      return updatedColumns;
+    });
+  }, [isInitialized]);
+
   const value: ColumnVisibilityContextValue = useMemo(() => ({
-    columns,
-    visibleColumns: columns.filter((c) => c.visible),
-    hiddenColumns: columns.filter((c) => !c.visible),
+    columns: columns.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    visibleColumns: columns.filter((c) => c.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    hiddenColumns: columns.filter((c) => !c.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     updateColumnVisibility,
+    reorderColumns,
     isInitialized,
-  }), [columns, updateColumnVisibility, isInitialized]);
+  }), [columns, updateColumnVisibility, reorderColumns, isInitialized]);
 
   return (
     <ColumnVisibilityContext.Provider value={value}>
