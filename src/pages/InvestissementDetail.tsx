@@ -604,6 +604,7 @@ export default function InvestissementDetail() {
             investmentId={isNewInvestment ? '' : investment!.id} 
             isEditMode={isEditMode}
             bailLoyerHT={tempEditData.bailLoyerHT}
+            bailCNR={tempEditData.bailCNR}
           />
         </TabsContent>
 

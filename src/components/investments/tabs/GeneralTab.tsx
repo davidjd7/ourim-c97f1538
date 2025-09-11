@@ -317,68 +317,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
           </CardContent>
         </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            Informations générales
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="address">Adresse</Label>
-              {isEditMode ? (
-                <Input
-                  id="address"
-                  value={editData.address}
-                  onChange={(e) => handleDataChange({ ...editData, address: e.target.value })}
-                />
-              ) : (
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    {data.address}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Surface next to address */}
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="surface">Surface Utile Pondérée (m2.UP)</Label>
-                {isEditMode ? (
-                  <Input
-                    id="surface"
-                    type="number"
-                    value={editData.surface}
-                    onChange={(e) => handleDataChange({ ...editData, surface: Number(e.target.value) })}
-                  />
-                ) : (
-                  <p className="font-medium">{data.surface} m²</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Label htmlFor="description">Description</Label>
-            {isEditMode ? (
-              <Textarea
-                id="description"
-                value={editData.description}
-                onChange={(e) => handleDataChange({ ...editData, description: e.target.value })}
-                placeholder="Décrivez l'investissement"
-                rows={4}
-              />
-            ) : (
-              <p className="text-muted-foreground mt-2">{data.description}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Section Bail */}
       <Card>
@@ -480,49 +418,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
             </div>
           </div>
 
-          {/* Troisième ligne: Loyer HT.HC (annuel) - Charge Non récupérable - Loyer net */}
-          <div className="grid gap-6 md:grid-cols-3">
-            <div>
-              <Label htmlFor="bailLoyerHT">Loyer HT.HC (annuel)</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailLoyerHT"
-                  type="number"
-                  step="0.01"
-                  value={editData.bailLoyerHT}
-                  onChange={(e) => handleDataChange({ ...editData, bailLoyerHT: Number(e.target.value) })}
-                />
-              ) : (
-                <p className="font-medium financial-value">
-                  {formatCurrency(data.bailLoyerHT)}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="bailCNR">Charge Non Récupérable (CNR)</Label>
-              {isEditMode ? (
-                <Input
-                  id="bailCNR"
-                  type="number"
-                  step="0.01"
-                  value={editData.bailCNR}
-                  onChange={(e) => handleDataChange({ ...editData, bailCNR: Number(e.target.value) })}
-                />
-              ) : (
-                <p className="font-medium financial-value">
-                  {formatCurrency(data.bailCNR)}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label>Loyer net HT.HC (annuel)</Label>
-              <p className="font-medium financial-value text-primary">
-                {formatCurrency(data.bailLoyerHT - data.bailCNR)}
-              </p>
-            </div>
-          </div>
 
           {/* Section additionnelle pour les liens Google Maps */}
           <div className="grid gap-6 md:grid-cols-2 mt-6 pt-6 border-t">

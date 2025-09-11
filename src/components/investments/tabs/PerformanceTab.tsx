@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -57,10 +58,12 @@ interface PerformanceTabProps {
   investmentId: string;
   isEditMode?: boolean;
   bailLoyerHT?: number;
+  bailCNR?: number;
 }
 export function PerformanceTab({
   investmentId,
-  bailLoyerHT = 0
+  bailLoyerHT = 0,
+  bailCNR = 0
 }: PerformanceTabProps) {
   const {
     user
@@ -773,6 +776,40 @@ export function PerformanceTab({
   const totalEarning = totalGainValeur + totalFlux;
 
   return <div className="space-y-6">
+      
+      {/* Section Loyers */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Informations Loyers
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-3">
+            <div>
+              <Label>Loyer HT.HC (annuel)</Label>
+              <p className="font-medium financial-value">
+                {formatCurrency(bailLoyerHT)}
+              </p>
+            </div>
+
+            <div>
+              <Label>Charge Non Récupérable (CNR)</Label>
+              <p className="font-medium financial-value">
+                {formatCurrency(bailCNR)}
+              </p>
+            </div>
+
+            <div>
+              <Label>Loyer net HT.HC (annuel)</Label>
+              <p className="font-medium financial-value text-primary">
+                {formatCurrency(bailLoyerHT - bailCNR)}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Chart and Synthesis Section */}
       <Card>
