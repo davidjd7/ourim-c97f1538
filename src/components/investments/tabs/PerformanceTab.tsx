@@ -888,20 +888,18 @@ export function PerformanceTab({
             {/* Tableau - 60% de la largeur */}
             <div className="flex-1">
               <div className="overflow-x-auto h-[400px] overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs text-center">Date</TableHead>
-                      <TableHead className="text-xs text-center">Valeur</TableHead>
-                      <TableHead className="text-xs text-center">CRD</TableHead>
-                      <TableHead className="text-xs text-center">FP</TableHead>
-                      <TableHead className="text-xs text-center">NOI ajusté</TableHead>
-                      <TableHead className="text-xs text-center">Rendement net</TableHead>
-                      <TableHead className="text-xs text-center">CFNI</TableHead>
-                      <TableHead className="text-xs text-center">COC net</TableHead>
-                      <TableHead className="text-xs text-center">CF</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs text-center">Date</TableHead>
+                        <TableHead className="text-xs text-center">FP</TableHead>
+                        <TableHead className="text-xs text-center">NOI ajusté</TableHead>
+                        <TableHead className="text-xs text-center">Rendement net</TableHead>
+                        <TableHead className="text-xs text-center">CFNI</TableHead>
+                        <TableHead className="text-xs text-center">COC net</TableHead>
+                        <TableHead className="text-xs text-center">CF</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                      {getSyntheseData().map((row, index) => {
                         const syntheseData = getSyntheseData();
@@ -930,12 +928,6 @@ export function PerformanceTab({
                           <TableCell className="font-medium text-xs text-center">
                             {new Date(row.date).toLocaleDateString('fr-FR')}
                           </TableCell>
-                          <TableCell className="financial-value text-xs text-center">
-                            {formatCurrency(row.valeur)}
-                          </TableCell>
-                          <TableCell className="financial-value text-xs text-center">
-                            {formatCurrency(row.crd)}
-                          </TableCell>
                           <TableCell className="financial-value font-medium text-xs text-center">
                             {formatCurrency(row.fp)}
                           </TableCell>
@@ -957,7 +949,7 @@ export function PerformanceTab({
                         </TableRow>
                       })}
                       {getSyntheseData().length === 0 && <TableRow>
-                          <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-xs">
+                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-xs">
                             Aucune donnée disponible pour la synthèse
                           </TableCell>
                         </TableRow>}
@@ -996,12 +988,6 @@ export function PerformanceTab({
                           <TableRow className="border-t-2 border-border bg-muted/30">
                             <TableCell className="font-bold text-xs text-center">
                               Total
-                            </TableCell>
-                            <TableCell className="financial-value text-xs text-center">
-                              {/* Pas de total pour la valeur */}
-                            </TableCell>
-                            <TableCell className="financial-value text-xs text-center">
-                              {/* Pas de total pour le CRD */}
                             </TableCell>
                             <TableCell className="financial-value text-xs text-center">
                               {/* Pas de total pour le FP */}
