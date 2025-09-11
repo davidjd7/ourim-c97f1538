@@ -360,20 +360,6 @@ export function InvestmentTable({ selectedRows, onSelectedRowsChange }: {
 
   return (
     <div className="card-financial">
-      <div className="p-6 border-b">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">Investissements</h3>
-            <p className="text-sm text-muted-foreground">
-              Suivi et gestion des actifs investis
-            </p>
-          </div>
-          <Button variant="outline" size="sm">
-            Voir tout
-          </Button>
-        </div>
-      </div>
-
       <Table>
         <TableHeader>
           <TableRow>
