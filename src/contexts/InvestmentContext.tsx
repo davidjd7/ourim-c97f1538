@@ -150,7 +150,7 @@ const initialInvestments: Investment[] = [
     id: '4',
     name: 'Commercial Montreuil',
     type: 'IMMO',
-    status: 'RECU',
+    status: 'INVESTI',
     dateInvestment: '2024-01-15',
     lastValue: 1200000,
     lastTRI: 0,

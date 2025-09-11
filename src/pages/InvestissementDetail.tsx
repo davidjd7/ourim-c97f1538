@@ -81,7 +81,7 @@ export default function InvestissementDetail() {
   const [tempEditData, setTempEditData] = useState({
     name: investment?.name || (isNewInvestment ? '' : ''),
     type: investment?.type || investmentType,
-    status: investment?.status || 'RECU',
+    status: investment?.status || 'INVESTI',
     address: investment?.address || '',
     surface: investment?.surface || 0,
     price: investment?.price || 0,
@@ -215,7 +215,7 @@ export default function InvestissementDetail() {
         const newInvestment = await addInvestment({
           name: tempEditData.name,
           type: tempEditData.type,
-          status: tempEditData.status || 'RECU',
+          status: tempEditData.status || 'INVESTI',
           address: tempEditData.address,
           surface: tempEditData.surface,
           price: tempEditData.price,
@@ -709,7 +709,7 @@ export default function InvestissementDetail() {
                 id: '',
                 name: tempEditData.name,
                 type: tempEditData.type,
-                status: 'RECU',
+                status: 'INVESTI',
                 lastValue: 0,
                 lastTRI: 0,
                 lastCashflow: 0,
