@@ -240,7 +240,7 @@ function InvestmentKPIRow({
 type SortKey = string;
 type SortDirection = 'asc' | 'desc' | null;
 
-export function InvestmentTable() {
+export function InvestmentTable({ onSelectedRowsChange }: { onSelectedRowsChange?: (selectedRows: Set<string>) => void }) {
   const { investments } = useInvestments();
   const { visibleColumns, isInitialized } = useColumnVisibility();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
@@ -331,15 +331,13 @@ export function InvestmentTable() {
       newSelected.delete(investmentId);
     }
     setSelectedRows(newSelected);
+    onSelectedRowsChange?.(newSelected);
   };
 
   const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const allIds = new Set(sortedInvestments.map(inv => inv.id));
-      setSelectedRows(allIds);
-    } else {
-      setSelectedRows(new Set());
-    }
+    const newSelected = checked ? new Set(sortedInvestments.map(inv => inv.id)) : new Set<string>();
+    setSelectedRows(newSelected);
+    onSelectedRowsChange?.(newSelected);
   };
 
   const isAllSelected = sortedInvestments.length > 0 && selectedRows.size === sortedInvestments.length;

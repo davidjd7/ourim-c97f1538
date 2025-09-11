@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { InvestmentTable } from '@/components/dashboard/InvestmentTable';
+import { ConsolidatedKPIView } from '@/components/dashboard/ConsolidatedKPIView';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Table } from 'lucide-react';
 
+type ViewMode = 'table' | 'kpi';
+
 export default function Investissements() {
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [selectedInvestments, setSelectedInvestments] = useState<Set<string>>(new Set());
+
+  const handleSelectedRowsChange = (selectedRows: Set<string>) => {
+    setSelectedInvestments(selectedRows);
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -16,19 +26,31 @@ export default function Investissements() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="default" size="sm">
+          <Button 
+            variant={viewMode === 'table' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewMode('table')}
+          >
             <Table className="h-4 w-4 mr-2" />
             Vue Table
           </Button>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant={viewMode === 'kpi' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewMode('kpi')}
+          >
             <BarChart3 className="h-4 w-4 mr-2" />
             Vue KPI
           </Button>
         </div>
       </div>
 
-      {/* Investments Table */}
-      <InvestmentTable />
+      {/* Content based on view mode */}
+      {viewMode === 'table' ? (
+        <InvestmentTable onSelectedRowsChange={handleSelectedRowsChange} />
+      ) : (
+        <ConsolidatedKPIView selectedInvestments={selectedInvestments} />
+      )}
     </div>
   );
 }
