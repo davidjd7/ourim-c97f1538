@@ -12,12 +12,14 @@ import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
 
 import { useInvestments } from '@/contexts/InvestmentContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
+import { useCompanies } from '@/contexts/CompanyContext';
 
 export default function InvestissementDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { companies } = useCompanies();
   
   // Check if this is a new investment
   const isNewInvestment = id === 'nouveau';
@@ -391,10 +393,20 @@ export default function InvestissementDetail() {
                         {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
                       </p>
                     </div>
-                    {/* Tags à droite du nom */}
+                    {/* Tags et Société à droite du nom */}
                     {!isNewInvestment && (
-                      <div className="flex-shrink-0">
+                      <div className="flex items-center gap-4">
                         <InvestmentTags investmentId={investment!.id} />
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Société: </span>
+                          <span className="font-medium">
+                            {(() => {
+                              const companyId = tempEditData?.companyId;
+                              const foundCompany = companies.find(c => c.id === companyId);
+                              return foundCompany?.name || 'Non défini';
+                            })()}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>

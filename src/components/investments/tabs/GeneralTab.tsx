@@ -428,46 +428,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
                   {formatCurrency((isEditMode ? editData.investmentAmount : data.investmentAmount) + (isEditMode ? editData.notaryFees : data.notaryFees))}
                 </p>
               </div>
-
-              <div>
-                <Label htmlFor="company">Société</Label>
-                {isEditMode ? (
-                  <Select 
-                    value={editData.companyId || undefined} 
-                    onValueChange={(value) => handleDataChange({ ...editData, companyId: value === 'clear' ? undefined : value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez une société" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {editData.companyId && (
-                        <SelectItem value="clear">
-                          <span className="text-muted-foreground">Aucune société</span>
-                        </SelectItem>
-                      )}
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                      {companies.length === 0 && (
-                        <SelectItem value="no-company" disabled>
-                          Aucune société disponible
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="font-medium">
-                    {(() => {
-                      // Utiliser tempEditData.companyId comme source de vérité
-                      const companyId = tempEditData?.companyId;
-                      const foundCompany = companies.find(c => c.id === companyId);
-                      return foundCompany?.name || (companyId ? 'Société inconnue' : 'Non défini');
-                    })()}
-                  </p>
-                )}
-              </div>
             </div>
 
             <div className="col-span-2">
