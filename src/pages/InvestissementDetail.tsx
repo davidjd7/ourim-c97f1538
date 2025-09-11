@@ -325,16 +325,16 @@ export default function InvestissementDetail() {
                   <p className="text-2xl font-bold financial-value">
                     {kpis.coc >= 0 ? '+' : ''}{formatPercentage(kpis.coc)}
                   </p>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    CFNI: {formatCurrency(kpis.cocDetails.cfni)}
+                  </div>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <div>CFNI: {formatCurrency(kpis.cocDetails.cfni)}</div>
                   <div>
                     DSCR: {kpis.cocDetails.dscr.toFixed(2)}
                   </div>
-                  <div>
-                    ICR: {kpis.cocDetails.icr.toFixed(2)}
-                  </div>
                   <div>Yield Banque: {kpis.cocDetails.yieldBanque?.toFixed(1) || '0.0'}%</div>
+                  <div className="text-xs">Dernier CF: {formatCurrency(kpis.cocDetails.cfni || 0)}</div>
                 </div>
               </div>
             </div>
