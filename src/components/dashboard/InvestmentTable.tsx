@@ -59,22 +59,22 @@ function InvestmentKPIRow({ investment }: { investment: any }) {
         {loading ? '...' : formatCurrency(kpis.fondPropre)}
       </TableCell>
       <TableCell className={`text-right financial-value ${
-        kpis.dernierFluxDetails.coc >= 0 ? 'text-success' : 'text-destructive'
+        loading || !kpis.cocDetails ? 'text-muted-foreground' : (kpis.coc >= 0 ? 'text-success' : 'text-destructive')
       }`}>
         {loading ? '...' : (
           <>
-            {kpis.dernierFluxDetails.coc >= 0 ? '+' : ''}
-            {formatPercentage(kpis.dernierFluxDetails.coc)}
+            {kpis.coc >= 0 ? '+' : ''}
+            {formatPercentage(kpis.coc)}
           </>
         )}
       </TableCell>
       <TableCell className={`text-right financial-value ${
-        kpis.xirrDetails.totalEarning >= 0 ? 'text-success' : 'text-destructive'
+        loading || !kpis.xirrDetails ? 'text-muted-foreground' : (kpis.xirrDetails.totalCfni >= 0 ? 'text-success' : 'text-destructive')
       }`}>
         {loading ? '...' : (
           <>
-            {kpis.xirrDetails.totalEarning >= 0 ? '+' : ''}
-            {formatCurrency(kpis.xirrDetails.totalEarning)}
+            {kpis.xirrDetails.totalCfni >= 0 ? '+' : ''}
+            {formatCurrency(kpis.xirrDetails.totalCfni)}
           </>
         )}
       </TableCell>
@@ -139,7 +139,7 @@ export function InvestmentTable() {
             <TableHead>Date d'investissement</TableHead>
             <TableHead className="text-right">Fond Propre</TableHead>
             <TableHead className="text-right">COC</TableHead>
-            <TableHead className="text-right">Total Earning</TableHead>
+            <TableHead className="text-right">Total CFNI</TableHead>
             <TableHead className="text-right">XIRR</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>

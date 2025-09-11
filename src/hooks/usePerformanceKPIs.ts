@@ -257,12 +257,12 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
         setKpis({ 
           fondPropre: 0,
           fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
-          dernierEarning: 0,
-          dernierEarningDetails: { flux: 0, varValeur: 0, varValeurPercentage: 0, year: 0 },
-          dernierFlux: 0,
-          dernierFluxDetails: { capRate: 0, coc: 0, yield: 0, fluxRate: 0, year: 0 },
+          rendementNet: 0,
+          rendementNetDetails: { ebitda: 0, loyer: 0, ebitdaSurLoyer: 0, year: 0 },
+          coc: 0,
+          cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
           xirr: 0,
-          xirrDetails: { totalEarning: 0, totalFlux: 0, totalGainValeur: 0, years: 0 }
+          xirrDetails: { totalCfni: 0, variationCfni: 0, deltaFP: 0, years: 0 }
         });
         return;
       }
