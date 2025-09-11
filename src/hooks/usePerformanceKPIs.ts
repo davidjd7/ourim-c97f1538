@@ -51,7 +51,7 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
     coc: 0,
     cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
     xirr: 0,
-    xirrDetails: { totalCfni: 0, variationCfni: 0, deltaFP: 0, years: 0 }
+    xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0 }
   });
 
   // Helper functions (exact same as PerformanceTab)
@@ -262,7 +262,7 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
           coc: 0,
           cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
           xirr: 0,
-          xirrDetails: { totalCfni: 0, variationCfni: 0, deltaFP: 0, years: 0 }
+          xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0 }
         });
         return;
       }
@@ -399,9 +399,9 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
         return sum + (noiAjusteDate - rmbtInteretDate);
       }, 0);
 
-      // Calculate current and previous year CFNI for variation
+      // Calculate CFNI for the latest year only (not variation)
       const currentYear = rendementNetYear;
-      const currentYearCfni = syntheseData
+      const cfniDerniereAnnee = syntheseData
         .filter(row => new Date(row.date).getFullYear() === currentYear)
         .reduce((sum, row) => {
           const cashflowDate = cashflows.find(cf => cf.date === row.date);
@@ -413,27 +413,31 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
           return sum + (noiAjusteDate - rmbtInteretDate);
         }, 0);
 
-      const previousYearCfni = syntheseData
-        .filter(row => new Date(row.date).getFullYear() === currentYear - 1)
-        .reduce((sum, row) => {
-          const cashflowDate = cashflows.find(cf => cf.date === row.date);
-          const ebitdaDate = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
-          const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
-          const noiAjusteDate = ebitdaDate - (immobilisationDate?.montant || 0);
-          const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
-          const rmbtInteretDate = debtFlowDate?.rmbtInteret || 0;
-          return sum + (noiAjusteDate - rmbtInteretDate);
-        }, 0);
-
-      const variationCfni = currentYearCfni - previousYearCfni;
-      const deltaFP = (latestSynthese?.fp || 0) - (oldestSynthese?.fp || 0);
+      // Calculate value difference between most recent and oldest date
+      const deltaValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
+      
+      // Calculate value variation for the latest year
+      const currentYearValorisation = valorisations
+        .filter(valo => new Date(valo.date).getFullYear() === currentYear)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      
+      const previousYearValorisation = valorisations
+        .filter(valo => new Date(valo.date).getFullYear() === currentYear - 1)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      
+      const variationValeurDerniereAnnee = (currentYearValorisation?.valeur || 0) - (previousYearValorisation?.valeur || 0);
+      
+      // Total = somme de totalCfni + deltaValeur
+      const total = totalCfni + deltaValeur;
       
       const years = syntheseData.length > 1 ? Math.round((new Date(latestSynthese.date).getTime() - new Date(oldestSynthese.date).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
       
       const xirrDetails = {
         totalCfni,
-        variationCfni,
-        deltaFP,
+        cfniDerniereAnnee,
+        deltaValeur,
+        variationValeurDerniereAnnee,
+        total,
         years
       };
 
@@ -458,7 +462,7 @@ export function usePerformanceKPIs(investmentId: string, bailLoyerHT?: number) {
         coc: 0,
         cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
         xirr: 0,
-        xirrDetails: { totalCfni: 0, variationCfni: 0, deltaFP: 0, years: 0 }
+          xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0 }
       });
     } finally {
       setLoading(false);

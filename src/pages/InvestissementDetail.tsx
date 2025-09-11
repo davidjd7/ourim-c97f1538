@@ -663,12 +663,13 @@ export default function InvestissementDetail() {
                         <p className="text-xl font-bold financial-value text-primary">
                           {kpisLoading ? '...' : formatPercentage(kpis.xirr)}
                         </p>
-                         {!kpisLoading && kpis.xirrDetails && (
-                           <div className="text-xs text-muted-foreground text-left">
-                             <div>Flux: {formatCurrency(kpis.xirrDetails.totalCfni)} ({kpis.xirrDetails.variationCfni >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.variationCfni)})</div>
-                             <div>Valeur: {formatCurrency(kpis.xirrDetails.deltaFP)}</div>
-                           </div>
-                         )}
+                          {!kpisLoading && kpis.xirrDetails && (
+                            <div className="text-xs text-muted-foreground text-left">
+                              <div>CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)} ({formatCurrency(kpis.xirrDetails.cfniDerniereAnnee)})</div>
+                              <div>Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)} ({kpis.xirrDetails.variationValeurDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)})</div>
+                              <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
