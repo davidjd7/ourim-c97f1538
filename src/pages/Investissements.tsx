@@ -47,7 +47,10 @@ export default function Investissements() {
 
       {/* Content based on view mode */}
       {viewMode === 'table' ? (
-        <InvestmentTable onSelectedRowsChange={handleSelectedRowsChange} />
+        <InvestmentTable 
+          selectedRows={selectedInvestments} 
+          onSelectedRowsChange={handleSelectedRowsChange} 
+        />
       ) : (
         <ConsolidatedKPIView selectedInvestments={selectedInvestments} />
       )}

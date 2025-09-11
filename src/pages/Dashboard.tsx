@@ -5,7 +5,7 @@ import { InvestmentChart, CashflowChart } from '@/components/dashboard/Investmen
 import { 
   Wallet, 
   TrendingUp, 
-  Euro, 
+  DollarSign, 
   Building,
   BarChart3,
   Target
@@ -120,7 +120,7 @@ export default function Dashboard() {
                 title="Valeur"
                 value="€18.2M"
                 subtitle="Portefeuille immo"
-                icon={Euro}
+                icon={DollarSign}
                 className="text-sm"
               />
             </div>
@@ -144,7 +144,7 @@ export default function Dashboard() {
                 title="Valeur"
                 value="€6.3M"
                 subtitle="Portefeuille PE"
-                icon={Euro}
+                icon={DollarSign}
                 className="text-sm"
               />
             </div>
@@ -160,7 +160,10 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Investments Table */}
-      <InvestmentTable />
+        <InvestmentTable 
+          selectedRows={new Set<string>()} 
+          onSelectedRowsChange={() => {}} 
+        />
     </div>
   );
 }

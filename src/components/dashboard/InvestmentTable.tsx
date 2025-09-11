@@ -240,12 +240,14 @@ function InvestmentKPIRow({
 type SortKey = string;
 type SortDirection = 'asc' | 'desc' | null;
 
-export function InvestmentTable({ onSelectedRowsChange }: { onSelectedRowsChange?: (selectedRows: Set<string>) => void }) {
+export function InvestmentTable({ selectedRows, onSelectedRowsChange }: { 
+  selectedRows: Set<string>;
+  onSelectedRowsChange?: (selectedRows: Set<string>) => void; 
+}) {
   const { investments } = useInvestments();
   const { visibleColumns, isInitialized } = useColumnVisibility();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   
   // KPI map for sorting by computed values - now holds all KPI data
   const [kpiMap, setKpiMap] = useState<Record<string, any>>({});
@@ -330,13 +332,11 @@ export function InvestmentTable({ onSelectedRowsChange }: { onSelectedRowsChange
     } else {
       newSelected.delete(investmentId);
     }
-    setSelectedRows(newSelected);
     onSelectedRowsChange?.(newSelected);
   };
 
   const handleSelectAll = (checked: boolean) => {
     const newSelected = checked ? new Set(sortedInvestments.map(inv => inv.id)) : new Set<string>();
-    setSelectedRows(newSelected);
     onSelectedRowsChange?.(newSelected);
   };
 
