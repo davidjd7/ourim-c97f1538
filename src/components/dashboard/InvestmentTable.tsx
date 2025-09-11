@@ -13,9 +13,19 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Building, TrendingUp, ChevronUp, ChevronDown } from 'lucide-react';
 import { useInvestments } from '@/contexts/InvestmentContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
+import { useColumnVisibility } from '@/hooks/useColumnVisibility';
+import { ColumnSelector } from './ColumnSelector';
 
 // Component for displaying KPI values for each investment
-function InvestmentKPIRow({ investment, onKpisLoaded }: { investment: any; onKpisLoaded?: (id: string, data: { fondPropre: number; coc: number; totalCfni: number; xirr: number }) => void }) {
+function InvestmentKPIRow({ 
+  investment, 
+  onKpisLoaded,
+  visibleColumns 
+}: { 
+  investment: any; 
+  onKpisLoaded?: (id: string, data: any) => void;
+  visibleColumns: Array<{ key: string; label: string; align?: 'left' | 'right'; type?: string }>;
+}) {
   const { kpis, loading } = usePerformanceKPIs(investment.id);
   
   const formatCurrency = (amount: number) => {
@@ -37,6 +47,15 @@ function InvestmentKPIRow({ investment, onKpisLoaded }: { investment: any; onKpi
         coc: Number(kpis.coc ?? 0),
         totalCfni: Number(kpis.xirrDetails?.totalCfni ?? 0),
         xirr: Number(kpis.xirr ?? 0),
+        // Nouvelles valeurs
+        totalVarValeur: Number(kpis.xirrDetails?.deltaValeur ?? 0),
+        lastVarValeur: Number(kpis.xirrDetails?.variationValeurDerniereAnnee ?? 0),
+        lastCfni: Number(kpis.xirrDetails?.cfniDerniereAnnee ?? 0),
+        ltv: Number(kpis.fondPropreDetails?.ltv ?? 0),
+        crd: Number(kpis.fondPropreDetails?.crd ?? 0),
+        noi: Number(kpis.rendementNetDetails?.noi ?? 0),
+        loyer: Number(kpis.rendementNetDetails?.loyer ?? 0),
+        rendementNet: Number(kpis.rendementNet ?? 0),
       };
       onKpisLoaded?.(investment.id, data);
     }
@@ -44,62 +63,155 @@ function InvestmentKPIRow({ investment, onKpisLoaded }: { investment: any; onKpi
   
   const navigate = useNavigate();
 
-  return (
-    <TableRow>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          {investment.type === 'IMMO' ? (
-            <Building className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          )}
-          <span className="font-medium">{investment.name}</span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <Badge variant="outline">
-          {investment.type === 'IMMO' ? 'Immobilier' : 'Private Equity'}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        {investment.dateInvestment ? 
+  const getCellValue = (columnKey: string) => {
+    if (loading) return '...';
+
+    switch (columnKey) {
+      case 'name':
+        return (
+          <div className="flex items-center gap-2">
+            {investment.type === 'IMMO' ? (
+              <Building className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className="font-medium">{investment.name}</span>
+          </div>
+        );
+      case 'type':
+        return (
+          <Badge variant="outline">
+            {investment.type === 'IMMO' ? 'Immobilier' : 'Private Equity'}
+          </Badge>
+        );
+      case 'dateInvestment':
+        return investment.dateInvestment ? 
           new Date(investment.dateInvestment).toLocaleDateString('fr-FR') : 
-          '-'
-        }
-      </TableCell>
-      <TableCell className="text-right financial-value">
-        {loading ? '...' : formatCurrency(kpis.fondPropre)}
-      </TableCell>
-      <TableCell className={`text-right financial-value ${
-        loading || !kpis.cocDetails ? 'text-muted-foreground' : (kpis.coc >= 0 ? 'text-success' : 'text-destructive')
-      }`}>
-        {loading ? '...' : (
+          '-';
+      case 'fondPropre':
+        return formatCurrency(kpis.fondPropre);
+      case 'coc':
+        return (
           <>
             {kpis.coc >= 0 ? '+' : ''}
             {formatPercentage(kpis.coc)}
           </>
-        )}
-      </TableCell>
-      <TableCell className={`text-right financial-value ${
-        loading || !kpis.xirrDetails ? 'text-muted-foreground' : (kpis.xirrDetails.totalCfni >= 0 ? 'text-success' : 'text-destructive')
-      }`}>
-        {loading ? '...' : (
+        );
+      case 'totalCfni':
+        return (
           <>
-            {kpis.xirrDetails.totalCfni >= 0 ? '+' : ''}
-            {formatCurrency(kpis.xirrDetails.totalCfni)}
+            {kpis.xirrDetails?.totalCfni >= 0 ? '+' : ''}
+            {formatCurrency(kpis.xirrDetails?.totalCfni || 0)}
           </>
-        )}
-      </TableCell>
-      <TableCell className={`text-right financial-value ${
-        kpis.xirr >= 0 ? 'text-success' : 'text-destructive'
-      }`}>
-        {loading ? '...' : (
+        );
+      case 'xirr':
+        return (
           <>
             {kpis.xirr >= 0 ? '+' : ''}
             {formatPercentage(kpis.xirr)}
           </>
-        )}
-      </TableCell>
+        );
+      case 'totalVarValeur':
+        return (
+          <>
+            {kpis.xirrDetails?.deltaValeur >= 0 ? '+' : ''}
+            {formatCurrency(kpis.xirrDetails?.deltaValeur || 0)}
+          </>
+        );
+      case 'lastVarValeur':
+        return (
+          <>
+            {kpis.xirrDetails?.variationValeurDerniereAnnee >= 0 ? '+' : ''}
+            {formatCurrency(kpis.xirrDetails?.variationValeurDerniereAnnee || 0)}
+          </>
+        );
+      case 'lastCfni':
+        return (
+          <>
+            {kpis.xirrDetails?.cfniDerniereAnnee >= 0 ? '+' : ''}
+            {formatCurrency(kpis.xirrDetails?.cfniDerniereAnnee || 0)}
+          </>
+        );
+      case 'ltv':
+        return formatPercentage(kpis.fondPropreDetails?.ltv || 0);
+      case 'crd':
+        return formatCurrency(kpis.fondPropreDetails?.crd || 0);
+      case 'noi':
+        return formatCurrency(kpis.rendementNetDetails?.noi || 0);
+      case 'loyer':
+        return formatCurrency(kpis.rendementNetDetails?.loyer || 0);
+      case 'rendementNet':
+        return (
+          <>
+            {kpis.rendementNet >= 0 ? '+' : ''}
+            {formatPercentage(kpis.rendementNet)}
+          </>
+        );
+      default:
+        return '-';
+    }
+  };
+
+  const getCellClass = (columnKey: string, columnType?: string, columnAlign?: string) => {
+    let baseClass = '';
+    
+    if (columnAlign === 'right') {
+      baseClass += 'text-right ';
+    }
+    
+    if (columnType === 'currency' || columnType === 'percentage') {
+      baseClass += 'financial-value ';
+    }
+
+    // Add color classes for financial values
+    if (!loading && (columnType === 'currency' || columnType === 'percentage')) {
+      let value = 0;
+      switch (columnKey) {
+        case 'coc':
+          value = kpis.coc || 0;
+          break;
+        case 'totalCfni':
+          value = kpis.xirrDetails?.totalCfni || 0;
+          break;
+        case 'xirr':
+          value = kpis.xirr || 0;
+          break;
+        case 'totalVarValeur':
+          value = kpis.xirrDetails?.deltaValeur || 0;
+          break;
+        case 'lastVarValeur':
+          value = kpis.xirrDetails?.variationValeurDerniereAnnee || 0;
+          break;
+        case 'lastCfni':
+          value = kpis.xirrDetails?.cfniDerniereAnnee || 0;
+          break;
+        case 'rendementNet':
+          value = kpis.rendementNet || 0;
+          break;
+        default:
+          value = 0;
+      }
+      
+      if (value > 0) {
+        baseClass += 'text-success';
+      } else if (value < 0) {
+        baseClass += 'text-destructive';
+      }
+    }
+
+    return baseClass;
+  };
+
+  return (
+    <TableRow>
+      {visibleColumns.map((column) => (
+        <TableCell 
+          key={column.key} 
+          className={getCellClass(column.key, column.type, column.align)}
+        >
+          {getCellValue(column.key)}
+        </TableCell>
+      ))}
       <TableCell>
         <Button 
           variant="ghost" 
@@ -114,27 +226,23 @@ function InvestmentKPIRow({ investment, onKpisLoaded }: { investment: any; onKpi
 }
 
 
-type SortKey = 'name' | 'type' | 'dateInvestment' | 'fondPropre' | 'coc' | 'totalCfni' | 'xirr';
+type SortKey = string;
 type SortDirection = 'asc' | 'desc' | null;
 
 export function InvestmentTable() {
   const { investments } = useInvestments();
+  const { visibleColumns } = useColumnVisibility();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   
-  // KPI map for sorting by computed values
-  const [kpiMap, setKpiMap] = useState<Record<string, { fondPropre: number; coc: number; totalCfni: number; xirr: number }>>({});
+  // KPI map for sorting by computed values - now holds all KPI data
+  const [kpiMap, setKpiMap] = useState<Record<string, any>>({});
 
-  const handleKpisLoaded = (id: string, data: { fondPropre: number; coc: number; totalCfni: number; xirr: number }) => {
+  const handleKpisLoaded = (id: string, data: any) => {
     setKpiMap((prev) => {
       const prevData = prev[id];
-      if (
-        prevData &&
-        prevData.fondPropre === data.fondPropre &&
-        prevData.coc === data.coc &&
-        prevData.totalCfni === data.totalCfni &&
-        prevData.xirr === data.xirr
-      ) {
+      // Simple comparison - if data is different, update
+      if (JSON.stringify(prevData) === JSON.stringify(data)) {
         return prev;
       }
       return { ...prev, [id]: data };
@@ -145,6 +253,10 @@ export function InvestmentTable() {
   const investedAssets = investments;
 
   const handleSort = (key: SortKey) => {
+    // Check if column is sortable
+    const column = visibleColumns.find(col => col.key === key);
+    if (!column?.sortable) return;
+
     if (sortKey === key) {
       // Si même colonne, alterner: null -> desc -> asc -> null
       if (sortDirection === null) {
@@ -183,24 +295,10 @@ export function InvestmentTable() {
           bValue = b.dateInvestment ? new Date(b.dateInvestment) : new Date(0);
           break;
         // Pour les KPIs, utiliser les données collectées depuis les lignes
-        case 'fondPropre':
-          aValue = kpiMap[a.id]?.fondPropre ?? Number.NEGATIVE_INFINITY;
-          bValue = kpiMap[b.id]?.fondPropre ?? Number.NEGATIVE_INFINITY;
-          break;
-        case 'coc':
-          aValue = kpiMap[a.id]?.coc ?? Number.NEGATIVE_INFINITY;
-          bValue = kpiMap[b.id]?.coc ?? Number.NEGATIVE_INFINITY;
-          break;
-        case 'totalCfni':
-          aValue = kpiMap[a.id]?.totalCfni ?? Number.NEGATIVE_INFINITY;
-          bValue = kpiMap[b.id]?.totalCfni ?? Number.NEGATIVE_INFINITY;
-          break;
-        case 'xirr':
-          aValue = kpiMap[a.id]?.xirr ?? Number.NEGATIVE_INFINITY;
-          bValue = kpiMap[b.id]?.xirr ?? Number.NEGATIVE_INFINITY;
-          break;
         default:
-          return 0;
+          aValue = kpiMap[a.id]?.[sortKey] ?? Number.NEGATIVE_INFINITY;
+          bValue = kpiMap[b.id]?.[sortKey] ?? Number.NEGATIVE_INFINITY;
+          break;
       }
 
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
@@ -226,84 +324,45 @@ export function InvestmentTable() {
               Suivi et gestion des actifs investis
             </p>
           </div>
-          <Button variant="outline" size="sm">
-            Voir tout
-          </Button>
+          <div className="flex items-center gap-2">
+            <ColumnSelector />
+            <Button variant="outline" size="sm">
+              Voir tout
+            </Button>
+          </div>
         </div>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('name')}
-            >
-              <div className="flex items-center gap-1">
-                Nom
-                {getSortIcon('name')}
-              </div>
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('type')}
-            >
-              <div className="flex items-center gap-1">
-                Type
-                {getSortIcon('type')}
-              </div>
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('dateInvestment')}
-            >
-              <div className="flex items-center gap-1">
-                Date d'investissement
-                {getSortIcon('dateInvestment')}
-              </div>
-            </TableHead>
-            <TableHead 
-              className="text-right cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('fondPropre')}
-            >
-              <div className="flex items-center justify-end gap-1">
-                Fond Propre
-                {getSortIcon('fondPropre')}
-              </div>
-            </TableHead>
-            <TableHead 
-              className="text-right cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('coc')}
-            >
-              <div className="flex items-center justify-end gap-1">
-                COC
-                {getSortIcon('coc')}
-              </div>
-            </TableHead>
-            <TableHead 
-              className="text-right cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('totalCfni')}
-            >
-              <div className="flex items-center justify-end gap-1">
-                Total CFNI
-                {getSortIcon('totalCfni')}
-              </div>
-            </TableHead>
-            <TableHead 
-              className="text-right cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('xirr')}
-            >
-              <div className="flex items-center justify-end gap-1">
-                XIRR
-                {getSortIcon('xirr')}
-              </div>
-            </TableHead>
+            {visibleColumns.map((column) => (
+              <TableHead 
+                key={column.key}
+                className={`${column.sortable ? 'cursor-pointer hover:bg-muted/50' : ''} select-none ${
+                  column.align === 'right' ? 'text-right' : ''
+                }`}
+                onClick={() => column.sortable && handleSort(column.key)}
+              >
+                <div className={`flex items-center gap-1 ${
+                  column.align === 'right' ? 'justify-end' : ''
+                }`}>
+                  {column.label}
+                  {column.sortable && getSortIcon(column.key)}
+                </div>
+              </TableHead>
+            ))}
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedInvestments.map((investment) => (
-            <InvestmentKPIRow key={investment.id} investment={investment} onKpisLoaded={handleKpisLoaded} />
+            <InvestmentKPIRow 
+              key={investment.id} 
+              investment={investment} 
+              onKpisLoaded={handleKpisLoaded}
+              visibleColumns={visibleColumns}
+            />
           ))}
         </TableBody>
       </Table>
