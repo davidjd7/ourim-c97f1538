@@ -388,6 +388,12 @@ export default function InvestissementDetail() {
                   <p className="text-lg text-muted-foreground">
                     {tempEditData.type === 'IMMO' ? 'Investissement Immobilier' : 'Private Equity'}
                   </p>
+                  {/* Tags */}
+                  {!isNewInvestment && (
+                    <div className="mt-2">
+                      <InvestmentTags investmentId={investment!.id} />
+                    </div>
+                  )}
                 </>
               )}
             </div>
