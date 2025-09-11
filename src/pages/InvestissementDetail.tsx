@@ -256,20 +256,18 @@ export default function InvestissementDetail() {
         </div>
       </div>
 
-      {/* Performance KPI Cards - Adjusted layout and colors */}
+      {/* Performance KPI Cards - Left-aligned layout */}
       {!isNewInvestment && (
         <div className="grid gap-4 md:grid-cols-4">
           {/* Fond Propre */}
           <div className="card-financial">
             <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Fond Propre</p>
-                  <p className={`text-2xl font-bold financial-value ${kpis.fondPropre >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(kpis.fondPropre)}
-                  </p>
-                </div>
-                <div className="text-right text-xs text-muted-foreground">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground font-bold">Fond Propre</p>
+                <p className={`text-2xl font-bold financial-value ${kpis.fondPropre >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(kpis.fondPropre)}
+                </p>
+                <div className="text-xs text-muted-foreground space-y-1">
                   <div>Valeur: {formatCurrency(kpis.fondPropreDetails.valeur)}</div>
                   <div>CRD: {formatCurrency(kpis.fondPropreDetails.crd)}</div>
                   <div>
@@ -283,14 +281,12 @@ export default function InvestissementDetail() {
           {/* Rendement Net */}
           <div className="card-financial">
             <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Rendement Net ({kpis.rendementNetDetails.year})</p>
-                  <p className={`text-2xl font-bold financial-value ${kpis.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatPercentage(kpis.rendementNet)}
-                  </p>
-                </div>
-                <div className="text-right text-xs text-muted-foreground">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground font-bold">Rendement Net ({kpis.rendementNetDetails.year})</p>
+                <p className={`text-2xl font-bold financial-value ${kpis.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatPercentage(kpis.rendementNet)}
+                </p>
+                <div className="text-xs text-muted-foreground space-y-1">
                   <div>EBITDA: {formatCurrency(kpis.rendementNetDetails.ebitda)}</div>
                   <div>Année: {kpis.rendementNetDetails.year}</div>
                   {kpis.rendementNetDetails.ebitdaSurLoyer > 0 && (
@@ -306,14 +302,12 @@ export default function InvestissementDetail() {
           {/* COC (Cash on Cash) */}
           <div className="card-financial">
             <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">COC</p>
-                  <p className={`text-2xl font-bold financial-value ${kpis.coc >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatPercentage(kpis.coc)}
-                  </p>
-                </div>
-                <div className="text-right text-xs text-muted-foreground">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground font-bold">COC</p>
+                <p className={`text-2xl font-bold financial-value ${kpis.coc >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatPercentage(kpis.coc)}
+                </p>
+                <div className="text-xs text-muted-foreground space-y-1">
                   <div>CFNI: {formatCurrency(kpis.cocDetails.cfni)}</div>
                   <div className={kpis.cocDetails.dscr >= 1.2 ? 'text-green-600' : 'text-red-600'}>
                     DSCR: {kpis.cocDetails.dscr.toFixed(2)}
@@ -329,14 +323,12 @@ export default function InvestissementDetail() {
           {/* XIRR */}
           <div className="card-financial">
             <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">XIRR</p>
-                  <p className={`text-2xl font-bold financial-value ${kpis.xirr >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatPercentage(kpis.xirr)}
-                  </p>
-                </div>
-                <div className="text-right text-xs text-muted-foreground">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground font-bold">XIRR</p>
+                <p className={`text-2xl font-bold financial-value ${kpis.xirr >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatPercentage(kpis.xirr)}
+                </p>
+                <div className="text-xs text-muted-foreground space-y-1">
                   <div className={kpis.xirrDetails.totalCfni >= 0 ? 'text-green-600' : 'text-red-600'}>
                     CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)}
                   </div>
