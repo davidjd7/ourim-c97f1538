@@ -281,51 +281,6 @@ export function DetteTab({ investmentId }: DetteTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Debt Overview */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Dette totale initiale</p>
-                <p className="text-xl font-bold financial-value">
-                  {formatCurrency(totalInitialDebt)}
-                </p>
-              </div>
-              <CreditCard className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Dette restante</p>
-                <p className="text-xl font-bold financial-value text-destructive">
-                  {formatCurrency(totalRemainingDebt)}
-                </p>
-              </div>
-              <TrendingDown className="h-5 w-5 text-destructive" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Nombre d'emprunts</p>
-                <p className="text-xl font-bold financial-value">
-                  {debtCharacteristics.length}
-                </p>
-              </div>
-              <Calendar className="h-5 w-5 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Debt List */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -436,58 +391,106 @@ export function DetteTab({ investmentId }: DetteTabProps) {
             ) : debtCharacteristics.length === 0 ? (
               <p className="text-muted-foreground italic">Aucune dette enregistrée</p>
             ) : (
-              debtCharacteristics.map((debt) => {
-                const currentDebt = calculateCurrentDebt(debt);
-                const progress = calculateProgress(debt.montant_initial, currentDebt);
-                
-                return (
-                  <div key={debt.id} className="border rounded-lg p-4 bg-card">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-3">
-                        <Badge variant="outline">{debt.type}</Badge>
-                        <div className="text-sm text-muted-foreground">
-                          <p>{formatPercentage(debt.taux)} • {debt.duree_mois} mois</p>
-                          <p className="font-medium">Montant: {formatCurrency(debt.montant_initial)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Capital restant</p>
-                          <p className="font-semibold financial-value text-destructive">
-                            {formatCurrency(currentDebt)}
+              <>
+                {/* Overview Cards - only show when there are debts */}
+                <div className="grid gap-4 md:grid-cols-3 mb-6">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Dette totale initiale</p>
+                          <p className="text-xl font-bold financial-value">
+                            {formatCurrency(totalInitialDebt)}
                           </p>
                         </div>
-                        {canEdit && (
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditDebt(debt.id)}
-                            >
-                              <Edit2 className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteDebt(debt.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                        <CreditCard className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Dette restante</p>
+                          <p className="text-xl font-bold financial-value text-destructive">
+                            {formatCurrency(totalRemainingDebt)}
+                          </p>
+                        </div>
+                        <TrendingDown className="h-5 w-5 text-destructive" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Nombre d'emprunts</p>
+                          <p className="text-xl font-bold financial-value">
+                            {debtCharacteristics.length}
+                          </p>
+                        </div>
+                        <Calendar className="h-5 w-5 text-primary" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Individual debt items */}
+                {debtCharacteristics.map((debt) => {
+                  const currentDebt = calculateCurrentDebt(debt);
+                  const progress = calculateProgress(debt.montant_initial, currentDebt);
+                  
+                  return (
+                    <div key={debt.id} className="border rounded-lg p-4 bg-card">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">{debt.type}</Badge>
+                          <div className="text-sm text-muted-foreground">
+                            <p>{formatPercentage(debt.taux)} • {debt.duree_mois} mois</p>
+                            <p className="font-medium">Montant: {formatCurrency(debt.montant_initial)}</p>
                           </div>
-                        )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Capital restant</p>
+                            <p className="font-semibold financial-value text-destructive">
+                              {formatCurrency(currentDebt)}
+                            </p>
+                          </div>
+                          {canEdit && (
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditDebt(debt.id)}
+                              >
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteDebt(debt.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Remboursé: {formatPercentage(progress)}</span>
+                          <span>Reste à rembourser: {formatCurrency(currentDebt)}</span>
+                        </div>
+                        <Progress value={progress} className="h-2" />
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Remboursé: {formatPercentage(progress)}</span>
-                        <span>Reste à rembourser: {formatCurrency(currentDebt)}</span>
-                      </div>
-                      <Progress value={progress} className="h-2" />
-                    </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+              </>
             )}
           </div>
         </CardContent>
