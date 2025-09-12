@@ -491,73 +491,74 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
           </div>
           
           {/* Tableau synthèse */}
-          <div className="overflow-x-auto">
-            <TooltipProvider delayDuration={0}>
-            <Table>
-               <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Valeur</TableHead>
-                    <TableHead className="text-right">FP</TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Cash après immo avant levier</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
-                        <TooltipContent>
-                          <p>NOI ajusté/ valeur</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
-                        <TooltipContent>
-                          <p>NOI ajusté après interet</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
-                        <TooltipContent>
-                          <p>CFNI / FP</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Cashflow</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delta FP + CF</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delta valeur + CFNI</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-right">XIRR glissant</TableHead>
-                  </TableRow>
-               </TableHeader>
+          <div className="w-full">
+            <div className="overflow-x-auto">
+              <TooltipProvider delayDuration={0}>
+              <Table className="min-w-full">
+                 <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[80px]">Date</TableHead>
+                      <TableHead className="text-right min-w-[80px]">Valeur</TableHead>
+                      <TableHead className="text-right min-w-[70px]">FP</TableHead>
+                      <TableHead className="text-right min-w-[90px]">
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Cash après immo avant levier</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableHead>
+                      <TableHead className="text-right min-w-[90px]">
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
+                          <TooltipContent>
+                            <p>NOI ajusté/ valeur</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableHead>
+                      <TableHead className="text-right min-w-[70px]">
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
+                          <TooltipContent>
+                            <p>NOI ajusté après interet</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableHead>
+                      <TableHead className="text-right min-w-[80px]">
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
+                          <TooltipContent>
+                            <p>CFNI / FP</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableHead>
+                      <TableHead className="text-right min-w-[60px]">
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Cashflow</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableHead>
+                      <TableHead className="text-right min-w-[70px]">
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Delta FP + CF</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableHead>
+                      <TableHead className="text-right min-w-[70px]">
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Delta valeur + CFNI</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableHead>
+                      <TableHead className="text-right min-w-[80px]">XIRR glissant</TableHead>
+                    </TableRow>
+                 </TableHeader>
               <TableBody>
                  {consolidatedData.chartData.map((row, index) => {
                    // Calculs pour les gains (variations par rapport à la ligne précédente)
@@ -616,8 +617,9 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                    <TableCell className="text-right">-</TableCell>
                  </TableRow>
                </TableBody>
-            </Table>
-            </TooltipProvider>
+              </Table>
+              </TooltipProvider>
+            </div>
           </div>
         </div>
       </div>

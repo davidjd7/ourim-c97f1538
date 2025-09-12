@@ -846,10 +846,252 @@ export function PerformanceTab({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-start">
-            {/* Graphique - 40% de la largeur avec conteneur strict */}
-            <div className="w-2/5 pr-4 flex-shrink-0">
-              <div className="w-full overflow-hidden">
+          <div className="space-y-6">
+            {/* Version mobile/tablette - Stack vertical */}
+            <div className="block lg:hidden">
+              {/* Graphique en premier sur mobile */}
+              <div className="mb-6">
+                <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart
+                      data={getChartData()}
+                      margin={{
+                        top: 20,
+                        right: 5,
+                        left: 10,
+                        bottom: 80,
+                      }}
+                    >
+                      <XAxis 
+                        dataKey="year" 
+                        tick={{ fontSize: 9 }}
+                        tickLine={{ stroke: 'hsl(var(--border))' }}
+                        tickFormatter={(value) => `${value}`}
+                      />
+                      <YAxis 
+                        yAxisId="bars"
+                        orientation="left"
+                        tick={{ fontSize: 9 }}
+                        tickLine={{ stroke: 'hsl(var(--border))' }}
+                        tickFormatter={(value) => `${(value/1000).toFixed(0)}k`}
+                        width={35}
+                      />
+                      <YAxis 
+                        yAxisId="valeur"
+                        orientation="right"
+                        tick={{ fontSize: 9 }}
+                        tickLine={{ stroke: 'hsl(var(--border))' }}
+                        tickFormatter={(value) => `${(value/1000000).toFixed(1)}M`}
+                        width={35}
+                      />
+                       <ChartTooltip 
+                         content={
+                           <ChartTooltipContent 
+                             formatter={(value, name) => [
+                               `${formatCurrency(Number(value))}`,
+                               <span className="font-bold">
+                                 {name === 'cfni' ? 'CFNI' : 
+                                  name === 'varValeur' ? 'Var Valeur' : 
+                                  name === 'gain' ? 'Gain' : 
+                                  name === 'valeur' ? 'Valeur' : name}
+                               </span>
+                             ]}
+                             labelFormatter={(label) => `Année ${label}`}
+                           />
+                         }
+                       />
+                      <Legend 
+                        align="center" 
+                        verticalAlign="bottom" 
+                        layout="horizontal"
+                        wrapperStyle={{ paddingTop: '10px', fontSize: '9px' }}
+                      />
+                      <Bar 
+                        yAxisId="bars"
+                        dataKey="cfni" 
+                        fill="#2563eb"
+                        name="CFNI"
+                      />
+                      <Bar 
+                        yAxisId="bars"
+                        dataKey="varValeur" 
+                        fill="#ea580c"
+                        name="Var Valeur"
+                      />
+                      <Line 
+                        yAxisId="bars"
+                        type="monotone" 
+                        dataKey="gain" 
+                        stroke="#06b6d4"
+                        strokeWidth={2}
+                        dot={{ fill: "#06b6d4", strokeWidth: 1, r: 3 }}
+                        name="Gain"
+                      />
+                      <Line 
+                        yAxisId="valeur"
+                        type="monotone" 
+                        dataKey="valeur" 
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        dot={{ fill: "#10b981", strokeWidth: 1, r: 3 }}
+                        name="Valeur"
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+
+              {/* Tableau en dessous sur mobile */}
+              <div className="w-full">
+                <div className="overflow-x-auto">
+                  <TooltipProvider delayDuration={0}>
+                    <Table className="min-w-full text-xs">
+                      <TableHeader>
+                         <TableRow>
+                           <TableHead className="text-xs text-center min-w-[80px]">Date</TableHead>
+                           <TableHead className="text-xs text-center min-w-[80px]">Valeur</TableHead>
+                           <TableHead className="text-xs text-center min-w-[70px]">FP</TableHead>
+                           <TableHead className="text-xs text-center min-w-[90px]">
+                             <Tooltip>
+                               <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
+                               <TooltipContent>
+                                 <p>Cash après immo avant levier</p>
+                               </TooltipContent>
+                             </Tooltip>
+                           </TableHead>
+                           <TableHead className="text-xs text-center min-w-[90px]">
+                             <Tooltip>
+                               <TooltipTrigger className="cursor-help">Rend. net</TooltipTrigger>
+                               <TooltipContent>
+                                 <p>NOI ajusté/ valeur</p>
+                               </TooltipContent>
+                             </Tooltip>
+                           </TableHead>
+                           <TableHead className="text-xs text-center min-w-[70px]">
+                             <Tooltip>
+                               <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
+                               <TooltipContent>
+                                 <p>NOI ajusté après interet</p>
+                               </TooltipContent>
+                             </Tooltip>
+                           </TableHead>
+                           <TableHead className="text-xs text-center min-w-[80px]">
+                             <Tooltip>
+                               <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
+                               <TooltipContent>
+                                 <p>CFNI / FP</p>
+                               </TooltipContent>
+                             </Tooltip>
+                           </TableHead>
+                           <TableHead className="text-xs text-center min-w-[60px]">
+                             <Tooltip>
+                               <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
+                               <TooltipContent>
+                                 <p>Cashflow</p>
+                               </TooltipContent>
+                             </Tooltip>
+                           </TableHead>
+                           <TableHead className="text-xs text-center min-w-[70px]">
+                             <Tooltip>
+                               <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                               <TooltipContent>
+                                 <p>Delta FP + CF</p>
+                               </TooltipContent>
+                             </Tooltip>
+                           </TableHead>
+                           <TableHead className="text-xs text-center min-w-[70px]">
+                             <Tooltip>
+                               <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
+                               <TooltipContent>
+                                 <p>Delta valeur + CFNI</p>
+                               </TooltipContent>
+                             </Tooltip>
+                           </TableHead>
+                           <TableHead className="text-xs text-center min-w-[80px]">XIRR glissant</TableHead>
+                         </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {getSyntheseData().map((row, index) => {
+                             // ... keep existing code
+                             const syntheseData = getSyntheseData();
+                             
+                             // Calculs pour NOI ajusté (EBITDA - immobilisation)
+                             const cashflowDate = cashflows.find(cf => cf.date === row.date);
+                             const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+                             
+                             const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+                             const immobilisationAmount = immobilisationDate?.montant || 0;
+                             
+                             const noiAjuste = ebitda - immobilisationAmount;
+                             
+                             // Calculs pour les autres métriques
+                             const rendementNet = row.valeur > 0 ? (noiAjuste / row.valeur) * 100 : 0;
+                             
+                             const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+                             const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+                             const rmbtCapital = debtFlowDate?.rmbtCapital || 0;
+                             
+                             const cfni = noiAjuste - rmbtInteret;
+                             const cocNet = row.fp > 0 ? (cfni / row.fp) * 100 : 0;
+                             const cf = cfni - rmbtCapital;
+                             
+                             // Calculs pour les gains (variations par rapport à la ligne précédente)
+                             const previousRow = index > 0 ? syntheseData[index - 1] : null;
+                             const variationFP = previousRow ? row.fp - previousRow.fp : 0;
+                             const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
+                             const gain1 = variationFP + cf; // Variation de FP + CF
+                             const gain2 = variationValeur + cfni; // Variation de valeur + CFNI
+                             
+                             // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
+                             const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
+                             
+                             return <TableRow key={index}>
+                               <TableCell className="font-medium text-xs text-center">
+                                 {new Date(row.date).toLocaleDateString('fr-FR')}
+                               </TableCell>
+                               <TableCell className="financial-value font-medium text-xs text-center">
+                                 {formatCurrency(row.valeur)}
+                               </TableCell>
+                               <TableCell className="financial-value font-medium text-xs text-center">
+                                 {formatCurrency(row.fp)}
+                               </TableCell>
+                               <TableCell className={`financial-value font-medium text-xs text-center ${noiAjuste >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                 {noiAjuste >= 0 ? '+' : ''}{formatCurrency(noiAjuste)}
+                               </TableCell>
+                               <TableCell className="financial-value font-medium text-xs text-center">
+                                 {formatPercentage(rendementNet)}
+                               </TableCell>
+                               <TableCell className={`financial-value font-medium text-xs text-center ${cfni >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                 {cfni >= 0 ? '+' : ''}{formatCurrency(cfni)}
+                               </TableCell>
+                               <TableCell className="financial-value font-medium text-xs text-center">
+                                 {formatPercentage(cocNet)}
+                               </TableCell>
+                               <TableCell className={`financial-value font-medium text-xs text-center ${cf >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                 {cf >= 0 ? '+' : ''}{formatCurrency(cf)}
+                               </TableCell>
+                               <TableCell className={`financial-value font-medium text-xs text-center ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                 {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
+                               </TableCell>
+                               <TableCell className={`financial-value font-medium text-xs text-center ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                 {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
+                               </TableCell>
+                               <TableCell className="financial-value font-medium text-xs text-center">
+                                 {xirrGlissant.toFixed(1)}%
+                               </TableCell>
+                             </TableRow>;
+                          })}
+                      </TableBody>
+                    </Table>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </div>
+
+            {/* Version desktop - côte à côte */}
+            <div className="hidden lg:flex lg:items-start lg:gap-4">
+              {/* Graphique - 40% de la largeur */}
+              <div className="w-2/5 flex-shrink-0">
                 <ChartContainer config={chartConfig} className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart
@@ -889,7 +1131,7 @@ export function PerformanceTab({
                              formatter={(value, name) => [
                                `${formatCurrency(Number(value))}`,
                                <span className="font-bold">
-                                 {name === 'flux' ? 'Flux' : 
+                                 {name === 'cfni' ? 'CFNI' : 
                                   name === 'varValeur' ? 'Var Valeur' : 
                                   name === 'gain' ? 'Gain' : 
                                   name === 'valeur' ? 'Valeur' : name}
@@ -939,80 +1181,76 @@ export function PerformanceTab({
                   </ResponsiveContainer>
                 </ChartContainer>
               </div>
-            </div>
 
-            {/* Séparateur vertical */}
-            <div className="w-px bg-border h-[400px] mx-4 flex-shrink-0"></div>
-
-          {/* Tableau - 60% de la largeur */}
-            <div className="flex-1">
-              <div className="overflow-x-auto h-[400px] overflow-y-auto">
-                <TooltipProvider delayDuration={0}>
-                  <Table>
-                     <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-xs text-center">Date</TableHead>
-                          <TableHead className="text-xs text-center">Valeur</TableHead>
-                          <TableHead className="text-xs text-center">FP</TableHead>
-                          <TableHead className="text-xs text-center">
-                            <Tooltip>
-                              <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
-                              <TooltipContent>
-                                <p>Cash après immo avant levier</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TableHead>
-                          <TableHead className="text-xs text-center">
-                            <Tooltip>
-                              <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
-                              <TooltipContent>
-                                <p>NOI ajusté/ valeur</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TableHead>
-                          <TableHead className="text-xs text-center">
-                            <Tooltip>
-                              <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
-                              <TooltipContent>
-                                <p>NOI ajusté après interet</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TableHead>
-                          <TableHead className="text-xs text-center">
-                            <Tooltip>
-                              <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
-                              <TooltipContent>
-                                <p>CFNI / FP</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TableHead>
-                          <TableHead className="text-xs text-center">
-                            <Tooltip>
-                              <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
-                              <TooltipContent>
-                                <p>Cashflow</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TableHead>
-                          <TableHead className="text-xs text-center">
-                            <Tooltip>
-                              <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
-                              <TooltipContent>
-                                <p>Delta FP + CF</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TableHead>
-                          <TableHead className="text-xs text-center">
-                            <Tooltip>
-                              <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
-                              <TooltipContent>
-                                <p>Delta valeur + CFNI</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TableHead>
-                          <TableHead className="text-xs text-center">XIRR glissant</TableHead>
-                        </TableRow>
-                     </TableHeader>
+              {/* Tableau - 60% de la largeur */}
+              <div className="w-3/5 flex-shrink-0">
+                <div className="max-h-[400px] overflow-y-auto">
+                  <TooltipProvider delayDuration={0}>
+                    <Table>
+                       <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs text-center">Date</TableHead>
+                            <TableHead className="text-xs text-center">Valeur</TableHead>
+                            <TableHead className="text-xs text-center">FP</TableHead>
+                            <TableHead className="text-xs text-center">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Cash après immo avant levier</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>NOI ajusté/ valeur</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>NOI ajusté après interet</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>CFNI / FP</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Cashflow</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delta FP + CF</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delta valeur + CFNI</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center">XIRR glissant</TableHead>
+                          </TableRow>
+                       </TableHeader>
                   <TableBody>
                       {getSyntheseData().map((row, index) => {
                          const syntheseData = getSyntheseData();
@@ -1169,13 +1407,14 @@ export function PerformanceTab({
                          );
                       })()}
                    </TableBody>
-                    </Table>
-                </TooltipProvider>
-              </div>
+                     </Table>
+                   </TooltipProvider>
+                 </div>
+               </div>
             </div>
-           </div>
-         </CardContent>
-       </Card>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Historique Performance */}
       <Card>
