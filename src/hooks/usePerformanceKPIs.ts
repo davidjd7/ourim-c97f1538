@@ -52,7 +52,7 @@ export function usePerformanceKPIs(investmentId: string) {
     coc: 0,
     cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
     xirr: 0,
-    xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0 }
+  xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0 }
   });
 
   // Helper functions (exact same as PerformanceTab)
@@ -264,7 +264,7 @@ export function usePerformanceKPIs(investmentId: string) {
           coc: 0,
           cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
           xirr: 0,
-          xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0 }
+          xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0 }
         });
         return;
       }
@@ -430,13 +430,37 @@ export function usePerformanceKPIs(investmentId: string) {
       
       const years = syntheseData.length > 1 ? Math.round((new Date(latestSynthese.date).getTime() - new Date(oldestSynthese.date).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
       
+      // Calcul du Gain 1 (variation FP + CF)
+      let gain1 = 0;
+      if (syntheseData.length >= 2) {
+        const latestSynthese = syntheseData[syntheseData.length - 1];
+        const secondLatestSynthese = syntheseData[syntheseData.length - 2];
+        
+        // Variation FP
+        const variationFP = latestSynthese.fp - secondLatestSynthese.fp;
+        
+        // Calcul du CF pour la dernière date (CFNI - rmbt capital)
+        const latestCashflow = cashflows.find(cf => cf.date === latestSynthese.date);
+        const latestNOICalculated = latestCashflow ? calculateNOI(latestCashflow) : 0;
+        const latestImmobilisationCalculated = immobilisations.find(immo => immo.date === latestSynthese.date);
+        const noiAjusteCalculated = latestNOICalculated - (latestImmobilisationCalculated?.montant || 0);
+        const latestDebtFlowCalculated = debtFlows.find(debt => debt.date === latestSynthese.date);
+        const rmbtInteretCalculated = latestDebtFlowCalculated?.rmbtInteret || 0;
+        const rmbtCapitalCalculated = latestDebtFlowCalculated?.rmbtCapital || 0;
+        const cfniCalculated = noiAjusteCalculated - rmbtInteretCalculated;
+        const cf = cfniCalculated - rmbtCapitalCalculated;
+        
+        gain1 = variationFP + cf;
+      }
+
       const xirrDetails = {
         totalCfni,
         cfniDerniereAnnee,
         deltaValeur,
         variationValeurDerniereAnnee,
         total,
-        years
+        years,
+        gain1  // Ajouter gain1 aux détails XIRR
       };
 
       setKpis({
@@ -460,7 +484,7 @@ export function usePerformanceKPIs(investmentId: string) {
         coc: 0,
         cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
         xirr: 0,
-          xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0 }
+        xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0 }
       });
     } finally {
       setLoading(false);

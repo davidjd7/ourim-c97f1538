@@ -62,6 +62,7 @@ function InvestmentKPIRow({
         noi: Number(kpis.rendementNetDetails?.noi ?? 0),
         loyer: Number(kpis.rendementNetDetails?.loyer ?? 0),
         rendementNet: Number(kpis.rendementNet ?? 0),
+        gain1: Number(kpis.xirrDetails?.gain1 ?? 0),
       };
       onKpisLoaded?.(investment.id, data);
     }
@@ -155,6 +156,13 @@ function InvestmentKPIRow({
             {formatPercentage(kpis.rendementNet)}
           </>
         );
+      case 'gain1':
+        return (
+          <>
+            {kpis.xirrDetails?.gain1 >= 0 ? '+' : ''}
+            {formatCurrency(kpis.xirrDetails?.gain1 || 0)}
+          </>
+        );
       default:
         return '-';
     }
@@ -195,6 +203,9 @@ function InvestmentKPIRow({
           break;
         case 'rendementNet':
           value = kpis.rendementNet || 0;
+          break;
+        case 'gain1':
+          value = kpis.xirrDetails?.gain1 || 0;
           break;
         default:
           value = 0;
