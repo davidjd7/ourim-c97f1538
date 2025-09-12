@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { YearPicker } from '@/components/ui/year-picker';
 interface CashflowRow {
   id?: string;
   date: string;
@@ -352,8 +353,9 @@ export function PerformanceTab({
 
   // CRUD functions for cashflows
   const addCashflow = () => {
+    const currentYear = new Date().getFullYear();
     const newRow: CashflowRow = {
-      date: new Date().toISOString().split('T')[0],
+      date: `${currentYear}-12-31`,
       loyer: 0,
       rex: 0,
       retraitAmort: 0,
@@ -425,8 +427,9 @@ export function PerformanceTab({
 
   // CRUD functions for immobilisations
   const addImmobilisation = () => {
+    const currentYear = new Date().getFullYear();
     const newRow: ImmobilisationRow = {
-      date: new Date().toISOString().split('T')[0],
+      date: `${currentYear}-12-31`,
       montant: 0,
       note: ''
     };
@@ -492,8 +495,9 @@ export function PerformanceTab({
 
   // CRUD functions for valorisations
   const addValorisation = () => {
+    const currentYear = new Date().getFullYear();
     const newRow: ValorisationRow = {
-      date: new Date().toISOString().split('T')[0],
+      date: `${currentYear}-12-31`,
       valeur: 0,
       note: ''
     };
@@ -596,8 +600,9 @@ export function PerformanceTab({
 
   // CRUD functions for debt flows
   const addDebtFlow = () => {
+    const currentYear = new Date().getFullYear();
     const newRow: DebtFlowRow = {
-      date: new Date().toISOString().split('T')[0],
+      date: `${currentYear}-12-31`,
       capitalDebut: 0,
       rmbtCapital: 0,
       rmbtInteret: 0
@@ -1047,13 +1052,13 @@ export function PerformanceTab({
               <TableBody>
                 {cashflows.map((cashflow, index) => <TableRow key={index}>
                     <TableCell>
-                      {editingCashflow && editingCashflow.index === index ? <Input type="date" value={editingCashflow.row.date} onChange={e => setEditingCashflow({
+                       {editingCashflow && editingCashflow.index === index ? <YearPicker value={editingCashflow.row.date} onChange={(date) => setEditingCashflow({
                     ...editingCashflow,
                     row: {
                       ...editingCashflow.row,
-                      date: e.target.value
+                      date: date
                     }
-                  })} /> : new Date(cashflow.date).toLocaleDateString('fr-FR')}
+                   })} /> : new Date(cashflow.date).toLocaleDateString('fr-FR')}
                      </TableCell>
                      <TableCell>
                        {editingCashflow && editingCashflow.index === index ? <Input type="number" value={editingCashflow.row.loyer} onChange={e => setEditingCashflow({
@@ -1145,13 +1150,13 @@ export function PerformanceTab({
               <TableBody>
                 {immobilisations.map((immo, index) => <TableRow key={index}>
                     <TableCell>
-                      {editingImmo && editingImmo.index === index ? <Input type="date" value={editingImmo.row.date} onChange={e => setEditingImmo({
+                       {editingImmo && editingImmo.index === index ? <YearPicker value={editingImmo.row.date} onChange={(date) => setEditingImmo({
                     ...editingImmo,
                     row: {
                       ...editingImmo.row,
-                      date: e.target.value
+                      date: date
                     }
-                  })} /> : new Date(immo.date).toLocaleDateString('fr-FR')}
+                   })} /> : new Date(immo.date).toLocaleDateString('fr-FR')}
                     </TableCell>
                     <TableCell>
                       {editingImmo && editingImmo.index === index ? <Input type="number" value={editingImmo.row.montant} onChange={e => setEditingImmo({
@@ -1216,13 +1221,13 @@ export function PerformanceTab({
               <TableBody>
                 {valorisations.map((valo, index) => <TableRow key={index}>
                     <TableCell>
-                      {editingValo && editingValo.index === index ? <Input type="date" value={editingValo.row.date} onChange={e => setEditingValo({
+                       {editingValo && editingValo.index === index ? <YearPicker value={editingValo.row.date} onChange={(date) => setEditingValo({
                     ...editingValo,
                     row: {
                       ...editingValo.row,
-                      date: e.target.value
+                      date: date
                     }
-                  })} /> : new Date(valo.date).toLocaleDateString('fr-FR')}
+                   })} /> : new Date(valo.date).toLocaleDateString('fr-FR')}
                     </TableCell>
                     <TableCell>
                       {editingValo && editingValo.index === index ? <Input type="number" value={editingValo.row.valeur} onChange={e => setEditingValo({
@@ -1379,13 +1384,13 @@ export function PerformanceTab({
               <TableBody>
                 {debtFlows.map((flow, index) => <TableRow key={index}>
                     <TableCell>
-                      {editingDebtFlow && editingDebtFlow.index === index ? <Input type="date" value={editingDebtFlow.row.date} onChange={e => setEditingDebtFlow({
+                       {editingDebtFlow && editingDebtFlow.index === index ? <YearPicker value={editingDebtFlow.row.date} onChange={(date) => setEditingDebtFlow({
                     ...editingDebtFlow,
                     row: {
                       ...editingDebtFlow.row,
-                      date: e.target.value
+                      date: date
                     }
-                  })} /> : new Date(flow.date).toLocaleDateString('fr-FR')}
+                   })} /> : new Date(flow.date).toLocaleDateString('fr-FR')}
                     </TableCell>
                     <TableCell>
                       {editingDebtFlow && editingDebtFlow.index === index ? <Input type="number" value={editingDebtFlow.row.capitalDebut} onChange={e => setEditingDebtFlow({
