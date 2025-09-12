@@ -73,9 +73,13 @@ export type Database = {
           created_at: string
           duree_mois: number | null
           id: string
+          indice_base: string | null
+          marge: number | null
           montant_initial: number | null
           taux: number | null
           type: string | null
+          type_credit: string | null
+          type_taux: string | null
           updated_at: string
           user_id: string
         }
@@ -86,9 +90,13 @@ export type Database = {
           created_at?: string
           duree_mois?: number | null
           id?: string
+          indice_base?: string | null
+          marge?: number | null
           montant_initial?: number | null
           taux?: number | null
           type?: string | null
+          type_credit?: string | null
+          type_taux?: string | null
           updated_at?: string
           user_id: string
         }
@@ -99,9 +107,13 @@ export type Database = {
           created_at?: string
           duree_mois?: number | null
           id?: string
+          indice_base?: string | null
+          marge?: number | null
           montant_initial?: number | null
           taux?: number | null
           type?: string | null
+          type_credit?: string | null
+          type_taux?: string | null
           updated_at?: string
           user_id?: string
         }
