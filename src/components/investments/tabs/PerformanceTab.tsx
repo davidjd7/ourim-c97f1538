@@ -298,17 +298,29 @@ export function PerformanceTab({
   // Get chart data grouped by year
   const getChartData = () => {
     const syntheseData = getSyntheseData();
-    const yearMap = new Map<number, { year: number; flux: number; valeur: number; varValeur: number; gain: number }>();
+    const yearMap = new Map<number, { year: number; cfni: number; valeur: number; varValeur: number; gain: number; fp: number }>();
 
     // First pass: Group data by year and calculate totals
     syntheseData.forEach((row) => {
       const year = new Date(row.date).getFullYear();
       if (!yearMap.has(year)) {
-        yearMap.set(year, { year, flux: 0, valeur: 0, varValeur: 0, gain: 0 });
+        yearMap.set(year, { year, cfni: 0, valeur: 0, varValeur: 0, gain: 0, fp: 0 });
       }
       const yearData = yearMap.get(year)!;
-      yearData.flux += row.flux;
+      
+      // Calculate CFNI for this row
+      const cashflowDate = cashflows.find(cf => cf.date === row.date);
+      const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+      const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+      const immobilisationAmount = immobilisationDate?.montant || 0;
+      const noiAjuste = ebitda - immobilisationAmount;
+      const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+      const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+      const cfni = noiAjuste - rmbtInteret;
+      
+      yearData.cfni += cfni;
       yearData.valeur = row.valeur; // Take the latest value for the year
+      yearData.fp = row.fp; // Take the latest FP for the year
     });
 
     // Convert to array and sort by year
@@ -317,25 +329,66 @@ export function PerformanceTab({
     // Exclude the oldest year (first year in the sorted array)
     const filteredYearArray = yearArray.length > 1 ? yearArray.slice(1) : yearArray;
 
-    // Second pass: Calculate varValeur (difference from previous year) and gain
+    // Second pass: Calculate varValeur and gain (Gain 1 = variationFP + CF)
     filteredYearArray.forEach((yearData, index) => {
       if (index > 0) {
         yearData.varValeur = yearData.valeur - filteredYearArray[index - 1].valeur;
+        // Calculate CF (CFNI - rmbt capital) and Gain 1 = variationFP + CF
+        const variationFP = yearData.fp - filteredYearArray[index - 1].fp;
+        
+        // Calculate CF for this year (sum of all CF for the year)
+        let yearCF = 0;
+        const yearDataFromSynthese = syntheseData.filter(row => new Date(row.date).getFullYear() === yearData.year);
+        yearDataFromSynthese.forEach(row => {
+          const cashflowDate = cashflows.find(cf => cf.date === row.date);
+          const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+          const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+          const immobilisationAmount = immobilisationDate?.montant || 0;
+          const noiAjuste = ebitda - immobilisationAmount;
+          const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+          const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+          const rmbtCapital = debtFlowDate?.rmbtCapital || 0;
+          const cfni = noiAjuste - rmbtInteret;
+          const cf = cfni - rmbtCapital;
+          yearCF += cf;
+        });
+        
+        yearData.gain = variationFP + yearCF; // Gain 1 = Delta FP + CF
       } else if (yearArray.length > 1) {
         // For the first year in filtered array, compare with the excluded oldest year
         yearData.varValeur = yearData.valeur - yearArray[0].valeur;
+        const variationFP = yearData.fp - yearArray[0].fp;
+        
+        // Calculate CF for this year
+        let yearCF = 0;
+        const yearDataFromSynthese = syntheseData.filter(row => new Date(row.date).getFullYear() === yearData.year);
+        yearDataFromSynthese.forEach(row => {
+          const cashflowDate = cashflows.find(cf => cf.date === row.date);
+          const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+          const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+          const immobilisationAmount = immobilisationDate?.montant || 0;
+          const noiAjuste = ebitda - immobilisationAmount;
+          const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+          const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+          const rmbtCapital = debtFlowDate?.rmbtCapital || 0;
+          const cfni = noiAjuste - rmbtInteret;
+          const cf = cfni - rmbtCapital;
+          yearCF += cf;
+        });
+        
+        yearData.gain = variationFP + yearCF; // Gain 1 = Delta FP + CF
       } else {
         yearData.varValeur = 0;
+        yearData.gain = 0;
       }
-      yearData.gain = yearData.flux + yearData.varValeur;
     });
 
     return filteredYearArray;
   };
 
   const chartConfig = {
-    flux: {
-      label: "Flux",
+    cfni: {
+      label: "CFNI",
       color: "#2563eb", // Blue color for bars
     },
     varValeur: {
@@ -854,9 +907,9 @@ export function PerformanceTab({
                       />
                       <Bar 
                         yAxisId="bars"
-                        dataKey="flux" 
+                        dataKey="cfni" 
                         fill="#2563eb"
-                        name="Flux"
+                        name="CFNI"
                       />
                       <Bar 
                         yAxisId="bars"
