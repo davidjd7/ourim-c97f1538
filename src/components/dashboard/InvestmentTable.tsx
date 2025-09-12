@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Building, TrendingUp, ChevronUp, ChevronDown } from 'lucide-react';
 import { useInvestments } from '@/contexts/InvestmentContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
-import { useColumnVisibility } from '@/hooks/useColumnVisibility';
+import { useColumnVisibility } from '@/contexts/ColumnVisibilityContext';
 import { ColumnSelector } from './ColumnSelector';
 import { InvestmentTags } from '@/components/investments/InvestmentTags';
 
