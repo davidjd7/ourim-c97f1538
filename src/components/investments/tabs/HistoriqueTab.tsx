@@ -11,7 +11,7 @@ import { useCompanies } from '@/contexts/CompanyContext';
 
 interface HistoryEvent {
   id: string;
-  investment_id: string;
+  immobilier_id: string;
   field_name: string;
   old_value?: string;
   new_value?: string;
@@ -44,9 +44,9 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
     try {
       const currentOffset = resetHistory ? 0 : offset;
       const { data, error } = await supabase
-        .from('investment_history')
+        .from('immobilier_history')
         .select('*')
-        .eq('investment_id', investmentId)
+        .eq('immobilier_id', investmentId)
         .order('created_at', { ascending: false })
         .range(currentOffset, currentOffset + LIMIT - 1);
 

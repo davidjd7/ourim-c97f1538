@@ -174,7 +174,7 @@ export function PerformanceTab({
       const {
         data: debtData,
         error
-      } = await supabase.from('investment_debt_characteristics').select('*').eq('investment_id', investmentId).eq('user_id', user?.id).maybeSingle();
+      } = await supabase.from('immobilier_debt_characteristics').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).maybeSingle();
       if (error) throw error;
       if (debtData) {
         setDebtCharacteristics({
@@ -493,15 +493,15 @@ export function PerformanceTab({
   const saveImmobilisation = async (row: ImmobilisationRow) => {
     try {
       if (row.id) {
-        const { error } = await supabase.from('investment_immobilisations').update({
+        const { error } = await supabase.from('immobilier_immobilisations').update({
           date: row.date,
           montant: row.montant,
           note: row.note
         }).eq('id', row.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('investment_immobilisations').insert({
-          investment_id: investmentId,
+        const { error } = await supabase.from('immobilier_immobilisations').insert({
+          immobilier_id: investmentId,
           user_id: user?.id,
           date: row.date,
           montant: row.montant,
@@ -522,7 +522,7 @@ export function PerformanceTab({
     const row = immobilisations[index];
     if (row.id) {
       try {
-        const { error } = await supabase.from('investment_immobilisations').delete().eq('id', row.id);
+        const { error } = await supabase.from('immobilier_immobilisations').delete().eq('id', row.id);
         if (error) throw error;
         await loadImmobilisations();
         notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
@@ -557,15 +557,15 @@ export function PerformanceTab({
   const saveValorisation = async (row: ValorisationRow) => {
     try {
       if (row.id) {
-        const { error } = await supabase.from('investment_valorisations').update({
+        const { error } = await supabase.from('immobilier_valorisations').update({
           date: row.date,
           valeur: row.valeur,
           note: row.note
         }).eq('id', row.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('investment_valorisations').insert({
-          investment_id: investmentId,
+        const { error } = await supabase.from('immobilier_valorisations').insert({
+          immobilier_id: investmentId,
           user_id: user?.id,
           date: row.date,
           valeur: row.valeur,
@@ -586,7 +586,7 @@ export function PerformanceTab({
     const row = valorisations[index];
     if (row.id) {
       try {
-        const { error } = await supabase.from('investment_valorisations').delete().eq('id', row.id);
+        const { error } = await supabase.from('immobilier_valorisations').delete().eq('id', row.id);
         if (error) throw error;
         await loadValorisations();
         notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
@@ -607,7 +607,7 @@ export function PerformanceTab({
   const saveDebtCharacteristics = async () => {
     try {
       if (debtCharacteristics.id) {
-        const { error } = await supabase.from('investment_debt_characteristics').update({
+        const { error } = await supabase.from('immobilier_debt_characteristics').update({
           montant_initial: debtCharacteristics.montantInitial,
           duree_mois: debtCharacteristics.dureeMois,
           taux: debtCharacteristics.taux,
@@ -616,8 +616,8 @@ export function PerformanceTab({
         }).eq('id', debtCharacteristics.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('investment_debt_characteristics').insert({
-          investment_id: investmentId,
+        const { error } = await supabase.from('immobilier_debt_characteristics').insert({
+          immobilier_id: investmentId,
           user_id: user?.id,
           montant_initial: debtCharacteristics.montantInitial,
           duree_mois: debtCharacteristics.dureeMois,
@@ -656,7 +656,7 @@ export function PerformanceTab({
   const saveDebtFlow = async (row: DebtFlowRow) => {
     try {
       if (row.id) {
-        const { error } = await supabase.from('investment_debt_flows').update({
+        const { error } = await supabase.from('immobilier_debt_flows').update({
           date: row.date,
           capital_debut: row.capitalDebut,
           rmbt_capital: row.rmbtCapital,
@@ -664,8 +664,8 @@ export function PerformanceTab({
         }).eq('id', row.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('investment_debt_flows').insert({
-          investment_id: investmentId,
+        const { error } = await supabase.from('immobilier_debt_flows').insert({
+          immobilier_id: investmentId,
           user_id: user?.id,
           date: row.date,
           capital_debut: row.capitalDebut,
@@ -687,7 +687,7 @@ export function PerformanceTab({
     const row = debtFlows[index];
     if (row.id) {
       try {
-        const { error } = await supabase.from('investment_debt_flows').delete().eq('id', row.id);
+        const { error } = await supabase.from('immobilier_debt_flows').delete().eq('id', row.id);
         if (error) throw error;
         await loadDebtFlows();
         notifyInvestmentDataChanged(investmentId); // Notify KPI refresh

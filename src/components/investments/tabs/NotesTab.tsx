@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface Note {
   id: string;
-  investment_id: string;
+  immobilier_id: string;
   user_id: string;
   title: string;
   content: string;
@@ -44,7 +44,7 @@ export function NotesTab({ investmentId }: NotesTabProps) {
         const { data, error } = await supabase
           .from('notes')
           .select('*')
-          .eq('investment_id', investmentId)
+          .eq('immobilier_id', investmentId)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -71,7 +71,7 @@ export function NotesTab({ investmentId }: NotesTabProps) {
 
     try {
       const noteData = {
-        investment_id: investmentId,
+        immobilier_id: investmentId,
         user_id: user.id,
         title: newNote.title.trim(),
         content: newNote.content.trim(),

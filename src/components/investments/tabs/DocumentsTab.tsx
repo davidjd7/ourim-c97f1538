@@ -46,7 +46,7 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('investment_id', investmentId)
+        .eq('immobilier_id', investmentId)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -121,7 +121,7 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
             .from('documents')
             .insert({
               user_id: user.id,
-              investment_id: investmentId,
+              immobilier_id: investmentId,
               name: file.name,
               type: documentType,
               file_path: filePath,
