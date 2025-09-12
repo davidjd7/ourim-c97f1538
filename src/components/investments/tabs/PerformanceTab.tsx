@@ -1926,15 +1926,8 @@ export function PerformanceTab({
             )}
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Aucune dette configurée</p>
-              <p className="text-sm mt-2">Configurez les caractéristiques de dette pour ce bien</p>
-            </div>
-            
-            {/* Configuration Form */}
-            {editingDebtCharacteristics && (
-              <div className="mt-6 p-4 border rounded-lg bg-accent/20">
+            {editingDebtCharacteristics ? (
+              <div className="p-4 border rounded-lg bg-accent/20">
                 <h3 className="text-lg font-semibold mb-4">Configuration de la dette</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2024,6 +2017,12 @@ export function PerformanceTab({
                     Annuler
                   </Button>
                 </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Aucune dette configurée</p>
+                <p className="text-sm mt-2">Configurez les caractéristiques de dette pour ce bien</p>
               </div>
             )}
           </CardContent>
