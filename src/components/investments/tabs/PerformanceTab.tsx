@@ -174,7 +174,7 @@ export function PerformanceTab({
       const {
         data: debtData,
         error
-      } = await supabase.from('immobilier_debt_characteristics').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).maybeSingle();
+      } = await supabase.from('debt_characteristics').select('*').eq('asset_id', investmentId).eq('user_id', user?.id).maybeSingle();
       if (error) throw error;
       if (debtData) {
         setDebtCharacteristics({
@@ -192,20 +192,34 @@ export function PerformanceTab({
   };
   const loadDebtFlows = async () => {
     try {
-      const {
-        data: flowData,
-        error
-      } = await supabase.from('immobilier_debt_flows').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).order('date', {
-        ascending: true
-      });
-      if (error) throw error;
-      const formattedFlows = flowData?.map(flow => ({
-        id: flow.id,
-        date: flow.date,
-        capitalDebut: flow.capital_debut || 0,
-        rmbtCapital: flow.rmbt_capital || 0,
-        rmbtInteret: flow.rmbt_interet || 0
-      })) || [];
+      // First get debt characteristics to get the debt_characteristics_id
+      const debtCharacteristicsRes = await supabase.from('debt_characteristics').select('id').eq('asset_id', investmentId).eq('user_id', user?.id);
+      
+      if (debtCharacteristicsRes.error) throw debtCharacteristicsRes.error;
+      
+      let formattedFlows: DebtFlowRow[] = [];
+      
+      if (debtCharacteristicsRes.data && debtCharacteristicsRes.data.length > 0) {
+        const debtCharacteristicsIds = debtCharacteristicsRes.data.map(dc => dc.id);
+        
+        const {
+          data: flowData,
+          error
+        } = await supabase.from('debt_flows').select('*').in('debt_characteristics_id', debtCharacteristicsIds).eq('user_id', user?.id).order('date', {
+          ascending: true
+        });
+        
+        if (error) throw error;
+        
+        formattedFlows = flowData?.map(flow => ({
+          id: flow.id,
+          date: flow.date,
+          capitalDebut: flow.capital_debut || 0,
+          rmbtCapital: flow.rmbt_capital || 0,
+          rmbtInteret: flow.rmbt_interet || 0
+        })) || [];
+      }
+      
       setDebtFlows(formattedFlows);
     } catch (error) {
       console.error('Error loading debt flows:', error);
@@ -607,7 +621,7 @@ export function PerformanceTab({
   const saveDebtCharacteristics = async () => {
     try {
       if (debtCharacteristics.id) {
-        const { error } = await supabase.from('immobilier_debt_characteristics').update({
+        const { error } = await supabase.from('debt_characteristics').update({
           montant_initial: debtCharacteristics.montantInitial,
           duree_mois: debtCharacteristics.dureeMois,
           taux: debtCharacteristics.taux,
@@ -616,8 +630,9 @@ export function PerformanceTab({
         }).eq('id', debtCharacteristics.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('immobilier_debt_characteristics').insert({
-          immobilier_id: investmentId,
+        const { error } = await supabase.from('debt_characteristics').insert({
+          asset_id: investmentId,
+          asset_type: 'immobilier',
           user_id: user?.id,
           montant_initial: debtCharacteristics.montantInitial,
           duree_mois: debtCharacteristics.dureeMois,
@@ -656,7 +671,7 @@ export function PerformanceTab({
   const saveDebtFlow = async (row: DebtFlowRow) => {
     try {
       if (row.id) {
-        const { error } = await supabase.from('immobilier_debt_flows').update({
+        const { error } = await supabase.from('debt_flows').update({
           date: row.date,
           capital_debut: row.capitalDebut,
           rmbt_capital: row.rmbtCapital,
@@ -664,8 +679,17 @@ export function PerformanceTab({
         }).eq('id', row.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('immobilier_debt_flows').insert({
-          immobilier_id: investmentId,
+        // Get debt characteristics ID first
+        const debtCharacteristicsRes = await supabase.from('debt_characteristics').select('id').eq('asset_id', investmentId).eq('user_id', user?.id).maybeSingle();
+        
+        if (debtCharacteristicsRes.error) throw debtCharacteristicsRes.error;
+        if (!debtCharacteristicsRes.data) {
+          toast.error('Vous devez d\'abord sauvegarder les caractéristiques de dette');
+          return;
+        }
+        
+        const { error } = await supabase.from('debt_flows').insert({
+          debt_characteristics_id: debtCharacteristicsRes.data.id,
           user_id: user?.id,
           date: row.date,
           capital_debut: row.capitalDebut,
@@ -687,7 +711,7 @@ export function PerformanceTab({
     const row = debtFlows[index];
     if (row.id) {
       try {
-        const { error } = await supabase.from('immobilier_debt_flows').delete().eq('id', row.id);
+        const { error } = await supabase.from('debt_flows').delete().eq('id', row.id);
         if (error) throw error;
         await loadDebtFlows();
         notifyInvestmentDataChanged(investmentId); // Notify KPI refresh

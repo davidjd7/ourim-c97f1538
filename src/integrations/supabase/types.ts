@@ -65,6 +65,92 @@ export type Database = {
         }
         Relationships: []
       }
+      debt_characteristics: {
+        Row: {
+          amortissement_annuel: number | null
+          asset_id: string
+          asset_type: string
+          created_at: string
+          duree_mois: number | null
+          id: string
+          montant_initial: number | null
+          taux: number | null
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amortissement_annuel?: number | null
+          asset_id: string
+          asset_type?: string
+          created_at?: string
+          duree_mois?: number | null
+          id?: string
+          montant_initial?: number | null
+          taux?: number | null
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amortissement_annuel?: number | null
+          asset_id?: string
+          asset_type?: string
+          created_at?: string
+          duree_mois?: number | null
+          id?: string
+          montant_initial?: number | null
+          taux?: number | null
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      debt_flows: {
+        Row: {
+          capital_debut: number | null
+          created_at: string
+          date: string
+          debt_characteristics_id: string
+          id: string
+          rmbt_capital: number | null
+          rmbt_interet: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          capital_debut?: number | null
+          created_at?: string
+          date: string
+          debt_characteristics_id: string
+          id?: string
+          rmbt_capital?: number | null
+          rmbt_interet?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          capital_debut?: number | null
+          created_at?: string
+          date?: string
+          debt_characteristics_id?: string
+          id?: string
+          rmbt_capital?: number | null
+          rmbt_interet?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_flows_debt_characteristics_id_fkey"
+            columns: ["debt_characteristics_id"]
+            isOneToOne: false
+            referencedRelation: "debt_characteristics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -138,81 +224,6 @@ export type Database = {
           retrait_amort?: number | null
           retrait_autres?: number | null
           rex?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      immobilier_debt_characteristics: {
-        Row: {
-          amortissement_annuel: number | null
-          created_at: string
-          duree_mois: number | null
-          id: string
-          immobilier_id: string
-          montant_initial: number | null
-          taux: number | null
-          type: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amortissement_annuel?: number | null
-          created_at?: string
-          duree_mois?: number | null
-          id?: string
-          immobilier_id: string
-          montant_initial?: number | null
-          taux?: number | null
-          type?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amortissement_annuel?: number | null
-          created_at?: string
-          duree_mois?: number | null
-          id?: string
-          immobilier_id?: string
-          montant_initial?: number | null
-          taux?: number | null
-          type?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      immobilier_debt_flows: {
-        Row: {
-          capital_debut: number | null
-          created_at: string
-          date: string
-          id: string
-          immobilier_id: string
-          rmbt_capital: number | null
-          rmbt_interet: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          capital_debut?: number | null
-          created_at?: string
-          date: string
-          id?: string
-          immobilier_id: string
-          rmbt_capital?: number | null
-          rmbt_interet?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          capital_debut?: number | null
-          created_at?: string
-          date?: string
-          id?: string
-          immobilier_id?: string
-          rmbt_capital?: number | null
-          rmbt_interet?: number | null
           updated_at?: string
           user_id?: string
         }

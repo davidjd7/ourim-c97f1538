@@ -75,12 +75,19 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
       const investmentIds = Array.from(selectedInvestments);
       
       // Charger toutes les données pour tous les investissements sélectionnés
-      const [cashflowsRes, valorisationsRes, debtFlowsRes, immobilisationsRes] = await Promise.all([
+      const [cashflowsRes, valorisationsRes, debtCharacteristicsRes, immobilisationsRes] = await Promise.all([
         supabase.from('immobilier_cashflows').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id),
         supabase.from('immobilier_valorisations').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id),
-        supabase.from('immobilier_debt_flows').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id),
+        supabase.from('debt_characteristics').select('*').in('asset_id', investmentIds).eq('user_id', user.id),
         supabase.from('immobilier_immobilisations').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id)
       ]);
+
+      // Load debt flows based on debt characteristics
+      let debtFlowsRes = { data: [] };
+      if (debtCharacteristicsRes.data && debtCharacteristicsRes.data.length > 0) {
+        const debtCharacteristicsIds = debtCharacteristicsRes.data.map(dc => dc.id);
+        debtFlowsRes = await supabase.from('debt_flows').select('*').in('debt_characteristics_id', debtCharacteristicsIds).eq('user_id', user.id);
+      }
 
       // Formatter les données
       const allCashflows: (CashflowRow & { investmentId: string })[] = (cashflowsRes.data || []).map(cf => ({ 

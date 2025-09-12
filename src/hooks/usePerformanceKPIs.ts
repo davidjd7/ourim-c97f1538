@@ -215,13 +215,20 @@ export function usePerformanceKPIs(investmentId: string) {
     try {
       setLoading(true);
 
-      // Load all data in parallel
-      const [cashflowsRes, valorisationsRes, debtFlowsRes, immobilisationsRes] = await Promise.all([
+      // Load debt characteristics first, then debt flows
+      const [cashflowsRes, valorisationsRes, debtCharacteristicsRes, immobilisationsRes] = await Promise.all([
         supabase.from('immobilier_cashflows').select('*').eq('immobilier_id', investmentId).eq('user_id', user.id),
         supabase.from('immobilier_valorisations').select('*').eq('immobilier_id', investmentId).eq('user_id', user.id),
-        supabase.from('immobilier_debt_flows').select('*').eq('immobilier_id', investmentId).eq('user_id', user.id),
+        supabase.from('debt_characteristics').select('*').eq('asset_id', investmentId).eq('user_id', user.id),
         supabase.from('immobilier_immobilisations').select('*').eq('immobilier_id', investmentId).eq('user_id', user.id)
       ]);
+
+      // Load debt flows based on debt characteristics
+      let debtFlowsRes = { data: [] };
+      if (debtCharacteristicsRes.data && debtCharacteristicsRes.data.length > 0) {
+        const debtCharacteristicsIds = debtCharacteristicsRes.data.map(dc => dc.id);
+        debtFlowsRes = await supabase.from('debt_flows').select('*').in('debt_characteristics_id', debtCharacteristicsIds).eq('user_id', user.id);
+      }
 
       const cashflows: CashflowRow[] = (cashflowsRes.data || []).map(cf => ({
         id: cf.id,
