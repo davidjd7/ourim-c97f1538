@@ -951,14 +951,14 @@ export function PerformanceTab({
                            <TableHead className="text-xs text-center min-w-[80px]">Date</TableHead>
                            <TableHead className="text-xs text-center min-w-[80px]">Valeur</TableHead>
                            <TableHead className="text-xs text-center min-w-[70px]">FP</TableHead>
-                           <TableHead className="text-xs text-center min-w-[90px]">
-                             <Tooltip>
-                               <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
-                               <TooltipContent>
-                                 <p>Cash après immo avant levier</p>
-                               </TooltipContent>
-                             </Tooltip>
-                           </TableHead>
+                            <TableHead className="text-xs text-center min-w-[90px]">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">NOI</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Net Operating Income</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
                            <TableHead className="text-xs text-center min-w-[90px]">
                              <Tooltip>
                                <TooltipTrigger className="cursor-help">Rend. net</TooltipTrigger>
@@ -1055,8 +1055,8 @@ export function PerformanceTab({
                                <TableCell className="financial-value font-medium text-xs text-center">
                                  {formatCurrency(row.fp)}
                                </TableCell>
-                               <TableCell className={`financial-value font-medium text-xs text-center ${noiAjuste >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                 {noiAjuste >= 0 ? '+' : ''}{formatCurrency(noiAjuste)}
+                                <TableCell className={`financial-value font-medium text-xs text-center ${ebitda >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                  {ebitda >= 0 ? '+' : ''}{formatCurrency(ebitda)}
                                </TableCell>
                                <TableCell className="financial-value font-medium text-xs text-center">
                                  {formatPercentage(rendementNet)}
@@ -1192,14 +1192,14 @@ export function PerformanceTab({
                             <TableHead className="text-xs text-center">Date</TableHead>
                             <TableHead className="text-xs text-center">Valeur</TableHead>
                             <TableHead className="text-xs text-center">FP</TableHead>
-                            <TableHead className="text-xs text-center">
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Cash après immo avant levier</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableHead>
+                             <TableHead className="text-xs text-center">
+                               <Tooltip>
+                                 <TooltipTrigger className="cursor-help">NOI</TooltipTrigger>
+                                 <TooltipContent>
+                                   <p>Net Operating Income</p>
+                                 </TooltipContent>
+                               </Tooltip>
+                             </TableHead>
                             <TableHead className="text-xs text-center">
                               <Tooltip>
                                 <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
@@ -1295,8 +1295,8 @@ export function PerformanceTab({
                            <TableCell className="financial-value font-medium text-xs text-center">
                              {formatCurrency(row.fp)}
                            </TableCell>
-                           <TableCell className={`financial-value text-xs text-center ${noiAjuste >= 0 ? 'text-success' : 'text-destructive'}`}>
-                             {noiAjuste >= 0 ? '+' : ''}{formatCurrency(noiAjuste)}
+                            <TableCell className={`financial-value text-xs text-center ${ebitda >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {ebitda >= 0 ? '+' : ''}{formatCurrency(ebitda)}
                            </TableCell>
                            <TableCell className={`financial-value text-xs text-center ${rendementNet >= 0 ? 'text-success' : 'text-destructive'}`}>
                              {rendementNet.toFixed(1)}%
@@ -1331,7 +1331,7 @@ export function PerformanceTab({
                          const syntheseData = getSyntheseData();
                          
                          // Calculer les totaux pour NOI ajusté, CFNI, CF, Gain1 et Gain2
-                         let totalNoiAjuste = 0;
+                         let totalNoi = 0;
                          let totalCfni = 0;
                          let totalCf = 0;
                          let totalGain1 = 0;
@@ -1361,7 +1361,7 @@ export function PerformanceTab({
                            const gain1 = variationFP + cf;
                            const gain2 = variationValeur + cfni;
                            
-                           totalNoiAjuste += noiAjuste;
+                           totalNoi += ebitda;
                            totalCfni += cfni;
                            totalCf += cf;
                            totalGain1 += gain1;
@@ -1379,8 +1379,8 @@ export function PerformanceTab({
                              <TableCell className="financial-value text-xs text-center">
                                {/* Pas de total pour le FP */}
                              </TableCell>
-                             <TableCell className={`financial-value font-bold text-xs text-center ${totalNoiAjuste >= 0 ? 'text-success' : 'text-destructive'}`}>
-                               {totalNoiAjuste >= 0 ? '+' : ''}{formatCurrency(totalNoiAjuste)}
+                              <TableCell className={`financial-value font-bold text-xs text-center ${totalNoi >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {totalNoi >= 0 ? '+' : ''}{formatCurrency(totalNoi)}
                              </TableCell>
                              <TableCell className="financial-value text-xs text-center">
                                {/* Pas de total pour le rendement net */}
