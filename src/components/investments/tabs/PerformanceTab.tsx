@@ -11,6 +11,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { ComposedChart, Bar, Line, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon } from 'lucide-react';
@@ -66,6 +67,7 @@ export function PerformanceTab({
   investmentId
 }: PerformanceTabProps) {
   const { user } = useAuth();
+  const { canEdit } = useUserRole();
   const { notifyInvestmentDataChanged } = useInvestments();
 
   // Data arrays
@@ -1678,179 +1680,276 @@ export function PerformanceTab({
       </Card>
 
       {/* Section Dette */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Dette
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          
-          {/* Section 1: Caractéristiques */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Caractéristiques</h3>
-              {editingDebtCharacteristics ? <Button onClick={saveDebtCharacteristics} size="sm" className="flex items-center gap-2">
-                  <Save className="h-4 w-4" />
-                  Sauvegarder
-                </Button> : <Button onClick={() => setEditingDebtCharacteristics(true)} size="sm" variant="outline" className="flex items-center gap-2">
-                  <Edit className="h-4 w-4" />
-                  Modifier
-                </Button>}
+      {debtCharacteristics.id ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Dette
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            
+            {/* Section 1: Caractéristiques */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Caractéristiques</h3>
+                {editingDebtCharacteristics ? <Button onClick={saveDebtCharacteristics} size="sm" className="flex items-center gap-2">
+                    <Save className="h-4 w-4" />
+                    Sauvegarder
+                  </Button> : <Button onClick={() => setEditingDebtCharacteristics(true)} size="sm" variant="outline" className="flex items-center gap-2">
+                    <Edit className="h-4 w-4" />
+                    Modifier
+                  </Button>}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Montant Initial (€)</label>
+                  {editingDebtCharacteristics ? <Input type="number" value={debtCharacteristics.montantInitial} onChange={e => setDebtCharacteristics({
+                  ...debtCharacteristics,
+                  montantInitial: parseFloat(e.target.value) || 0
+                })} /> : <div className="financial-value font-medium text-lg">
+                      {formatCurrency(debtCharacteristics.montantInitial)}
+                    </div>}
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Durée (mois)</label>
+                  {editingDebtCharacteristics ? <Input type="number" value={debtCharacteristics.dureeMois} onChange={e => setDebtCharacteristics({
+                  ...debtCharacteristics,
+                  dureeMois: parseInt(e.target.value) || 0
+                })} /> : <div className="font-medium text-lg">
+                      {debtCharacteristics.dureeMois} mois
+                    </div>}
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Taux (%)</label>
+                  {editingDebtCharacteristics ? <Input type="number" step="0.01" value={debtCharacteristics.taux} onChange={e => setDebtCharacteristics({
+                  ...debtCharacteristics,
+                  taux: parseFloat(e.target.value) || 0
+                })} /> : <div className="font-medium text-lg">
+                      {formatPercentage(debtCharacteristics.taux)}
+                    </div>}
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Type</label>
+                  {editingDebtCharacteristics ? <Select value={debtCharacteristics.type} onValueChange={(value: 'Amortissement constant' | 'Annuité constante') => setDebtCharacteristics({
+                  ...debtCharacteristics,
+                  type: value,
+                  amortissementAnnuel: value === 'Amortissement constant' ? debtCharacteristics.amortissementAnnuel : undefined
+                })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
+                        <SelectItem value="Annuité constante">Annuité constante</SelectItem>
+                      </SelectContent>
+                    </Select> : <div className="font-medium text-lg">
+                      {debtCharacteristics.type}
+                    </div>}
+                </div>
+                
+                {debtCharacteristics.type === 'Amortissement constant' && <div className="space-y-2">
+                    <label className="text-sm font-medium">Amortissement annuel (%)</label>
+                    {editingDebtCharacteristics ? <Input type="number" step="0.01" value={debtCharacteristics.amortissementAnnuel || 0} onChange={e => setDebtCharacteristics({
+                  ...debtCharacteristics,
+                  amortissementAnnuel: parseFloat(e.target.value) || 0
+                })} /> : <div className="font-medium text-lg">
+                        {formatPercentage(debtCharacteristics.amortissementAnnuel || 0)}
+                      </div>}
+                  </div>}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Section 2: Flux */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Flux</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Capital Début</TableHead>
+                    <TableHead>Rmbt Capital</TableHead>
+                    <TableHead>Rmbt Intérêt</TableHead>
+                    <TableHead>Flux</TableHead>
+                    <TableHead>Capital Fin</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {debtFlows.map((flow, index) => <TableRow key={index}>
+                      <TableCell>
+                         {editingDebtFlow && editingDebtFlow.index === index ? <YearPicker value={editingDebtFlow.row.date} onChange={(date) => setEditingDebtFlow({
+                      ...editingDebtFlow,
+                      row: {
+                        ...editingDebtFlow.row,
+                        date: date
+                      }
+                     })} /> : new Date(flow.date).toLocaleDateString('fr-FR')}
+                      </TableCell>
+                      <TableCell>
+                        {editingDebtFlow && editingDebtFlow.index === index ? <Input type="number" value={editingDebtFlow.row.capitalDebut} onChange={e => setEditingDebtFlow({
+                      ...editingDebtFlow,
+                      row: {
+                        ...editingDebtFlow.row,
+                        capitalDebut: parseFloat(e.target.value) || 0
+                      }
+                    })} /> : formatCurrency(flow.capitalDebut)}
+                      </TableCell>
+                      <TableCell>
+                        {editingDebtFlow && editingDebtFlow.index === index ? <Input type="number" value={editingDebtFlow.row.rmbtCapital} onChange={e => setEditingDebtFlow({
+                      ...editingDebtFlow,
+                      row: {
+                        ...editingDebtFlow.row,
+                        rmbtCapital: parseFloat(e.target.value) || 0
+                      }
+                    })} /> : formatCurrency(flow.rmbtCapital)}
+                      </TableCell>
+                      <TableCell>
+                        {editingDebtFlow && editingDebtFlow.index === index ? <Input type="number" value={editingDebtFlow.row.rmbtInteret} onChange={e => setEditingDebtFlow({
+                      ...editingDebtFlow,
+                      row: {
+                        ...editingDebtFlow.row,
+                        rmbtInteret: parseFloat(e.target.value) || 0
+                      }
+                    })} /> : formatCurrency(flow.rmbtInteret)}
+                      </TableCell>
+                      <TableCell className="financial-value font-medium">
+                        {formatCurrency(calculateFlux(editingDebtFlow && editingDebtFlow.index === index ? editingDebtFlow.row : flow))}
+                      </TableCell>
+                      <TableCell className="financial-value font-medium">
+                        {formatCurrency(calculateCapitalFin(editingDebtFlow && editingDebtFlow.index === index ? editingDebtFlow.row : flow))}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {editingDebtFlow && editingDebtFlow.index === index ? <Button size="sm" variant="ghost" onClick={() => saveDebtFlow(editingDebtFlow.row)} className="h-8 w-8 p-0">
+                              <Save className="h-4 w-4 text-success" />
+                            </Button> : <Button size="sm" variant="ghost" onClick={() => setEditingDebtFlow({
+                        index,
+                        row: {
+                          ...flow
+                        }
+                      })} className="h-8 w-8 p-0">
+                              <Edit className="h-4 w-4 text-primary" />
+                            </Button>}
+                          <Button size="sm" variant="ghost" onClick={() => deleteDebtFlow(index)} className="h-8 w-8 p-0">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>)}
+                </TableBody>
+              </Table>
+              <div className="mt-4 flex justify-center">
+                <Button onClick={addDebtFlow} variant="outline" className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Ajouter une ligne
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Dette
+            </CardTitle>
+            {canEdit && (
+              <Button 
+                size="sm" 
+                onClick={() => setEditingDebtCharacteristics(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Configurer
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8 text-muted-foreground">
+              <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Aucune dette configurée</p>
+              <p className="text-sm mt-2">Configurez les caractéristiques de dette pour ce bien</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Montant Initial (€)</label>
-                {editingDebtCharacteristics ? <Input type="number" value={debtCharacteristics.montantInitial} onChange={e => setDebtCharacteristics({
-                ...debtCharacteristics,
-                montantInitial: parseFloat(e.target.value) || 0
-              })} /> : <div className="financial-value font-medium text-lg">
-                    {formatCurrency(debtCharacteristics.montantInitial)}
-                  </div>}
+            {/* Configuration Form */}
+            {editingDebtCharacteristics && (
+              <div className="mt-6 p-4 border rounded-lg bg-accent/20">
+                <h3 className="text-lg font-semibold mb-4">Configuration de la dette</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-0">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Montant Initial (€)</label>
+                    <Input type="number" value={debtCharacteristics.montantInitial} onChange={e => setDebtCharacteristics({
+                      ...debtCharacteristics,
+                      montantInitial: parseFloat(e.target.value) || 0
+                    })} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Durée (mois)</label>
+                    <Input type="number" value={debtCharacteristics.dureeMois} onChange={e => setDebtCharacteristics({
+                      ...debtCharacteristics,
+                      dureeMois: parseInt(e.target.value) || 0
+                    })} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Taux (%)</label>
+                    <Input type="number" step="0.01" value={debtCharacteristics.taux} onChange={e => setDebtCharacteristics({
+                      ...debtCharacteristics,
+                      taux: parseFloat(e.target.value) || 0
+                    })} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Type</label>
+                    <Select value={debtCharacteristics.type} onValueChange={(value: 'Amortissement constant' | 'Annuité constante') => setDebtCharacteristics({
+                      ...debtCharacteristics,
+                      type: value,
+                      amortissementAnnuel: value === 'Amortissement constant' ? debtCharacteristics.amortissementAnnuel : undefined
+                    })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
+                        <SelectItem value="Annuité constante">Annuité constante</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {debtCharacteristics.type === 'Amortissement constant' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Amortissement annuel (%)</label>
+                      <Input type="number" step="0.01" value={debtCharacteristics.amortissementAnnuel || 0} onChange={e => setDebtCharacteristics({
+                        ...debtCharacteristics,
+                        amortissementAnnuel: parseFloat(e.target.value) || 0
+                      })} />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-2 mt-6">
+                  <Button onClick={saveDebtCharacteristics} size="sm" className="flex items-center gap-2">
+                    <Save className="h-4 w-4" />
+                    Sauvegarder
+                  </Button>
+                  <Button onClick={() => setEditingDebtCharacteristics(false)} size="sm" variant="outline">
+                    Annuler
+                  </Button>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Durée (mois)</label>
-                {editingDebtCharacteristics ? <Input type="number" value={debtCharacteristics.dureeMois} onChange={e => setDebtCharacteristics({
-                ...debtCharacteristics,
-                dureeMois: parseInt(e.target.value) || 0
-              })} /> : <div className="font-medium text-lg">
-                    {debtCharacteristics.dureeMois} mois
-                  </div>}
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Taux (%)</label>
-                {editingDebtCharacteristics ? <Input type="number" step="0.01" value={debtCharacteristics.taux} onChange={e => setDebtCharacteristics({
-                ...debtCharacteristics,
-                taux: parseFloat(e.target.value) || 0
-              })} /> : <div className="font-medium text-lg">
-                    {formatPercentage(debtCharacteristics.taux)}
-                  </div>}
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Type</label>
-                {editingDebtCharacteristics ? <Select value={debtCharacteristics.type} onValueChange={(value: 'Amortissement constant' | 'Annuité constante') => setDebtCharacteristics({
-                ...debtCharacteristics,
-                type: value,
-                amortissementAnnuel: value === 'Amortissement constant' ? debtCharacteristics.amortissementAnnuel : undefined
-              })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
-                      <SelectItem value="Annuité constante">Annuité constante</SelectItem>
-                    </SelectContent>
-                  </Select> : <div className="font-medium text-lg">
-                    {debtCharacteristics.type}
-                  </div>}
-              </div>
-              
-              {debtCharacteristics.type === 'Amortissement constant' && <div className="space-y-2">
-                  <label className="text-sm font-medium">Amortissement annuel (%)</label>
-                  {editingDebtCharacteristics ? <Input type="number" step="0.01" value={debtCharacteristics.amortissementAnnuel || 0} onChange={e => setDebtCharacteristics({
-                ...debtCharacteristics,
-                amortissementAnnuel: parseFloat(e.target.value) || 0
-              })} /> : <div className="font-medium text-lg">
-                      {formatPercentage(debtCharacteristics.amortissementAnnuel || 0)}
-                    </div>}
-                </div>}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Section 2: Flux */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Flux</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Capital Début</TableHead>
-                  <TableHead>Rmbt Capital</TableHead>
-                  <TableHead>Rmbt Intérêt</TableHead>
-                  <TableHead>Flux</TableHead>
-                  <TableHead>Capital Fin</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {debtFlows.map((flow, index) => <TableRow key={index}>
-                    <TableCell>
-                       {editingDebtFlow && editingDebtFlow.index === index ? <YearPicker value={editingDebtFlow.row.date} onChange={(date) => setEditingDebtFlow({
-                    ...editingDebtFlow,
-                    row: {
-                      ...editingDebtFlow.row,
-                      date: date
-                    }
-                   })} /> : new Date(flow.date).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    <TableCell>
-                      {editingDebtFlow && editingDebtFlow.index === index ? <Input type="number" value={editingDebtFlow.row.capitalDebut} onChange={e => setEditingDebtFlow({
-                    ...editingDebtFlow,
-                    row: {
-                      ...editingDebtFlow.row,
-                      capitalDebut: parseFloat(e.target.value) || 0
-                    }
-                  })} /> : formatCurrency(flow.capitalDebut)}
-                    </TableCell>
-                    <TableCell>
-                      {editingDebtFlow && editingDebtFlow.index === index ? <Input type="number" value={editingDebtFlow.row.rmbtCapital} onChange={e => setEditingDebtFlow({
-                    ...editingDebtFlow,
-                    row: {
-                      ...editingDebtFlow.row,
-                      rmbtCapital: parseFloat(e.target.value) || 0
-                    }
-                  })} /> : formatCurrency(flow.rmbtCapital)}
-                    </TableCell>
-                    <TableCell>
-                      {editingDebtFlow && editingDebtFlow.index === index ? <Input type="number" value={editingDebtFlow.row.rmbtInteret} onChange={e => setEditingDebtFlow({
-                    ...editingDebtFlow,
-                    row: {
-                      ...editingDebtFlow.row,
-                      rmbtInteret: parseFloat(e.target.value) || 0
-                    }
-                  })} /> : formatCurrency(flow.rmbtInteret)}
-                    </TableCell>
-                    <TableCell className="financial-value font-medium">
-                      {formatCurrency(calculateFlux(editingDebtFlow && editingDebtFlow.index === index ? editingDebtFlow.row : flow))}
-                    </TableCell>
-                    <TableCell className="financial-value font-medium">
-                      {formatCurrency(calculateCapitalFin(editingDebtFlow && editingDebtFlow.index === index ? editingDebtFlow.row : flow))}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {editingDebtFlow && editingDebtFlow.index === index ? <Button size="sm" variant="ghost" onClick={() => saveDebtFlow(editingDebtFlow.row)} className="h-8 w-8 p-0">
-                            <Save className="h-4 w-4 text-success" />
-                          </Button> : <Button size="sm" variant="ghost" onClick={() => setEditingDebtFlow({
-                      index,
-                      row: {
-                        ...flow
-                      }
-                    })} className="h-8 w-8 p-0">
-                            <Edit className="h-4 w-4 text-primary" />
-                          </Button>}
-                        <Button size="sm" variant="ghost" onClick={() => deleteDebtFlow(index)} className="h-8 w-8 p-0">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>)}
-              </TableBody>
-            </Table>
-            <div className="mt-4 flex justify-center">
-              <Button onClick={addDebtFlow} variant="outline" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Ajouter une ligne
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>;
 }
