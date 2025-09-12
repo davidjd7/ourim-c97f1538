@@ -891,9 +891,10 @@ export function PerformanceTab({
             {/* Séparateur vertical */}
             <div className="w-px bg-border h-[400px] mx-4 flex-shrink-0"></div>
 
-            {/* Tableau - 60% de la largeur */}
+          {/* Tableau - 60% de la largeur */}
             <div className="flex-1">
               <div className="overflow-x-auto h-[400px] overflow-y-auto">
+                <TooltipProvider>
                   <Table>
                      <TableHeader>
                         <TableRow>
@@ -901,74 +902,60 @@ export function PerformanceTab({
                           <TableHead className="text-xs text-center">Valeur</TableHead>
                           <TableHead className="text-xs text-center">FP</TableHead>
                           <TableHead className="text-xs text-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Cash après immo avant levier</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
+                              <TooltipContent>
+                                <p>Cash après immo avant levier</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </TableHead>
                           <TableHead className="text-xs text-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>NOI ajusté/ valeur</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
+                              <TooltipContent>
+                                <p>NOI ajusté/ valeur</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </TableHead>
                           <TableHead className="text-xs text-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>NOI ajusté après interet</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
+                              <TooltipContent>
+                                <p>NOI ajusté après interet</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </TableHead>
                           <TableHead className="text-xs text-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>CFNI / FP</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
+                              <TooltipContent>
+                                <p>CFNI / FP</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </TableHead>
                           <TableHead className="text-xs text-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Cashflow</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
+                              <TooltipContent>
+                                <p>Cashflow</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </TableHead>
                           <TableHead className="text-xs text-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Delta FP + CF</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                              <TooltipContent>
+                                <p>Delta FP + CF</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </TableHead>
                           <TableHead className="text-xs text-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Delta valeur + CFNI</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
+                              <TooltipContent>
+                                <p>Delta valeur + CFNI</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </TableHead>
                           <TableHead className="text-xs text-center">XIRR glissant</TableHead>
                         </TableRow>
@@ -1129,9 +1116,10 @@ export function PerformanceTab({
                          );
                       })()}
                    </TableBody>
-                 </Table>
-               </div>
-             </div>
+                    </Table>
+                </TooltipProvider>
+              </div>
+            </div>
            </div>
          </CardContent>
        </Card>
