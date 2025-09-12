@@ -47,6 +47,7 @@ interface ConsolidatedData {
   };
   chartData: Array<{
     date: string;
+    valeur: number;
     fondPropre: number;
     noi: number;
     rendementNet: number;
@@ -146,7 +147,8 @@ function InvestmentKPIData({ investmentId, onDataLoaded }: { investmentId: strin
 
       const synthese = getSyntheseData(cashflows, immobilisations, debtFlows, valorisations);
 
-      const yearMap = new Map<number, { fp: number; noiAjuste: number; cfni: number; cashFlow: number }>();
+      // Process yearly data exactly like PerformanceTab
+      const yearMap = new Map<number, { valeur: number; fp: number; noi: number; cfni: number; cashFlow: number }>();
       synthese.forEach(row => {
         const year = new Date(row.date).getFullYear();
         const cf = cashflows.find(c => c.date === row.date);
@@ -155,20 +157,24 @@ function InvestmentKPIData({ investmentId, onDataLoaded }: { investmentId: strin
         const noiAjuste = noi - (immo?.montant || 0);
         const debt = debtFlows.find(d => d.date === row.date);
         const interet = debt?.rmbtInteret || 0;
+        const capital = debt?.rmbtCapital || 0;
         const cfni = noiAjuste - interet;
-        if (!yearMap.has(year)) yearMap.set(year, { fp: 0, noiAjuste: 0, cfni: 0, cashFlow: 0 });
+        const cashFlow = cfni - capital;
+        
+        if (!yearMap.has(year)) yearMap.set(year, { valeur: 0, fp: 0, noi: 0, cfni: 0, cashFlow: 0 });
         const entry = yearMap.get(year)!;
-        entry.noiAjuste += noiAjuste;
+        entry.noi += noi; // Keep actual NOI (EBITDA), not adjusted
         entry.cfni += cfni;
-        entry.cashFlow += cfni; // CF = CFNI consolidé
-        // Dernière valeur de FP de l'année = dernière ligne de l'année (synthese est triée)
+        entry.cashFlow += cashFlow;
+        // Take latest values for the year
+        entry.valeur = row.valeur;
         entry.fp = row.fp;
       });
 
-      const yearly: Record<string, { fp: number; noiAjuste: number; cfni: number; cashFlow: number }> = {};
+      const yearly: Record<string, { valeur: number; fp: number; noi: number; cfni: number; cashFlow: number }> = {};
       Array.from(yearMap.entries()).forEach(([y, v]) => { yearly[String(y)] = v; });
 
-      // Envoyer l'objet complété (incluant les KPI simples)
+      // Envoyer l'objet complété (incluant les KPI simples et yearly data)
       onDataLoaded({
         fondPropre: Number(kpis.fondPropre ?? 0),
         fondPropreDetails: kpis.fondPropreDetails || { valeur: 0, crd: 0, ltv: 0 },
@@ -282,27 +288,30 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
     const years = Array.from(yearSet).sort((a, b) => a - b);
 
     const chartData = years.map((year) => {
-      const sums = selectedKPIs.reduce((acc: { fp: number; noi: number; cfni: number }, kpi: any) => {
+      const sums = selectedKPIs.reduce((acc: { valeur: number; fp: number; noi: number; cfni: number; cashFlow: number }, kpi: any) => {
         const y = kpi.yearly?.[String(year)];
         if (y) {
+          acc.valeur += y.valeur || 0;
           acc.fp += y.fp || 0;
-          acc.noi += y.noiAjuste || 0;
+          acc.noi += y.noi || 0; // Use actual NOI, not noiAjuste
           acc.cfni += y.cfni || 0;
+          acc.cashFlow += y.cashFlow || 0;
         }
         return acc;
-      }, { fp: 0, noi: 0, cfni: 0 });
+      }, { valeur: 0, fp: 0, noi: 0, cfni: 0, cashFlow: 0 });
 
-      const rendementNetY = sums.fp > 0 ? (sums.noi / sums.fp) * 100 : 0;
+      const rendementNetY = sums.valeur > 0 ? (sums.noi / sums.valeur) * 100 : 0;
       const cocNetY = sums.fp > 0 ? (sums.cfni / sums.fp) * 100 : 0;
 
       return {
         date: `31/12/${year}`,
+        valeur: sums.valeur,
         fondPropre: sums.fp,
         noi: sums.noi,
         rendementNet: rendementNetY,
         cfni: sums.cfni,
         cocNet: cocNetY,
-        cashFlow: sums.cfni,
+        cashFlow: sums.cashFlow,
       };
     });
 
@@ -415,37 +424,32 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
                 <p className={`text-2xl font-bold financial-value ${consolidatedData.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {consolidatedData.rendementNet >= 0 ? '+' : ''}{formatPercentage(consolidatedData.rendementNet)}
+                  {formatPercentage(consolidatedData.rendementNet)}
                 </p>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
                 <div>NOI: {formatCurrency(consolidatedData.rendementNetDetails.noi)}</div>
                 <div>Loyer: {formatCurrency(consolidatedData.rendementNetDetails.loyer)}</div>
-                <div>NOI sur loyer: {consolidatedData.rendementNetDetails.noiSurLoyer.toFixed(1)}%</div>
+                <div>NOI/Loyer: {consolidatedData.rendementNetDetails.noiSurLoyer.toFixed(1)}%</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* COC (Cash on Cash) */}
+        {/* COC */}
         <div className="card-financial">
           <div className="p-4">
             <p className="text-sm text-muted-foreground font-bold mb-3">COC (2024)</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
-                <p className="text-2xl font-bold financial-value">
-                  {consolidatedData.coc >= 0 ? '+' : ''}{formatPercentage(consolidatedData.coc)}
+                <p className={`text-2xl font-bold financial-value ${consolidatedData.coc >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatPercentage(consolidatedData.coc)}
                 </p>
-                <div className="text-sm text-muted-foreground mt-1">
-                  CFNI: {formatCurrency(consolidatedData.cocDetails.cfni)}
-                </div>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
-                <div>
-                  DSCR: {consolidatedData.cocDetails.dscr.toFixed(2)}
-                </div>
+                <div>CFNI: {formatCurrency(consolidatedData.cocDetails.cfni)}</div>
+                <div>DSCR: {consolidatedData.cocDetails.dscr.toFixed(2)}</div>
                 <div>Yield Banque: {consolidatedData.cocDetails.yieldBanque.toFixed(1)}%</div>
-                <div className="text-xs">Dernier CF: {formatCurrency(consolidatedData.cocDetails.cfni)}</div>
               </div>
             </div>
           </div>
@@ -454,166 +458,145 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
         {/* XIRR */}
         <div className="card-financial">
           <div className="p-4">
-            <p className="text-sm text-muted-foreground font-bold mb-3">XIRR ({consolidatedData.xirrDetails.years}Y)</p>
+            <p className="text-sm text-muted-foreground font-bold mb-3">XIRR (Glissant 3 ans)</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
-                <p className="text-2xl font-bold financial-value">
+                <p className={`text-2xl font-bold financial-value ${consolidatedData.xirr >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatPercentage(consolidatedData.xirr)}
                 </p>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
-                <div>
-                  CFNI: {formatCurrency(consolidatedData.xirrDetails.totalCfni)} ({consolidatedData.xirrDetails.cfniDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(consolidatedData.xirrDetails.cfniDerniereAnnee)})
-                </div>
-                <div>
-                  Valeur: {formatCurrency(consolidatedData.xirrDetails.deltaValeur)} ({consolidatedData.xirrDetails.variationValeurDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(consolidatedData.xirrDetails.variationValeurDerniereAnnee)})
-                </div>
+                <div>Total CFNI: {formatCurrency(consolidatedData.xirrDetails.totalCfni)}</div>
+                <div>Delta valeur: {formatCurrency(consolidatedData.xirrDetails.deltaValeur)}</div>
                 <div>Total: {formatCurrency(consolidatedData.xirrDetails.total)}</div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Section Synthèse */}
-      <div className="card-financial">
-        <div className="p-6 border-b">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            📊 Synthèse Consolidée
-          </h3>
-        </div>
         
-        <div className="p-6 space-y-6">
-          {/* Tableau synthèse */}
-          <div className="w-full">
-            <div className="overflow-x-auto">
-              <TooltipProvider delayDuration={0}>
-              <Table className="min-w-full">
-                 <TableHeader>
-                    <TableRow>
-                      <TableHead className="min-w-[80px]">Date</TableHead>
-                      <TableHead className="text-right min-w-[80px]">Valeur</TableHead>
-                      <TableHead className="text-right min-w-[70px]">FP</TableHead>
-                      <TableHead className="text-right min-w-[90px]">
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Cash après immo avant levier</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableHead>
-                      <TableHead className="text-right min-w-[90px]">
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
-                          <TooltipContent>
-                            <p>NOI ajusté/ valeur</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableHead>
-                      <TableHead className="text-right min-w-[70px]">
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
-                          <TooltipContent>
-                            <p>NOI ajusté après interet</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableHead>
-                      <TableHead className="text-right min-w-[80px]">
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
-                          <TooltipContent>
-                            <p>CFNI / FP</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableHead>
-                      <TableHead className="text-right min-w-[60px]">
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Cashflow</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableHead>
-                      <TableHead className="text-right min-w-[70px]">
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Delta FP + CF</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableHead>
-                      <TableHead className="text-right min-w-[70px]">
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Delta valeur + CFNI</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableHead>
-                      <TableHead className="text-right min-w-[80px]">XIRR glissant</TableHead>
-                    </TableRow>
-                 </TableHeader>
-              <TableBody>
-                 {consolidatedData.chartData.map((row, index) => {
-                   // Calculs pour les gains (variations par rapport à la ligne précédente)
-                   const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
-                   const variationFP = previousRow ? row.fondPropre - previousRow.fondPropre : 0;
-                   const variationValeur = previousRow ? (row.fondPropre * 1.2) - (previousRow.fondPropre * 1.2) : 0; // Approximation pour la valeur
-                   const gain1 = variationFP + row.cashFlow; // Variation de FP + CF
-                   const gain2 = variationValeur + row.cfni; // Variation de valeur + CFNI
-                   
-                   // Calcul XIRR glissant pour cette ligne (depuis le début jusqu'à cette ligne)
-                   const xirrGlissant = index > 0 ? calculateConsolidatedXIRR(consolidatedData.chartData.slice(0, index + 1)) : 0;
-                   
-                   return (
-                     <TableRow key={index}>
-                       <TableCell className="font-medium">{row.date}</TableCell>
-                       <TableCell className="text-right">{formatCurrency(row.fondPropre * 1.2)}</TableCell>
-                       <TableCell className="text-right">{formatCurrency(row.fondPropre)}</TableCell>
-                       <TableCell className="text-right">{formatCurrency(row.noi)}</TableCell>
-                       <TableCell className="text-right">{formatPercentage(row.rendementNet)}</TableCell>
-                       <TableCell className="text-right financial-value">
-                         {row.cfni >= 0 ? '+' : ''}{formatCurrency(row.cfni)}
-                       </TableCell>
-                       <TableCell className="text-right">{formatPercentage(row.cocNet)}</TableCell>
-                       <TableCell className="text-right financial-value">
-                         {row.cashFlow >= 0 ? '+' : ''}{formatCurrency(row.cashFlow)}
-                       </TableCell>
-                       <TableCell className={`text-right financial-value ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
-                         {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
-                       </TableCell>
-                       <TableCell className={`text-right financial-value ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
-                         {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
-                       </TableCell>
-                       <TableCell className="text-right financial-value">
-                         {xirrGlissant.toFixed(1)}%
-                       </TableCell>
-                     </TableRow>
-                   );
-                 })}
-                 <TableRow className="font-semibold bg-muted/30">
-                   <TableCell>Total</TableCell>
-                   <TableCell className="text-right">-</TableCell>
-                   <TableCell className="text-right">{formatCurrency(consolidatedData.fondPropre)}</TableCell>
-                   <TableCell className="text-right">-</TableCell>
-                   <TableCell className="text-right">-</TableCell>
-                   <TableCell className="text-right financial-value">
-                     {consolidatedData.chartData.reduce((sum, row) => sum + row.cfni, 0) >= 0 ? '+' : ''}
-                     {formatCurrency(consolidatedData.chartData.reduce((sum, row) => sum + row.cfni, 0))}
-                   </TableCell>
-                   <TableCell className="text-right">-</TableCell>
-                   <TableCell className="text-right financial-value">
-                     {consolidatedData.chartData.reduce((sum, row) => sum + row.cashFlow, 0) >= 0 ? '+' : ''}
-                     {formatCurrency(consolidatedData.chartData.reduce((sum, row) => sum + row.cashFlow, 0))}
-                   </TableCell>
-                   <TableCell className="text-right">-</TableCell>
-                   <TableCell className="text-right">-</TableCell>
-                   <TableCell className="text-right">-</TableCell>
-                 </TableRow>
-               </TableBody>
+      <div className="p-6 space-y-6">
+        {/* Tableau synthèse */}
+        <div className="w-full">
+          <div className="overflow-x-auto">
+            <TooltipProvider>
+              <Table className="min-w-full text-xs">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs text-center min-w-[80px]">Date</TableHead>
+                    <TableHead className="text-xs text-center min-w-[80px]">Valeur</TableHead>
+                    <TableHead className="text-xs text-center min-w-[70px]">FP</TableHead>
+                    <TableHead className="text-xs text-center min-w-[90px]">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help">NOI</TooltipTrigger>
+                        <TooltipContent>
+                          <p>Net Operating Income</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-xs text-center min-w-[90px]">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help">Rend. net</TooltipTrigger>
+                        <TooltipContent>
+                          <p>NOI / valeur</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-xs text-center min-w-[70px]">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
+                        <TooltipContent>
+                          <p>NOI ajusté après intérêt</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-xs text-center min-w-[80px]">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
+                        <TooltipContent>
+                          <p>CFNI / FP</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-xs text-center min-w-[60px]">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
+                        <TooltipContent>
+                          <p>Cashflow</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-xs text-center min-w-[70px]">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delta FP + CF</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-xs text-center min-w-[70px]">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delta valeur + CFNI</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-xs text-center min-w-[80px]">XIRR glissant</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {consolidatedData.chartData.map((row, index) => {
+                    const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
+                    
+                    // Calculs des gains
+                    const variationFP = previousRow ? row.fondPropre - previousRow.fondPropre : 0;
+                    const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
+                    const gain1 = variationFP + row.cashFlow; // Delta FP + CF
+                    const gain2 = variationValeur + row.cfni; // Delta valeur + CFNI
+                    
+                    // XIRR glissant
+                    const xirrGlissant = index > 0 ? calculateConsolidatedXIRR(consolidatedData.chartData.slice(0, index + 1)) : 0;
+                    
+                    return (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium text-xs text-center">{row.date}</TableCell>
+                        <TableCell className="financial-value text-xs text-center">
+                          {formatCurrency(row.valeur)}
+                        </TableCell>
+                        <TableCell className="financial-value text-xs text-center">
+                          {formatCurrency(row.fondPropre)}
+                        </TableCell>
+                        <TableCell className="financial-value text-xs text-center">
+                          {formatCurrency(row.noi)}
+                        </TableCell>
+                        <TableCell className={`text-xs text-center ${row.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatPercentage(row.rendementNet)}
+                        </TableCell>
+                        <TableCell className="financial-value text-xs text-center">
+                          {formatCurrency(row.cfni)}
+                        </TableCell>
+                        <TableCell className={`text-xs text-center ${row.cocNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatPercentage(row.cocNet)}
+                        </TableCell>
+                        <TableCell className="financial-value text-xs text-center">
+                          {formatCurrency(row.cashFlow)}
+                        </TableCell>
+                        <TableCell className={`financial-value text-xs text-center ${gain1 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(gain1)}
+                        </TableCell>
+                        <TableCell className={`financial-value text-xs text-center ${gain2 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(gain2)}
+                        </TableCell>
+                        <TableCell className={`text-xs text-center ${xirrGlissant >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatPercentage(xirrGlissant)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
               </Table>
-              </TooltipProvider>
-            </div>
+            </TooltipProvider>
           </div>
         </div>
       </div>
