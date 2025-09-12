@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useInvestments } from '@/contexts/InvestmentContext';
 
 interface CashflowRow {
   id?: string;
@@ -43,6 +44,7 @@ interface ImmobilisationRow {
 
 export function usePerformanceKPIs(investmentId: string) {
   const { user } = useAuth();
+  const { lastDataChangeTimestamp } = useInvestments();
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState({
     fondPropre: 0,
@@ -496,7 +498,7 @@ export function usePerformanceKPIs(investmentId: string) {
 
   useEffect(() => {
     loadKPIs();
-  }, [user, investmentId]);
+  }, [user, investmentId, lastDataChangeTimestamp]);
 
   return { kpis, loading, refreshKPIs: loadKPIs };
 }

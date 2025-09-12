@@ -26,6 +26,10 @@ interface InvestmentContextType {
   deleteInvestment: (id: string) => Promise<void>;
   getInvestment: (id: string) => Investment | undefined;
   loading: boolean;
+  // New method to trigger KPI refresh
+  notifyInvestmentDataChanged: (investmentId: string) => void;
+  // Event to listen for data changes
+  lastDataChangeTimestamp: number;
 }
 
 const InvestmentContext = createContext<InvestmentContextType | undefined>(undefined);
@@ -34,6 +38,7 @@ const InvestmentContext = createContext<InvestmentContextType | undefined>(undef
 export function InvestmentProvider({ children }: { children: ReactNode }) {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastDataChangeTimestamp, setLastDataChangeTimestamp] = useState(Date.now());
   const { user, loading: authLoading } = useAuth();
   const companiesContext = useCompanies();
   const { selectedCompanyIds } = companiesContext || { selectedCompanyIds: [] };
@@ -335,6 +340,11 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     return investments.find(inv => inv.id === id);
   };
 
+  const notifyInvestmentDataChanged = (investmentId: string) => {
+    console.log('Investment data changed for:', investmentId);
+    setLastDataChangeTimestamp(Date.now());
+  };
+
   return (
     <InvestmentContext.Provider value={{
       investments,
@@ -343,7 +353,9 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       addInvestment,
       deleteInvestment,
       getInvestment,
-      loading
+      loading,
+      notifyInvestmentDataChanged,
+      lastDataChangeTimestamp
     }}>
       {children}
     </InvestmentContext.Provider>

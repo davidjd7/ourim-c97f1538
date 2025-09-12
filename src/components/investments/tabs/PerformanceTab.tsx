@@ -11,6 +11,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { ComposedChart, Bar, Line, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
+import { useInvestments } from '@/contexts/InvestmentContext';
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,9 +65,8 @@ interface PerformanceTabProps {
 export function PerformanceTab({
   investmentId
 }: PerformanceTabProps) {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
+  const { notifyInvestmentDataChanged } = useInvestments();
 
   // Data arrays
   const [cashflows, setCashflows] = useState<CashflowRow[]>([]);
@@ -425,9 +425,7 @@ export function PerformanceTab({
   const saveCashflow = async (row: CashflowRow) => {
     try {
       if (row.id) {
-        const {
-          error
-        } = await supabase.from('investment_cashflows').update({
+        const { error } = await supabase.from('investment_cashflows').update({
           date: row.date,
           loyer: row.loyer,
           rex: row.rex,
@@ -436,9 +434,7 @@ export function PerformanceTab({
         }).eq('id', row.id);
         if (error) throw error;
       } else {
-        const {
-          error
-        } = await supabase.from('investment_cashflows').insert({
+        const { error } = await supabase.from('investment_cashflows').insert({
           investment_id: investmentId,
           user_id: user?.id,
           date: row.date,
@@ -450,6 +446,7 @@ export function PerformanceTab({
         if (error) throw error;
       }
       await loadCashflows();
+      notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
       setEditingCashflow(null);
       toast.success('Flux sauvegardé');
     } catch (error) {
@@ -461,11 +458,10 @@ export function PerformanceTab({
     const row = cashflows[index];
     if (row.id) {
       try {
-        const {
-          error
-        } = await supabase.from('investment_cashflows').delete().eq('id', row.id);
+        const { error } = await supabase.from('investment_cashflows').delete().eq('id', row.id);
         if (error) throw error;
         await loadCashflows();
+        notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
         toast.success('Flux supprimé');
       } catch (error) {
         console.error('Error deleting cashflow:', error);
@@ -497,18 +493,14 @@ export function PerformanceTab({
   const saveImmobilisation = async (row: ImmobilisationRow) => {
     try {
       if (row.id) {
-        const {
-          error
-        } = await supabase.from('investment_immobilisations').update({
+        const { error } = await supabase.from('investment_immobilisations').update({
           date: row.date,
           montant: row.montant,
           note: row.note
         }).eq('id', row.id);
         if (error) throw error;
       } else {
-        const {
-          error
-        } = await supabase.from('investment_immobilisations').insert({
+        const { error } = await supabase.from('investment_immobilisations').insert({
           investment_id: investmentId,
           user_id: user?.id,
           date: row.date,
@@ -518,6 +510,7 @@ export function PerformanceTab({
         if (error) throw error;
       }
       await loadImmobilisations();
+      notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
       setEditingImmo(null);
       toast.success('Immobilisation sauvegardée');
     } catch (error) {
@@ -529,11 +522,10 @@ export function PerformanceTab({
     const row = immobilisations[index];
     if (row.id) {
       try {
-        const {
-          error
-        } = await supabase.from('investment_immobilisations').delete().eq('id', row.id);
+        const { error } = await supabase.from('investment_immobilisations').delete().eq('id', row.id);
         if (error) throw error;
         await loadImmobilisations();
+        notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
         toast.success('Immobilisation supprimée');
       } catch (error) {
         console.error('Error deleting immobilisation:', error);
@@ -565,18 +557,14 @@ export function PerformanceTab({
   const saveValorisation = async (row: ValorisationRow) => {
     try {
       if (row.id) {
-        const {
-          error
-        } = await supabase.from('investment_valorisations').update({
+        const { error } = await supabase.from('investment_valorisations').update({
           date: row.date,
           valeur: row.valeur,
           note: row.note
         }).eq('id', row.id);
         if (error) throw error;
       } else {
-        const {
-          error
-        } = await supabase.from('investment_valorisations').insert({
+        const { error } = await supabase.from('investment_valorisations').insert({
           investment_id: investmentId,
           user_id: user?.id,
           date: row.date,
@@ -586,6 +574,7 @@ export function PerformanceTab({
         if (error) throw error;
       }
       await loadValorisations();
+      notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
       setEditingValo(null);
       toast.success('Valorisation sauvegardée');
     } catch (error) {
@@ -597,11 +586,10 @@ export function PerformanceTab({
     const row = valorisations[index];
     if (row.id) {
       try {
-        const {
-          error
-        } = await supabase.from('investment_valorisations').delete().eq('id', row.id);
+        const { error } = await supabase.from('investment_valorisations').delete().eq('id', row.id);
         if (error) throw error;
         await loadValorisations();
+        notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
         toast.success('Valorisation supprimée');
       } catch (error) {
         console.error('Error deleting valorisation:', error);
@@ -619,9 +607,7 @@ export function PerformanceTab({
   const saveDebtCharacteristics = async () => {
     try {
       if (debtCharacteristics.id) {
-        const {
-          error
-        } = await supabase.from('investment_debt_characteristics').update({
+        const { error } = await supabase.from('investment_debt_characteristics').update({
           montant_initial: debtCharacteristics.montantInitial,
           duree_mois: debtCharacteristics.dureeMois,
           taux: debtCharacteristics.taux,
@@ -630,9 +616,7 @@ export function PerformanceTab({
         }).eq('id', debtCharacteristics.id);
         if (error) throw error;
       } else {
-        const {
-          error
-        } = await supabase.from('investment_debt_characteristics').insert({
+        const { error } = await supabase.from('investment_debt_characteristics').insert({
           investment_id: investmentId,
           user_id: user?.id,
           montant_initial: debtCharacteristics.montantInitial,
@@ -644,6 +628,7 @@ export function PerformanceTab({
         if (error) throw error;
       }
       await loadDebtCharacteristics();
+      notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
       setEditingDebtCharacteristics(false);
       toast.success('Caractéristiques de dette sauvegardées');
     } catch (error) {
@@ -671,9 +656,7 @@ export function PerformanceTab({
   const saveDebtFlow = async (row: DebtFlowRow) => {
     try {
       if (row.id) {
-        const {
-          error
-        } = await supabase.from('investment_debt_flows').update({
+        const { error } = await supabase.from('investment_debt_flows').update({
           date: row.date,
           capital_debut: row.capitalDebut,
           rmbt_capital: row.rmbtCapital,
@@ -681,9 +664,7 @@ export function PerformanceTab({
         }).eq('id', row.id);
         if (error) throw error;
       } else {
-        const {
-          error
-        } = await supabase.from('investment_debt_flows').insert({
+        const { error } = await supabase.from('investment_debt_flows').insert({
           investment_id: investmentId,
           user_id: user?.id,
           date: row.date,
@@ -694,6 +675,7 @@ export function PerformanceTab({
         if (error) throw error;
       }
       await loadDebtFlows();
+      notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
       setEditingDebtFlow(null);
       toast.success('Flux de dette sauvegardé');
     } catch (error) {
@@ -705,11 +687,10 @@ export function PerformanceTab({
     const row = debtFlows[index];
     if (row.id) {
       try {
-        const {
-          error
-        } = await supabase.from('investment_debt_flows').delete().eq('id', row.id);
+        const { error } = await supabase.from('investment_debt_flows').delete().eq('id', row.id);
         if (error) throw error;
         await loadDebtFlows();
+        notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
         toast.success('Flux de dette supprimé');
       } catch (error) {
         console.error('Error deleting debt flow:', error);
