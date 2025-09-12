@@ -44,6 +44,10 @@ interface DebtCharacteristics {
   taux: number;
   type: 'Amortissement constant' | 'Annuité constante';
   amortissementAnnuel?: number;
+  typeCredit?: 'Hypothécaire' | 'Lombard';
+  typeTaux?: 'Fixe' | 'Variable';
+  marge?: number;
+  indiceBase?: string;
 }
 interface DebtFlowRow {
   id?: string;
@@ -78,7 +82,9 @@ export function PerformanceTab({
     montantInitial: 0,
     dureeMois: 0,
     taux: 0,
-    type: 'Amortissement constant'
+    type: 'Amortissement constant',
+    typeCredit: 'Hypothécaire',
+    typeTaux: 'Fixe'
   });
   const [debtFlows, setDebtFlows] = useState<DebtFlowRow[]>([]);
 
@@ -185,7 +191,11 @@ export function PerformanceTab({
           dureeMois: debtData.duree_mois || 0,
           taux: debtData.taux || 0,
           type: debtData.type as 'Amortissement constant' | 'Annuité constante' || 'Amortissement constant',
-          amortissementAnnuel: debtData.amortissement_annuel || undefined
+          amortissementAnnuel: debtData.amortissement_annuel || undefined,
+          typeCredit: debtData.type_credit as 'Hypothécaire' | 'Lombard' || 'Hypothécaire',
+          typeTaux: debtData.type_taux as 'Fixe' | 'Variable' || 'Fixe',
+          marge: debtData.marge || undefined,
+          indiceBase: debtData.indice_base || undefined
         });
       }
     } catch (error) {
@@ -628,7 +638,11 @@ export function PerformanceTab({
           duree_mois: debtCharacteristics.dureeMois,
           taux: debtCharacteristics.taux,
           type: debtCharacteristics.type,
-          amortissement_annuel: debtCharacteristics.amortissementAnnuel
+          amortissement_annuel: debtCharacteristics.amortissementAnnuel,
+          type_credit: debtCharacteristics.typeCredit,
+          type_taux: debtCharacteristics.typeTaux,
+          marge: debtCharacteristics.marge,
+          indice_base: debtCharacteristics.indiceBase
         }).eq('id', debtCharacteristics.id);
         if (error) throw error;
       } else {
@@ -640,7 +654,11 @@ export function PerformanceTab({
           duree_mois: debtCharacteristics.dureeMois,
           taux: debtCharacteristics.taux,
           type: debtCharacteristics.type,
-          amortissement_annuel: debtCharacteristics.amortissementAnnuel
+          amortissement_annuel: debtCharacteristics.amortissementAnnuel,
+          type_credit: debtCharacteristics.typeCredit,
+          type_taux: debtCharacteristics.typeTaux,
+          marge: debtCharacteristics.marge,
+          indice_base: debtCharacteristics.indiceBase
         });
         if (error) throw error;
       }
@@ -1930,7 +1948,24 @@ export function PerformanceTab({
               <div className="p-4 border rounded-lg bg-accent/20">
                 <h3 className="text-lg font-semibold mb-4">Configuration de la dette</h3>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Première ligne - 4 champs */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Type de crédit</label>
+                      <Select value={debtCharacteristics.typeCredit} onValueChange={(value: 'Hypothécaire' | 'Lombard') => setDebtCharacteristics({
+                        ...debtCharacteristics,
+                        typeCredit: value
+                      })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectioner" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border z-50">
+                          <SelectItem value="Hypothécaire">Hypothécaire</SelectItem>
+                          <SelectItem value="Lombard">Lombard</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Montant Initial (€)</label>
                       <Input 
@@ -1956,22 +1991,58 @@ export function PerformanceTab({
                         })} 
                       />
                     </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Type de taux</label>
+                      <Select value={debtCharacteristics.typeTaux} onValueChange={(value: 'Fixe' | 'Variable') => setDebtCharacteristics({
+                        ...debtCharacteristics,
+                        typeTaux: value
+                      })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectioner" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border z-50">
+                          <SelectItem value="Fixe">Fixe</SelectItem>
+                          <SelectItem value="Variable">Variable</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Deuxième ligne - 3 ou 4 champs selon le type de taux */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Taux (%)</label>
+                      <label className="text-sm font-medium">
+                        {debtCharacteristics.typeTaux === 'Variable' ? 'Marge (%)' : 'Taux (%)'}
+                      </label>
                       <Input 
                         type="number" 
                         step="0.01" 
                         placeholder="0.00" 
-                        value={debtCharacteristics.taux} 
+                        value={debtCharacteristics.typeTaux === 'Variable' ? (debtCharacteristics.marge || 0) : debtCharacteristics.taux} 
                         onChange={e => setDebtCharacteristics({
                           ...debtCharacteristics,
-                          taux: parseFloat(e.target.value) || 0
+                          ...(debtCharacteristics.typeTaux === 'Variable' 
+                            ? { marge: parseFloat(e.target.value) || 0 }
+                            : { taux: parseFloat(e.target.value) || 0 })
                         })} 
                       />
                     </div>
+
+                    {debtCharacteristics.typeTaux === 'Variable' && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Indice de base</label>
+                        <Input 
+                          type="text" 
+                          placeholder="Ex: EURIBOR 3M" 
+                          value={debtCharacteristics.indiceBase || ''} 
+                          onChange={e => setDebtCharacteristics({
+                            ...debtCharacteristics,
+                            indiceBase: e.target.value
+                          })} 
+                        />
+                      </div>
+                    )}
                     
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Type d'amortissement</label>
@@ -1983,30 +2054,28 @@ export function PerformanceTab({
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-background border border-border z-50">
                           <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
                           <SelectItem value="Annuité constante">Annuité constante</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {debtCharacteristics.type === 'Amortissement constant' && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Amortissement annuel (€)</label>
+                        <Input 
+                          type="number" 
+                          placeholder="0" 
+                          value={debtCharacteristics.amortissementAnnuel || 0} 
+                          onChange={e => setDebtCharacteristics({
+                            ...debtCharacteristics,
+                            amortissementAnnuel: parseFloat(e.target.value) || 0
+                          })} 
+                        />
+                      </div>
+                    )}
                   </div>
-                  
-                  {debtCharacteristics.type === 'Amortissement constant' && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Amortissement annuel (€)</label>
-                      <Input 
-                        type="number" 
-                        step="0.01" 
-                        placeholder="0" 
-                        value={debtCharacteristics.amortissementAnnuel || 0} 
-                        onChange={e => setDebtCharacteristics({
-                          ...debtCharacteristics,
-                          amortissementAnnuel: parseFloat(e.target.value) || 0
-                        })} 
-                      />
-                    </div>
-                  )}
-                </div>
                 
                 <div className="flex gap-2 mt-6">
                   <Button onClick={saveDebtCharacteristics} size="sm" className="flex items-center gap-2">
@@ -2028,5 +2097,6 @@ export function PerformanceTab({
           </CardContent>
         </Card>
       )}
-    </div>;
+    </div>
+  )
 }
