@@ -654,6 +654,46 @@ export function PerformanceTab({
     }
   };
 
+  const deleteDebtCharacteristics = async () => {
+    if (!debtCharacteristics.id || !user) return;
+
+    try {
+      // First delete all associated debt flows
+      const { error: flowsError } = await supabase
+        .from('debt_flows')
+        .delete()
+        .eq('debt_characteristics_id', debtCharacteristics.id)
+        .eq('user_id', user.id);
+
+      if (flowsError) throw flowsError;
+
+      // Then delete the debt characteristics
+      const { error: debtError } = await supabase
+        .from('debt_characteristics')
+        .delete()
+        .eq('id', debtCharacteristics.id)
+        .eq('user_id', user.id);
+
+      if (debtError) throw debtError;
+
+      // Reset local state
+      setDebtCharacteristics({
+        montantInitial: 0,
+        dureeMois: 0,
+        taux: 0,
+        type: 'Amortissement constant'
+      });
+      setDebtFlows([]);
+      setEditingDebtCharacteristics(false);
+      notifyInvestmentDataChanged(investmentId); // Notify KPI refresh
+      
+      toast.success('Dette supprimée avec succès');
+    } catch (error) {
+      console.error('Error deleting debt:', error);
+      toast.error('Erreur lors de la suppression de la dette');
+    }
+  };
+
   // CRUD functions for debt flows
   const addDebtFlow = () => {
     const currentYear = new Date().getFullYear();
@@ -1692,16 +1732,28 @@ export function PerformanceTab({
             
             {/* Section 1: Caractéristiques */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Caractéristiques</h3>
-                {editingDebtCharacteristics ? <Button onClick={saveDebtCharacteristics} size="sm" className="flex items-center gap-2">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Caractéristiques</h3>
+              <div className="flex items-center gap-2">
+                {editingDebtCharacteristics ? (
+                  <Button onClick={saveDebtCharacteristics} size="sm" className="flex items-center gap-2">
                     <Save className="h-4 w-4" />
                     Sauvegarder
-                  </Button> : <Button onClick={() => setEditingDebtCharacteristics(true)} size="sm" variant="outline" className="flex items-center gap-2">
-                    <Edit className="h-4 w-4" />
-                    Modifier
-                  </Button>}
+                  </Button>
+                ) : (
+                  <>
+                    <Button onClick={() => setEditingDebtCharacteristics(true)} size="sm" variant="outline" className="flex items-center gap-2">
+                      <Edit className="h-4 w-4" />
+                      Modifier
+                    </Button>
+                    <Button onClick={deleteDebtCharacteristics} size="sm" variant="destructive" className="flex items-center gap-2">
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer
+                    </Button>
+                  </>
+                )}
               </div>
+            </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
