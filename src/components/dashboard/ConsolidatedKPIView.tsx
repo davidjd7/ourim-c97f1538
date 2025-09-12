@@ -250,7 +250,7 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
     
     // Recalculer les pourcentages à partir des totaux (numérateur/dénominateur)
     const consolidatedLTV = totalValeur > 0 ? (totalCrd / totalValeur) * 100 : 0;
-    const consolidatedRendementNet = totalFondPropre > 0 ? (totalNOI / totalFondPropre) * 100 : 0;
+    const consolidatedRendementNet = totalValeur > 0 ? (totalNOI / totalValeur) * 100 : 0;
     const consolidatedNoiSurLoyer = totalLoyer > 0 ? (totalNOI / totalLoyer) * 100 : 0;
     const consolidatedCOC = totalInvestmentAmount > 0 ? (totalCFNI / totalInvestmentAmount) * 100 : 0;
     
