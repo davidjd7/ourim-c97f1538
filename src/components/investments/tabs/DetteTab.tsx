@@ -8,6 +8,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AddDebtDialog } from './AddDebtDialog';
 
 interface DebtCharacteristics {
   id: string;
@@ -184,21 +185,63 @@ export function DetteTab({ investmentId }: DetteTabProps) {
       {/* Debt List */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Emprunts
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Emprunts
+            </div>
+            {canEdit && <AddDebtDialog investmentId={investmentId} onDebtAdded={loadDebtData} />}
           </CardTitle>
           <CardDescription>
-            Dettes configurées dans l'onglet Performance
+            Gestion des emprunts et financements de cet investissement
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {debtCharacteristics.length === 0 && (
+            {debtCharacteristics.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Aucune dette enregistrée</p>
-                <p className="text-sm mt-2">Les dettes sont gérées dans l'onglet Performance</p>
+                <p className="text-sm mt-2">Commencez par ajouter un emprunt</p>
+                {canEdit && (
+                  <div className="mt-4">
+                    <AddDebtDialog investmentId={investmentId} onDebtAdded={loadDebtData} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {debtCharacteristics.map((debt) => {
+                  const currentDebt = calculateCurrentDebt(debt);
+                  const progress = calculateProgress(debt.montant_initial, currentDebt);
+                  
+                  return (
+                    <Card key={debt.id} className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">{debt.type}</Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {formatPercentage(debt.taux)} - {debt.duree_mois} mois
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">Capital restant</p>
+                          <p className="font-semibold financial-value text-destructive">
+                            {formatCurrency(currentDebt)}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Montant initial: {formatCurrency(debt.montant_initial)}</span>
+                          <span>Remboursé: {formatPercentage(progress)}</span>
+                        </div>
+                        <Progress value={progress} className="h-2" />
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>
