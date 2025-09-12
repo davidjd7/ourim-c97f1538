@@ -24,7 +24,7 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
   { key: 'totalVarValeur', label: 'Total Var valeur', visible: false, sortable: true, align: 'right', type: 'currency', order: 8 },
   { key: 'lastVarValeur', label: 'Last Var. Valeur', visible: false, sortable: true, align: 'right', type: 'currency', order: 9 },
   { key: 'lastCfni', label: 'Last CFNI', visible: false, sortable: true, align: 'right', type: 'currency', order: 10 },
-  { key: 'gain1', label: 'Gain 1', visible: false, sortable: true, align: 'right', type: 'currency', order: 11 },
+  { key: 'gain1', label: 'Last gain', visible: false, sortable: true, align: 'right', type: 'currency', order: 11 },
   { key: 'ltv', label: 'LTV', visible: false, sortable: true, align: 'right', type: 'percentage', order: 12 },
   { key: 'crd', label: 'CRD', visible: false, sortable: true, align: 'right', type: 'currency', order: 13 },
   { key: 'noi', label: 'NOI', visible: false, sortable: true, align: 'right', type: 'currency', order: 14 },
