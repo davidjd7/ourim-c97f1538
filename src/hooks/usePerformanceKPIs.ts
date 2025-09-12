@@ -50,7 +50,7 @@ export function usePerformanceKPIs(investmentId: string) {
     rendementNet: 0,
     rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0 },
     coc: 0,
-    cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
+    cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
     xirr: 0,
     xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0 }
   });
@@ -262,7 +262,7 @@ export function usePerformanceKPIs(investmentId: string) {
           rendementNet: 0,
           rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0 },
           coc: 0,
-          cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
+          cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
           xirr: 0,
           xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0 }
         });
@@ -369,6 +369,7 @@ export function usePerformanceKPIs(investmentId: string) {
       
       const cocDetails = {
         cfni: cfni,
+        dernierCF: latestSynthese?.flux || 0,
         dscr: dscr,
         icr: icr,
         yieldBanque: yieldBanque,
@@ -457,7 +458,7 @@ export function usePerformanceKPIs(investmentId: string) {
         rendementNet: 0,
         rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0 },
         coc: 0,
-        cocDetails: { cfni: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
+        cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
         xirr: 0,
           xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0 }
       });

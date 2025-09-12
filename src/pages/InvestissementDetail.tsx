@@ -394,7 +394,7 @@ export default function InvestissementDetail() {
                     DSCR: {kpis.cocDetails.dscr.toFixed(2)}
                   </div>
                   <div>Yield Banque: {kpis.cocDetails.yieldBanque?.toFixed(1) || '0.0'}%</div>
-                  <div className="text-xs">Dernier CF: {formatCurrency(kpis.cocDetails.cfni || 0)}</div>
+                  <div className="text-xs">Dernier CF: {formatCurrency(kpis.cocDetails.dernierCF || 0)}</div>
                 </div>
               </div>
             </div>
