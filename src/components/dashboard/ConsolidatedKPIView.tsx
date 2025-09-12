@@ -492,7 +492,7 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
           
           {/* Tableau synthèse */}
           <div className="overflow-x-auto">
-            <TooltipProvider>
+            <TooltipProvider delayDuration={0}>
             <Table>
                <TableHeader>
                   <TableRow>

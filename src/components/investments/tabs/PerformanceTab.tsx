@@ -894,7 +894,7 @@ export function PerformanceTab({
           {/* Tableau - 60% de la largeur */}
             <div className="flex-1">
               <div className="overflow-x-auto h-[400px] overflow-y-auto">
-                <TooltipProvider>
+                <TooltipProvider delayDuration={0}>
                   <Table>
                      <TableHeader>
                         <TableRow>
