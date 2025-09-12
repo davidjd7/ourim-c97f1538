@@ -960,12 +960,12 @@ export function PerformanceTab({
                               </Tooltip>
                             </TableHead>
                            <TableHead className="text-xs text-center min-w-[90px]">
-                             <Tooltip>
-                               <TooltipTrigger className="cursor-help">Rend. net</TooltipTrigger>
-                               <TooltipContent>
-                                 <p>NOI ajusté/ valeur</p>
-                               </TooltipContent>
-                             </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Rend. net</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>NOI / valeur</p>
+                                </TooltipContent>
+                              </Tooltip>
                            </TableHead>
                            <TableHead className="text-xs text-center min-w-[70px]">
                              <Tooltip>
@@ -1025,7 +1025,7 @@ export function PerformanceTab({
                              const noiAjuste = ebitda - immobilisationAmount;
                              
                              // Calculs pour les autres métriques
-                             const rendementNet = row.valeur > 0 ? (noiAjuste / row.valeur) * 100 : 0;
+                              const rendementNet = row.valeur > 0 ? (ebitda / row.valeur) * 100 : 0;
                              
                              const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
                              const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
@@ -1201,12 +1201,12 @@ export function PerformanceTab({
                                </Tooltip>
                              </TableHead>
                             <TableHead className="text-xs text-center">
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>NOI ajusté/ valeur</p>
-                                </TooltipContent>
-                              </Tooltip>
+                               <Tooltip>
+                                 <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
+                                 <TooltipContent>
+                                   <p>NOI / valeur</p>
+                                 </TooltipContent>
+                               </Tooltip>
                             </TableHead>
                             <TableHead className="text-xs text-center">
                               <Tooltip>
@@ -1265,7 +1265,7 @@ export function PerformanceTab({
                          const noiAjuste = ebitda - immobilisationAmount;
                          
                          // Calculs pour les autres métriques
-                         const rendementNet = row.valeur > 0 ? (noiAjuste / row.valeur) * 100 : 0;
+                         const rendementNet = row.valeur > 0 ? (ebitda / row.valeur) * 100 : 0;
                          
                          const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
                          const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
