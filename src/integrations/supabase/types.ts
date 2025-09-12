@@ -323,7 +323,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "investments_company_id_fkey"
+            foreignKeyName: "immobilier_investments_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
