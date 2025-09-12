@@ -52,7 +52,7 @@ export function usePerformanceKPIs(investmentId: string) {
     coc: 0,
     cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
     xirr: 0,
-  xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0 }
+    xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
   });
 
   // Helper functions (exact same as PerformanceTab)
@@ -264,7 +264,7 @@ export function usePerformanceKPIs(investmentId: string) {
           coc: 0,
           cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
           xirr: 0,
-          xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0 }
+          xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
         });
         return;
       }
@@ -460,7 +460,10 @@ export function usePerformanceKPIs(investmentId: string) {
         variationValeurDerniereAnnee,
         total,
         years,
-        gain1  // Ajouter gain1 aux détails XIRR
+        gain1,
+        lastCfniYear: currentYear,
+        lastVarValeurYear: sortedValorisations.length >= 2 ? new Date(sortedValorisations[sortedValorisations.length - 1].date).getFullYear() : 0,
+        gain1Year: syntheseData.length >= 2 ? new Date(latestSynthese.date).getFullYear() : 0
       };
 
       setKpis({
@@ -484,7 +487,7 @@ export function usePerformanceKPIs(investmentId: string) {
         coc: 0,
         cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
         xirr: 0,
-        xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0 }
+        xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
       });
     } finally {
       setLoading(false);

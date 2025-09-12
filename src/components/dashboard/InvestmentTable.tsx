@@ -63,6 +63,10 @@ function InvestmentKPIRow({
         loyer: Number(kpis.rendementNetDetails?.loyer ?? 0),
         rendementNet: Number(kpis.rendementNet ?? 0),
         gain1: Number(kpis.xirrDetails?.gain1 ?? 0),
+        // Year information for Last columns
+        lastVarValeurYear: kpis.xirrDetails?.lastVarValeurYear ?? 0,
+        lastCfniYear: kpis.xirrDetails?.lastCfniYear ?? 0,
+        gain1Year: kpis.xirrDetails?.gain1Year ?? 0,
       };
       onKpisLoaded?.(investment.id, data);
     }
@@ -128,17 +132,21 @@ function InvestmentKPIRow({
           </>
         );
       case 'lastVarValeur':
+        const lastVarValeurYear = kpis.xirrDetails?.lastVarValeurYear;
         return (
           <>
             {kpis.xirrDetails?.variationValeurDerniereAnnee >= 0 ? '+' : ''}
             {formatCurrency(kpis.xirrDetails?.variationValeurDerniereAnnee || 0)}
+            {lastVarValeurYear && <span className="text-xs text-muted-foreground ml-1">({lastVarValeurYear})</span>}
           </>
         );
       case 'lastCfni':
+        const lastCfniYear = kpis.xirrDetails?.lastCfniYear;
         return (
           <>
             {kpis.xirrDetails?.cfniDerniereAnnee >= 0 ? '+' : ''}
             {formatCurrency(kpis.xirrDetails?.cfniDerniereAnnee || 0)}
+            {lastCfniYear && <span className="text-xs text-muted-foreground ml-1">({lastCfniYear})</span>}
           </>
         );
       case 'ltv':
@@ -157,10 +165,12 @@ function InvestmentKPIRow({
           </>
         );
       case 'gain1':
+        const gain1Year = kpis.xirrDetails?.gain1Year;
         return (
           <>
             {kpis.xirrDetails?.gain1 >= 0 ? '+' : ''}
             {formatCurrency(kpis.xirrDetails?.gain1 || 0)}
+            {gain1Year && <span className="text-xs text-muted-foreground ml-1">({gain1Year})</span>}
           </>
         );
       default:
