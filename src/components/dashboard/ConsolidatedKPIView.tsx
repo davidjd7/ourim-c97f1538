@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -492,21 +493,84 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
           {/* Tableau synthèse */}
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
-                 <TableRow>
-                   <TableHead>Date</TableHead>
-                   <TableHead className="text-right">Valeur</TableHead>
-                   <TableHead className="text-right">FP</TableHead>
-                   <TableHead className="text-right">NOI ajusté</TableHead>
-                   <TableHead className="text-right">Rendement net</TableHead>
-                   <TableHead className="text-right">CFNI</TableHead>
-                   <TableHead className="text-right">COC net</TableHead>
-                   <TableHead className="text-right">CF</TableHead>
-                   <TableHead className="text-right">Gain 1</TableHead>
-                   <TableHead className="text-right">Gain 2</TableHead>
-                   <TableHead className="text-right">XIRR glissant</TableHead>
-                 </TableRow>
-              </TableHeader>
+               <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Valeur</TableHead>
+                    <TableHead className="text-right">FP</TableHead>
+                    <TableHead className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Cash après immo avant levier</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
+                          <TooltipContent>
+                            <p>NOI ajusté/ valeur</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
+                          <TooltipContent>
+                            <p>NOI ajusté après interet</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
+                          <TooltipContent>
+                            <p>CFNI / FP</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Cashflow</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Delta FP + CF</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Delta valeur + CFNI</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead className="text-right">XIRR glissant</TableHead>
+                  </TableRow>
+               </TableHeader>
               <TableBody>
                  {consolidatedData.chartData.map((row, index) => {
                    // Calculs pour les gains (variations par rapport à la ligne précédente)

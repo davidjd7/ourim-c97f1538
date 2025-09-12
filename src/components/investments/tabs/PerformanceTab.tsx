@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { ComposedChart, Bar, Line, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon } from 'lucide-react';
@@ -894,21 +895,84 @@ export function PerformanceTab({
             <div className="flex-1">
               <div className="overflow-x-auto h-[400px] overflow-y-auto">
                   <Table>
-                    <TableHeader>
-                       <TableRow>
-                         <TableHead className="text-xs text-center">Date</TableHead>
-                         <TableHead className="text-xs text-center">Valeur</TableHead>
-                         <TableHead className="text-xs text-center">FP</TableHead>
-                         <TableHead className="text-xs text-center">NOI ajusté</TableHead>
-                         <TableHead className="text-xs text-center">Rendement net</TableHead>
-                         <TableHead className="text-xs text-center">CFNI</TableHead>
-                         <TableHead className="text-xs text-center">COC net</TableHead>
-                         <TableHead className="text-xs text-center">CF</TableHead>
-                         <TableHead className="text-xs text-center">Gain 1</TableHead>
-                         <TableHead className="text-xs text-center">Gain 2</TableHead>
-                         <TableHead className="text-xs text-center">XIRR glissant</TableHead>
-                       </TableRow>
-                    </TableHeader>
+                     <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs text-center">Date</TableHead>
+                          <TableHead className="text-xs text-center">Valeur</TableHead>
+                          <TableHead className="text-xs text-center">FP</TableHead>
+                          <TableHead className="text-xs text-center">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">NOI ajusté</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Cash après immo avant levier</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableHead>
+                          <TableHead className="text-xs text-center">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>NOI ajusté/ valeur</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableHead>
+                          <TableHead className="text-xs text-center">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>NOI ajusté après interet</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableHead>
+                          <TableHead className="text-xs text-center">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>CFNI / FP</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableHead>
+                          <TableHead className="text-xs text-center">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Cashflow</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableHead>
+                          <TableHead className="text-xs text-center">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delta FP + CF</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableHead>
+                          <TableHead className="text-xs text-center">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delta valeur + CFNI</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableHead>
+                          <TableHead className="text-xs text-center">XIRR glissant</TableHead>
+                        </TableRow>
+                     </TableHeader>
                   <TableBody>
                       {getSyntheseData().map((row, index) => {
                          const syntheseData = getSyntheseData();
