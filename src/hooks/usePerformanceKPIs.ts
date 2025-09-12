@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useInvestments } from '@/contexts/InvestmentContext';
+import { useInvestments } from '@/contexts/ImmobilierContext';
 
 interface CashflowRow {
   id?: string;
@@ -217,10 +217,10 @@ export function usePerformanceKPIs(investmentId: string) {
 
       // Load all data in parallel
       const [cashflowsRes, valorisationsRes, debtFlowsRes, immobilisationsRes] = await Promise.all([
-        supabase.from('investment_cashflows').select('*').eq('investment_id', investmentId).eq('user_id', user.id),
-        supabase.from('investment_valorisations').select('*').eq('investment_id', investmentId).eq('user_id', user.id),
-        supabase.from('investment_debt_flows').select('*').eq('investment_id', investmentId).eq('user_id', user.id),
-        supabase.from('investment_immobilisations').select('*').eq('investment_id', investmentId).eq('user_id', user.id)
+        supabase.from('immobilier_cashflows').select('*').eq('immobilier_id', investmentId).eq('user_id', user.id),
+        supabase.from('immobilier_valorisations').select('*').eq('immobilier_id', investmentId).eq('user_id', user.id),
+        supabase.from('immobilier_debt_flows').select('*').eq('immobilier_id', investmentId).eq('user_id', user.id),
+        supabase.from('immobilier_immobilisations').select('*').eq('immobilier_id', investmentId).eq('user_id', user.id)
       ]);
 
       const cashflows: CashflowRow[] = (cashflowsRes.data || []).map(cf => ({

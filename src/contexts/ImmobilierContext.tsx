@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompanies } from '@/contexts/CompanyContext';
 
-export interface Investment {
+export interface Immobilier {
   id: string;
   name: string;
   type: 'IMMO' | 'PE';
@@ -18,13 +18,13 @@ export interface Investment {
   investmentAmount?: number;
 }
 
-interface InvestmentContextType {
-  investments: Investment[];
-  filteredInvestments: Investment[];
-  updateInvestment: (id: string, updates: Partial<Investment>) => Promise<void>;
-  addInvestment: (investment: Omit<Investment, 'id'>) => Promise<Investment>;
+interface ImmobilierContextType {
+  investments: Immobilier[];
+  filteredInvestments: Immobilier[];
+  updateInvestment: (id: string, updates: Partial<Immobilier>) => Promise<void>;
+  addInvestment: (investment: Omit<Immobilier, 'id'>) => Promise<Immobilier>;
   deleteInvestment: (id: string) => Promise<void>;
-  getInvestment: (id: string) => Investment | undefined;
+  getInvestment: (id: string) => Immobilier | undefined;
   loading: boolean;
   // New method to trigger KPI refresh
   notifyInvestmentDataChanged: (investmentId: string) => void;
@@ -32,11 +32,11 @@ interface InvestmentContextType {
   lastDataChangeTimestamp: number;
 }
 
-const InvestmentContext = createContext<InvestmentContextType | undefined>(undefined);
+const ImmobilierContext = createContext<ImmobilierContextType | undefined>(undefined);
 
 
-export function InvestmentProvider({ children }: { children: ReactNode }) {
-  const [investments, setInvestments] = useState<Investment[]>([]);
+export function ImmobilierProvider({ children }: { children: ReactNode }) {
+  const [investments, setInvestments] = useState<Immobilier[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastDataChangeTimestamp, setLastDataChangeTimestamp] = useState(Date.now());
   const { user, loading: authLoading } = useAuth();
@@ -51,8 +51,8 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     return investments.filter(inv => inv.companyId && selectedCompanyIds.includes(inv.companyId));
   }, [investments, selectedCompanyIds]);
 
-  // Convert database row to Investment interface
-  const convertDbToInvestment = (dbRow: any): Investment => {
+  // Convert database row to Immobilier interface
+  const convertDbToInvestment = (dbRow: any): Immobilier => {
     return {
       id: dbRow.id,
       name: dbRow.name,
@@ -66,8 +66,8 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     };
   };
 
-  // Convert Investment to database format
-  const convertInvestmentToDb = (investment: Partial<Investment>) => {
+  // Convert Immobilier to database format
+  const convertInvestmentToDb = (investment: Partial<Immobilier>) => {
     return {
       name: investment.name,
       type: investment.type,
@@ -97,7 +97,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       
       try {
         const { data, error } = await supabase
-          .from('investments')
+          .from('immobilier_investments')
           .select('*')
           .eq('user_id', user.id);
 
@@ -131,7 +131,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
 
-  const addInvestment = async (investmentData: Omit<Investment, 'id'>): Promise<Investment> => {
+  const addInvestment = async (investmentData: Omit<Immobilier, 'id'>): Promise<Immobilier> => {
     if (!user) throw new Error('User not authenticated');
 
     try {
@@ -145,7 +145,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       
       // Insert into Supabase
       const { data, error } = await supabase
-        .from('investments')
+        .from('immobilier_investments')
         .insert([dbData])
         .select('*')
         .single();
@@ -161,9 +161,9 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
         // Record creation in history
         try {
           await supabase
-            .from('investment_history')
+            .from('immobilier_history')
             .insert({
-              investment_id: data.id,
+              immobilier_id: data.id,
               user_id: user.id,
               field_name: 'creation',
               old_value: null,
@@ -184,7 +184,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateInvestment = async (id: string, updates: Partial<Investment>) => {
+  const updateInvestment = async (id: string, updates: Partial<Immobilier>) => {
     if (!user) return;
 
     try {
@@ -210,7 +210,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       
       // Update in Supabase
       const { error } = await supabase
-        .from('investments')
+        .from('immobilier_investments')
         .update(dbUpdates)
         .eq('id', id)
         .eq('user_id', user.id);
@@ -219,7 +219,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
         console.error('Error updating investment:', error);
         // Reload data from database to revert optimistic updates
         const { data: freshData } = await supabase
-          .from('investments')
+          .from('immobilier_investments')
           .select('*')
           .eq('user_id', user.id);
         
@@ -241,8 +241,8 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
   // Helper function to record changes in history
   const recordInvestmentChanges = async (
     investmentId: string, 
-    currentInvestment: Investment, 
-    updates: Partial<Investment>
+    currentInvestment: Immobilier, 
+    updates: Partial<Immobilier>
   ) => {
     if (!user) return;
 
@@ -250,7 +250,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
 
     // Check each field for changes
     for (const [key, newValue] of Object.entries(updates)) {
-      const oldValue = currentInvestment[key as keyof Investment];
+      const oldValue = currentInvestment[key as keyof Immobilier];
       
       // Skip if values are the same or both are empty/null/undefined
       if (oldValue === newValue || 
@@ -262,7 +262,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       const dbFieldName = getDbFieldName(key);
       
       historyEntries.push({
-        investment_id: investmentId,
+        immobilier_id: investmentId,
         user_id: user.id,
         field_name: dbFieldName,
         old_value: oldValue ? String(oldValue) : null,
@@ -275,7 +275,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     if (historyEntries.length > 0) {
       try {
         const { error } = await supabase
-          .from('investment_history')
+          .from('immobilier_history')
           .insert(historyEntries);
 
         if (error) {
@@ -305,7 +305,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       
       // Delete from Supabase
       const { error } = await supabase
-        .from('investments')
+        .from('immobilier_investments')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);
@@ -318,9 +318,9 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       // Record deletion in history
       try {
         await supabase
-          .from('investment_history')
+          .from('immobilier_history')
           .insert({
-            investment_id: id,
+            immobilier_id: id,
             user_id: user.id,
             field_name: 'deletion',
             old_value: null,
@@ -336,7 +336,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const getInvestment = (id: string): Investment | undefined => {
+  const getInvestment = (id: string): Immobilier | undefined => {
     return investments.find(inv => inv.id === id);
   };
 
@@ -346,7 +346,7 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <InvestmentContext.Provider value={{
+    <ImmobilierContext.Provider value={{
       investments,
       filteredInvestments,
       updateInvestment,
@@ -358,14 +358,14 @@ export function InvestmentProvider({ children }: { children: ReactNode }) {
       lastDataChangeTimestamp
     }}>
       {children}
-    </InvestmentContext.Provider>
+    </ImmobilierContext.Provider>
   );
 }
 
 export function useInvestments() {
-  const context = useContext(InvestmentContext);
+  const context = useContext(ImmobilierContext);
   if (context === undefined) {
-    throw new Error('useInvestments must be used within an InvestmentProvider');
+    throw new Error('useInvestments must be used within an ImmobilierProvider');
   }
   return context;
 }

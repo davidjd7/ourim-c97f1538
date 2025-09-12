@@ -3,7 +3,7 @@ import { InvestmentTable } from '@/components/dashboard/InvestmentTable';
 import { ConsolidatedKPIView } from '@/components/dashboard/ConsolidatedKPIView';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Table } from 'lucide-react';
-import { useInvestments } from '@/contexts/InvestmentContext';
+import { useInvestments } from '@/contexts/ImmobilierContext';
 
 type ViewMode = 'table' | 'kpi';
 

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useInvestments } from '@/contexts/InvestmentContext';
+import { useInvestments } from '@/contexts/ImmobilierContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
 import {
   Table,
@@ -76,15 +76,15 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
       
       // Charger toutes les données pour tous les investissements sélectionnés
       const [cashflowsRes, valorisationsRes, debtFlowsRes, immobilisationsRes] = await Promise.all([
-        supabase.from('investment_cashflows').select('*').in('investment_id', investmentIds).eq('user_id', user.id),
-        supabase.from('investment_valorisations').select('*').in('investment_id', investmentIds).eq('user_id', user.id),
-        supabase.from('investment_debt_flows').select('*').in('investment_id', investmentIds).eq('user_id', user.id),
-        supabase.from('investment_immobilisations').select('*').in('investment_id', investmentIds).eq('user_id', user.id)
+        supabase.from('immobilier_cashflows').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id),
+        supabase.from('immobilier_valorisations').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id),
+        supabase.from('immobilier_debt_flows').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id),
+        supabase.from('immobilier_immobilisations').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id)
       ]);
 
       // Formatter les données
       const allCashflows: (CashflowRow & { investmentId: string })[] = (cashflowsRes.data || []).map(cf => ({ 
-        investmentId: cf.investment_id,
+        investmentId: cf.immobilier_id,
         date: cf.date, 
         rex: cf.rex || 0, 
         retraitAmort: cf.retrait_amort || 0, 
@@ -93,13 +93,13 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
       }));
       
       const allValorisations: (ValorisationRow & { investmentId: string })[] = (valorisationsRes.data || []).map(v => ({ 
-        investmentId: v.investment_id,
+        investmentId: v.immobilier_id,
         date: v.date, 
         valeur: v.valeur || 0 
       }));
       
       const allDebtFlows: (DebtFlowRow & { investmentId: string })[] = (debtFlowsRes.data || []).map(d => ({ 
-        investmentId: d.investment_id,
+        investmentId: d.immobilier_id,
         date: d.date, 
         capitalDebut: d.capital_debut || 0, 
         rmbtCapital: d.rmbt_capital || 0, 
@@ -107,7 +107,7 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
       }));
       
       const allImmobilisations: (ImmobilisationRow & { investmentId: string })[] = (immobilisationsRes.data || []).map(m => ({ 
-        investmentId: m.investment_id,
+        investmentId: m.immobilier_id,
         date: m.date, 
         montant: m.montant || 0 
       }));

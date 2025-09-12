@@ -10,10 +10,11 @@ export interface Tag {
   user_id: string;
 }
 
-export interface InvestmentTag {
+export interface AssetTag {
   id: string;
-  investment_id: string;
+  asset_id: string;
   tag_id: string;
+  asset_type: string;
   tag: Tag;
 }
 
@@ -101,9 +102,9 @@ export function useTags() {
     if (!user) return;
 
     try {
-      // First delete all investment_tags relationships
+      // First delete all asset_tags relationships
       await supabase
-        .from('investment_tags')
+        .from('asset_tags')
         .delete()
         .eq('tag_id', id)
         .eq('user_id', user.id);
@@ -142,29 +143,30 @@ export function useTags() {
 
 export function useInvestmentTags(investmentId: string) {
   const { user } = useAuth();
-  const [investmentTags, setInvestmentTags] = useState<InvestmentTag[]>([]);
+  const [investmentTags, setInvestmentTags] = useState<AssetTag[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadInvestmentTags = async () => {
     if (!user || !investmentId) return;
 
     try {
-      // First get investment_tags
-      const { data: investmentTagsData, error: investmentTagsError } = await supabase
-        .from('investment_tags')
+      // First get asset_tags for immobilier
+      const { data: assetTagsData, error: assetTagsError } = await supabase
+        .from('asset_tags')
         .select('*')
-        .eq('investment_id', investmentId)
+        .eq('asset_id', investmentId)
+        .eq('asset_type', 'immobilier')
         .eq('user_id', user.id);
 
-      if (investmentTagsError) throw investmentTagsError;
+      if (assetTagsError) throw assetTagsError;
 
-      if (!investmentTagsData || investmentTagsData.length === 0) {
+      if (!assetTagsData || assetTagsData.length === 0) {
         setInvestmentTags([]);
         return;
       }
 
       // Get tag IDs
-      const tagIds = investmentTagsData.map(item => item.tag_id);
+      const tagIds = assetTagsData.map(item => item.tag_id);
 
       // Then get the actual tags
       const { data: tagsData, error: tagsError } = await supabase
@@ -176,12 +178,13 @@ export function useInvestmentTags(investmentId: string) {
       if (tagsError) throw tagsError;
 
       // Combine the data
-      const combinedData = investmentTagsData.map(investmentTag => {
-        const tag = tagsData?.find(tag => tag.id === investmentTag.tag_id);
+      const combinedData = assetTagsData.map(assetTag => {
+        const tag = tagsData?.find(tag => tag.id === assetTag.tag_id);
         return {
-          id: investmentTag.id,
-          investment_id: investmentTag.investment_id,
-          tag_id: investmentTag.tag_id,
+          id: assetTag.id,
+          asset_id: assetTag.asset_id,
+          tag_id: assetTag.tag_id,
+          asset_type: assetTag.asset_type,
           tag: tag!
         };
       }).filter(item => item.tag); // Filter out items where tag wasn't found
@@ -199,10 +202,11 @@ export function useInvestmentTags(investmentId: string) {
 
     try {
       const { error } = await supabase
-        .from('investment_tags')
+        .from('asset_tags')
         .insert([{
-          investment_id: investmentId,
+          asset_id: investmentId,
           tag_id: tagId,
+          asset_type: 'immobilier',
           user_id: user.id
         }]);
 
@@ -225,10 +229,11 @@ export function useInvestmentTags(investmentId: string) {
 
     try {
       const { error } = await supabase
-        .from('investment_tags')
+        .from('asset_tags')
         .delete()
-        .eq('investment_id', investmentId)
+        .eq('asset_id', investmentId)
         .eq('tag_id', tagId)
+        .eq('asset_type', 'immobilier')
         .eq('user_id', user.id);
 
       if (error) throw error;

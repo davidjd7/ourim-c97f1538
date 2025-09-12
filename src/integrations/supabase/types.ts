@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      asset_tags: {
+        Row: {
+          asset_id: string
+          asset_type: string
+          created_at: string
+          id: string
+          tag_id: string
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          asset_type?: string
+          created_at?: string
+          id?: string
+          tag_id: string
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          asset_type?: string
+          created_at?: string
+          id?: string
+          tag_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           created_at: string
@@ -44,7 +71,7 @@ export type Database = {
           file_path: string
           file_size: number
           id: string
-          investment_id: string
+          immobilier_id: string
           mime_type: string | null
           name: string
           type: string
@@ -56,7 +83,7 @@ export type Database = {
           file_path: string
           file_size: number
           id?: string
-          investment_id: string
+          immobilier_id: string
           mime_type?: string | null
           name: string
           type: string
@@ -68,7 +95,7 @@ export type Database = {
           file_path?: string
           file_size?: number
           id?: string
-          investment_id?: string
+          immobilier_id?: string
           mime_type?: string | null
           name?: string
           type?: string
@@ -77,12 +104,12 @@ export type Database = {
         }
         Relationships: []
       }
-      investment_cashflows: {
+      immobilier_cashflows: {
         Row: {
           created_at: string
           date: string
           id: string
-          investment_id: string
+          immobilier_id: string
           loyer: number | null
           retrait_amort: number | null
           retrait_autres: number | null
@@ -94,7 +121,7 @@ export type Database = {
           created_at?: string
           date: string
           id?: string
-          investment_id: string
+          immobilier_id: string
           loyer?: number | null
           retrait_amort?: number | null
           retrait_autres?: number | null
@@ -106,7 +133,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          investment_id?: string
+          immobilier_id?: string
           loyer?: number | null
           retrait_amort?: number | null
           retrait_autres?: number | null
@@ -116,13 +143,13 @@ export type Database = {
         }
         Relationships: []
       }
-      investment_debt_characteristics: {
+      immobilier_debt_characteristics: {
         Row: {
           amortissement_annuel: number | null
           created_at: string
           duree_mois: number | null
           id: string
-          investment_id: string
+          immobilier_id: string
           montant_initial: number | null
           taux: number | null
           type: string | null
@@ -134,7 +161,7 @@ export type Database = {
           created_at?: string
           duree_mois?: number | null
           id?: string
-          investment_id: string
+          immobilier_id: string
           montant_initial?: number | null
           taux?: number | null
           type?: string | null
@@ -146,7 +173,7 @@ export type Database = {
           created_at?: string
           duree_mois?: number | null
           id?: string
-          investment_id?: string
+          immobilier_id?: string
           montant_initial?: number | null
           taux?: number | null
           type?: string | null
@@ -155,13 +182,13 @@ export type Database = {
         }
         Relationships: []
       }
-      investment_debt_flows: {
+      immobilier_debt_flows: {
         Row: {
           capital_debut: number | null
           created_at: string
           date: string
           id: string
-          investment_id: string
+          immobilier_id: string
           rmbt_capital: number | null
           rmbt_interet: number | null
           updated_at: string
@@ -172,7 +199,7 @@ export type Database = {
           created_at?: string
           date: string
           id?: string
-          investment_id: string
+          immobilier_id: string
           rmbt_capital?: number | null
           rmbt_interet?: number | null
           updated_at?: string
@@ -183,7 +210,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          investment_id?: string
+          immobilier_id?: string
           rmbt_capital?: number | null
           rmbt_interet?: number | null
           updated_at?: string
@@ -191,13 +218,13 @@ export type Database = {
         }
         Relationships: []
       }
-      investment_history: {
+      immobilier_history: {
         Row: {
           action_type: string
           created_at: string
           field_name: string
           id: string
-          investment_id: string
+          immobilier_id: string
           new_value: string | null
           old_value: string | null
           user_id: string
@@ -207,7 +234,7 @@ export type Database = {
           created_at?: string
           field_name: string
           id?: string
-          investment_id: string
+          immobilier_id: string
           new_value?: string | null
           old_value?: string | null
           user_id: string
@@ -217,19 +244,19 @@ export type Database = {
           created_at?: string
           field_name?: string
           id?: string
-          investment_id?: string
+          immobilier_id?: string
           new_value?: string | null
           old_value?: string | null
           user_id?: string
         }
         Relationships: []
       }
-      investment_immobilisations: {
+      immobilier_immobilisations: {
         Row: {
           created_at: string
           date: string
           id: string
-          investment_id: string
+          immobilier_id: string
           montant: number | null
           note: string | null
           updated_at: string
@@ -239,7 +266,7 @@ export type Database = {
           created_at?: string
           date: string
           id?: string
-          investment_id: string
+          immobilier_id: string
           montant?: number | null
           note?: string | null
           updated_at?: string
@@ -249,7 +276,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          investment_id?: string
+          immobilier_id?: string
           montant?: number | null
           note?: string | null
           updated_at?: string
@@ -257,64 +284,7 @@ export type Database = {
         }
         Relationships: []
       }
-      investment_tags: {
-        Row: {
-          created_at: string
-          id: string
-          investment_id: string
-          tag_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          investment_id: string
-          tag_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          investment_id?: string
-          tag_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      investment_valorisations: {
-        Row: {
-          created_at: string
-          date: string
-          id: string
-          investment_id: string
-          note: string | null
-          updated_at: string
-          user_id: string
-          valeur: number | null
-        }
-        Insert: {
-          created_at?: string
-          date: string
-          id?: string
-          investment_id: string
-          note?: string | null
-          updated_at?: string
-          user_id: string
-          valeur?: number | null
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          id?: string
-          investment_id?: string
-          note?: string | null
-          updated_at?: string
-          user_id?: string
-          valeur?: number | null
-        }
-        Relationships: []
-      }
-      investments: {
+      immobilier_investments: {
         Row: {
           company_id: string | null
           created_at: string
@@ -361,13 +331,46 @@ export type Database = {
           },
         ]
       }
+      immobilier_valorisations: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          immobilier_id: string
+          note: string | null
+          updated_at: string
+          user_id: string
+          valeur: number | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          immobilier_id: string
+          note?: string | null
+          updated_at?: string
+          user_id: string
+          valeur?: number | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          immobilier_id?: string
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+          valeur?: number | null
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           author: string
           content: string
           created_at: string
           id: string
-          investment_id: string
+          immobilier_id: string
           is_private: boolean
           title: string
           updated_at: string
@@ -378,7 +381,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
-          investment_id: string
+          immobilier_id: string
           is_private?: boolean
           title: string
           updated_at?: string
@@ -389,7 +392,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
-          investment_id?: string
+          immobilier_id?: string
           is_private?: boolean
           title?: string
           updated_at?: string

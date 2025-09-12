@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Building, TrendingUp, ChevronUp, ChevronDown } from 'lucide-react';
-import { useInvestments } from '@/contexts/InvestmentContext';
+import { useInvestments } from '@/contexts/ImmobilierContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
 import { useColumnVisibility } from '@/contexts/ColumnVisibilityContext';
 import { ColumnSelector } from './ColumnSelector';

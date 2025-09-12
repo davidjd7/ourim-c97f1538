@@ -11,7 +11,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { ComposedChart, Bar, Line, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
-import { useInvestments } from '@/contexts/InvestmentContext';
+import { useInvestments } from '@/contexts/ImmobilierContext';
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -112,7 +112,7 @@ export function PerformanceTab({
       const {
         data: cashflowData,
         error
-      } = await supabase.from('investment_cashflows').select('*').eq('investment_id', investmentId).eq('user_id', user?.id).order('date', {
+      } = await supabase.from('immobilier_cashflows').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).order('date', {
         ascending: true
       });
       if (error) throw error;
@@ -134,7 +134,7 @@ export function PerformanceTab({
       const {
         data: immoData,
         error
-      } = await supabase.from('investment_immobilisations').select('*').eq('investment_id', investmentId).eq('user_id', user?.id).order('date', {
+      } = await supabase.from('immobilier_immobilisations').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).order('date', {
         ascending: true
       });
       if (error) throw error;
@@ -154,7 +154,7 @@ export function PerformanceTab({
       const {
         data: valoData,
         error
-      } = await supabase.from('investment_valorisations').select('*').eq('investment_id', investmentId).eq('user_id', user?.id).order('date', {
+      } = await supabase.from('immobilier_valorisations').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).order('date', {
         ascending: true
       });
       if (error) throw error;
@@ -195,7 +195,7 @@ export function PerformanceTab({
       const {
         data: flowData,
         error
-      } = await supabase.from('investment_debt_flows').select('*').eq('investment_id', investmentId).eq('user_id', user?.id).order('date', {
+      } = await supabase.from('immobilier_debt_flows').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).order('date', {
         ascending: true
       });
       if (error) throw error;
@@ -425,7 +425,7 @@ export function PerformanceTab({
   const saveCashflow = async (row: CashflowRow) => {
     try {
       if (row.id) {
-        const { error } = await supabase.from('investment_cashflows').update({
+        const { error } = await supabase.from('immobilier_cashflows').update({
           date: row.date,
           loyer: row.loyer,
           rex: row.rex,
@@ -434,8 +434,8 @@ export function PerformanceTab({
         }).eq('id', row.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('investment_cashflows').insert({
-          investment_id: investmentId,
+        const { error } = await supabase.from('immobilier_cashflows').insert({
+          immobilier_id: investmentId,
           user_id: user?.id,
           date: row.date,
           loyer: row.loyer,
@@ -458,7 +458,7 @@ export function PerformanceTab({
     const row = cashflows[index];
     if (row.id) {
       try {
-        const { error } = await supabase.from('investment_cashflows').delete().eq('id', row.id);
+        const { error } = await supabase.from('immobilier_cashflows').delete().eq('id', row.id);
         if (error) throw error;
         await loadCashflows();
         notifyInvestmentDataChanged(investmentId); // Notify KPI refresh

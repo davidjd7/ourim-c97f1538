@@ -22,7 +22,7 @@ import { PerformanceTab } from '@/components/investments/tabs/PerformanceTab';
 import { DocumentsTab } from '@/components/investments/tabs/DocumentsTab';
 import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
 
-import { useInvestments } from '@/contexts/InvestmentContext';
+import { useInvestments } from '@/contexts/ImmobilierContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
 import { useCompanies } from '@/contexts/CompanyContext';
 
