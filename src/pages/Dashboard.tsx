@@ -18,7 +18,7 @@ export default function Dashboard() {
       <div className="space-y-1">
         <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
         <p className="text-lg text-muted-foreground">
-          Vue d'ensemble de votre portefeuille d'investissements
+          Vue d'ensemble de votre patrimoine immobilier
         </p>
       </div>
 

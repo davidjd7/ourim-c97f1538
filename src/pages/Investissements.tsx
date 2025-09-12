@@ -24,9 +24,9 @@ export default function Investissements() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Investissements</h1>
+          <h1 className="text-3xl font-bold text-foreground">Biens Immobiliers</h1>
           <p className="text-lg text-muted-foreground">
-            Gestion de vos actifs investis
+            Gestion de votre patrimoine immobilier
           </p>
         </div>
         
