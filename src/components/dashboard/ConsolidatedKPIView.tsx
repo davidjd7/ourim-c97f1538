@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { useInvestments } from '@/contexts/InvestmentContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
-import { InvestmentChart } from './InvestmentChart';
 import {
   Table,
   TableBody,
@@ -485,11 +484,6 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
         </div>
         
         <div className="p-6 space-y-6">
-          {/* Graphique */}
-          <div className="h-64">
-            <InvestmentChart />
-          </div>
-          
           {/* Tableau synthèse */}
           <div className="w-full">
             <div className="overflow-x-auto">
