@@ -64,132 +64,200 @@ interface DebtFlowRow { date: string; capitalDebut: number; rmbtCapital: number;
 interface ImmobilisationRow { date: string; montant: number; }
 interface SyntheseRow { date: string; flux: number; valeur: number; crd: number; fp: number; }
 
-function InvestmentKPIData({ investmentId, onDataLoaded }: { investmentId: string; onDataLoaded: (data: any) => void }) {
-  const { kpis, loading } = usePerformanceKPIs(investmentId);
-  const { investments } = useInvestments();
+function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selectedInvestments: Set<string>; onDataLoaded: (data: any) => void }) {
   const { user } = useAuth();
-  
-  const investment = investments.find(inv => inv.id === investmentId);
+  const { investments } = useInvestments();
   
   React.useEffect(() => {
-    if (!loading && kpis && investment) {
-      onDataLoaded({
-        fondPropre: Number(kpis.fondPropre ?? 0),
-        fondPropreDetails: kpis.fondPropreDetails || { valeur: 0, crd: 0, ltv: 0 },
-        rendementNet: Number(kpis.rendementNet ?? 0),
-        rendementNetDetails: kpis.rendementNetDetails || { noi: 0, loyer: 0, noiSurLoyer: 0 },
-        coc: Number(kpis.coc ?? 0),
-        cocDetails: kpis.cocDetails || { cfni: 0, dscr: 0, yieldBanque: 0 },
-        xirr: Number(kpis.xirr ?? 0),
-        xirrDetails: kpis.xirrDetails || { years: 3, totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0 },
-        investmentAmount: Number(investment.investmentAmount ?? 0),
-      });
-    }
-  }, [loading, kpis, investment, onDataLoaded]);
-
-  // Fonctions utilitaires identiques au hook
-  const calculateNOI = (cashflow?: CashflowRow) => {
-    if (!cashflow) return 0;
-    return (cashflow.rex || 0) + (cashflow.retraitAmort || 0) + (cashflow.retraitAutres || 0);
-  };
-  const calculateCapitalFin = (flow?: DebtFlowRow) => {
-    if (!flow) return 0;
-    return (flow.capitalDebut || 0) - (flow.rmbtCapital || 0);
-  };
-  const calculateFlux = (flow?: DebtFlowRow) => {
-    if (!flow) return 0;
-    return (flow.rmbtCapital || 0) + (flow.rmbtInteret || 0);
-  };
-  const getSyntheseData = (
-    cashflows: CashflowRow[],
-    immobilisations: ImmobilisationRow[],
-    debtFlows: DebtFlowRow[],
-    valorisations: ValorisationRow[]
-  ): SyntheseRow[] => {
-    const dateMap = new Map<string, SyntheseRow>();
-    const allDates = new Set<string>();
-    cashflows.forEach(cf => allDates.add(cf.date));
-    immobilisations.forEach(immo => allDates.add(immo.date));
-    debtFlows.forEach(df => allDates.add(df.date));
-    valorisations.forEach(valo => allDates.add(valo.date));
-    allDates.forEach(date => {
-      dateMap.set(date, { date, flux: 0, valeur: 0, crd: 0, fp: 0 });
-    });
-    cashflows.forEach(cf => {
-      const row = dateMap.get(cf.date)!; row.flux += calculateNOI(cf);
-    });
-    immobilisations.forEach(immo => {
-      const row = dateMap.get(immo.date)!; row.flux -= (immo.montant || 0);
-    });
-    debtFlows.forEach(df => {
-      const row = dateMap.get(df.date)!; row.flux -= calculateFlux(df); row.crd = calculateCapitalFin(df);
-    });
-    valorisations.forEach(valo => {
-      const row = dateMap.get(valo.date)!; row.valeur = valo.valeur || 0;
-    });
-    dateMap.forEach(row => { row.fp = row.valeur - row.crd; });
-    return Array.from(dateMap.values()).sort((a,b)=> new Date(a.date).getTime() - new Date(b.date).getTime());
-  };
-
-  React.useEffect(() => {
-    if (!user || !investment) return;
-    const loadYearly = async () => {
+    if (!user || selectedInvestments.size === 0) return;
+    
+    const loadConsolidatedData = async () => {
+      const investmentIds = Array.from(selectedInvestments);
+      
+      // Charger toutes les données pour tous les investissements sélectionnés
       const [cashflowsRes, valorisationsRes, debtFlowsRes, immobilisationsRes] = await Promise.all([
-        supabase.from('investment_cashflows').select('*').eq('investment_id', investmentId).eq('user_id', user.id),
-        supabase.from('investment_valorisations').select('*').eq('investment_id', investmentId).eq('user_id', user.id),
-        supabase.from('investment_debt_flows').select('*').eq('investment_id', investmentId).eq('user_id', user.id),
-        supabase.from('investment_immobilisations').select('*').eq('investment_id', investmentId).eq('user_id', user.id)
+        supabase.from('investment_cashflows').select('*').in('investment_id', investmentIds).eq('user_id', user.id),
+        supabase.from('investment_valorisations').select('*').in('investment_id', investmentIds).eq('user_id', user.id),
+        supabase.from('investment_debt_flows').select('*').in('investment_id', investmentIds).eq('user_id', user.id),
+        supabase.from('investment_immobilisations').select('*').in('investment_id', investmentIds).eq('user_id', user.id)
       ]);
-      const cashflows: CashflowRow[] = (cashflowsRes.data || []).map(cf => ({ date: cf.date, rex: cf.rex || 0, retraitAmort: cf.retrait_amort || 0, retraitAutres: cf.retrait_autres || 0, loyer: cf.loyer || 0 }));
-      const valorisations: ValorisationRow[] = (valorisationsRes.data || []).map(v => ({ date: v.date, valeur: v.valeur || 0 }));
-      const debtFlows: DebtFlowRow[] = (debtFlowsRes.data || []).map(d => ({ date: d.date, capitalDebut: d.capital_debut || 0, rmbtCapital: d.rmbt_capital || 0, rmbtInteret: d.rmbt_interet || 0 }));
-      const immobilisations: ImmobilisationRow[] = (immobilisationsRes.data || []).map(m => ({ date: m.date, montant: m.montant || 0 }));
 
-      const synthese = getSyntheseData(cashflows, immobilisations, debtFlows, valorisations);
+      // Formatter les données
+      const allCashflows: (CashflowRow & { investmentId: string })[] = (cashflowsRes.data || []).map(cf => ({ 
+        investmentId: cf.investment_id,
+        date: cf.date, 
+        rex: cf.rex || 0, 
+        retraitAmort: cf.retrait_amort || 0, 
+        retraitAutres: cf.retrait_autres || 0, 
+        loyer: cf.loyer || 0 
+      }));
+      
+      const allValorisations: (ValorisationRow & { investmentId: string })[] = (valorisationsRes.data || []).map(v => ({ 
+        investmentId: v.investment_id,
+        date: v.date, 
+        valeur: v.valeur || 0 
+      }));
+      
+      const allDebtFlows: (DebtFlowRow & { investmentId: string })[] = (debtFlowsRes.data || []).map(d => ({ 
+        investmentId: d.investment_id,
+        date: d.date, 
+        capitalDebut: d.capital_debut || 0, 
+        rmbtCapital: d.rmbt_capital || 0, 
+        rmbtInteret: d.rmbt_interet || 0 
+      }));
+      
+      const allImmobilisations: (ImmobilisationRow & { investmentId: string })[] = (immobilisationsRes.data || []).map(m => ({ 
+        investmentId: m.investment_id,
+        date: m.date, 
+        montant: m.montant || 0 
+      }));
 
-      // Process yearly data exactly like PerformanceTab
-      const yearMap = new Map<number, { valeur: number; fp: number; noi: number; cfni: number; cashFlow: number }>();
-      synthese.forEach(row => {
-        const year = new Date(row.date).getFullYear();
-        const cf = cashflows.find(c => c.date === row.date);
-        const noi = calculateNOI(cf);
-        const immo = immobilisations.find(i => i.date === row.date);
-        const noiAjuste = noi - (immo?.montant || 0);
-        const debt = debtFlows.find(d => d.date === row.date);
-        const interet = debt?.rmbtInteret || 0;
-        const capital = debt?.rmbtCapital || 0;
-        const cfni = noiAjuste - interet;
-        const cashFlow = cfni - capital;
+      // Regrouper par date et consolider
+      const dateMap = new Map<string, {
+        date: string;
+        valeur: number;
+        fp: number;
+        noi: number;
+        cfni: number;
+        cashFlow: number;
+        crd: number;
+      }>();
+
+      // Récupérer toutes les dates uniques
+      const allDates = new Set<string>();
+      allCashflows.forEach(cf => allDates.add(cf.date));
+      allValorisations.forEach(v => allDates.add(v.date));
+      allDebtFlows.forEach(d => allDates.add(d.date));
+      allImmobilisations.forEach(i => allDates.add(i.date));
+
+      // Initialiser toutes les dates
+      allDates.forEach(date => {
+        dateMap.set(date, {
+          date,
+          valeur: 0,
+          fp: 0,
+          noi: 0,
+          cfni: 0,
+          cashFlow: 0,
+          crd: 0
+        });
+      });
+
+      // Consolider les données par date
+      allDates.forEach(date => {
+        const consolidated = dateMap.get(date)!;
         
-        if (!yearMap.has(year)) yearMap.set(year, { valeur: 0, fp: 0, noi: 0, cfni: 0, cashFlow: 0 });
-        const entry = yearMap.get(year)!;
-        entry.noi += noi; // Keep actual NOI (EBITDA), not adjusted
-        entry.cfni += cfni;
-        entry.cashFlow += cashFlow;
-        // Take latest values for the year
-        entry.valeur = row.valeur;
-        entry.fp = row.fp;
+        // NOI consolidé pour cette date
+        let totalNOI = 0;
+        allCashflows.filter(cf => cf.date === date).forEach(cf => {
+          totalNOI += (cf.rex || 0) + (cf.retraitAmort || 0) + (cf.retraitAutres || 0);
+        });
+        
+        // Immobilisations consolidées pour cette date
+        let totalImmobilisations = 0;
+        allImmobilisations.filter(i => i.date === date).forEach(i => {
+          totalImmobilisations += i.montant || 0;
+        });
+        
+        // NOI ajusté
+        const noiAjuste = totalNOI - totalImmobilisations;
+        
+        // Dette consolidée pour cette date
+        let totalInteret = 0;
+        let totalCapital = 0;
+        let totalCRD = 0;
+        allDebtFlows.filter(d => d.date === date).forEach(d => {
+          totalInteret += d.rmbtInteret || 0;
+          totalCapital += d.rmbtCapital || 0;
+          totalCRD += (d.capitalDebut || 0) - (d.rmbtCapital || 0);
+        });
+        
+        // Valorisations consolidées pour cette date
+        let totalValeur = 0;
+        allValorisations.filter(v => v.date === date).forEach(v => {
+          totalValeur += v.valeur || 0;
+        });
+        
+        // Calculs finaux
+        const cfni = noiAjuste - totalInteret;
+        const cashFlow = cfni - totalCapital;
+        const fp = totalValeur - totalCRD;
+        
+        consolidated.valeur = totalValeur;
+        consolidated.fp = fp;
+        consolidated.noi = totalNOI;
+        consolidated.cfni = cfni;
+        consolidated.cashFlow = cashFlow;
+        consolidated.crd = totalCRD;
       });
 
-      const yearly: Record<string, { valeur: number; fp: number; noi: number; cfni: number; cashFlow: number }> = {};
-      Array.from(yearMap.entries()).forEach(([y, v]) => { yearly[String(y)] = v; });
+      // Trier par date et convertir en tableau
+      const consolidatedArray = Array.from(dateMap.values()).sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
 
-      // Envoyer l'objet complété (incluant les KPI simples et yearly data)
-      onDataLoaded({
-        fondPropre: Number(kpis.fondPropre ?? 0),
-        fondPropreDetails: kpis.fondPropreDetails || { valeur: 0, crd: 0, ltv: 0 },
-        rendementNet: Number(kpis.rendementNet ?? 0),
-        rendementNetDetails: kpis.rendementNetDetails || { noi: 0, loyer: 0, noiSurLoyer: 0 },
-        coc: Number(kpis.coc ?? 0),
-        cocDetails: kpis.cocDetails || { cfni: 0, dscr: 0, yieldBanque: 0 },
-        xirr: Number(kpis.xirr ?? 0),
-        xirrDetails: kpis.xirrDetails || { years: 3, totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0 },
-        investmentAmount: Number(investment?.investmentAmount ?? 0),
-        yearly,
-      });
+      // Calculer les données KPI consolidées (dernières valeurs)
+      const latestData = consolidatedArray[consolidatedArray.length - 1];
+      const totalInvestmentAmount = investments
+        .filter(inv => selectedInvestments.has(inv.id))
+        .reduce((sum, inv) => sum + (Number(inv.investmentAmount) || 0), 0);
+
+      const consolidatedKPIs = {
+        fondPropre: latestData?.fp || 0,
+        fondPropreDetails: {
+          valeur: latestData?.valeur || 0,
+          crd: latestData?.crd || 0,
+          ltv: latestData?.valeur > 0 ? (latestData.crd / latestData.valeur) * 100 : 0
+        },
+        rendementNet: latestData?.valeur > 0 ? (latestData.noi / latestData.valeur) * 100 : 0,
+        rendementNetDetails: {
+          noi: latestData?.noi || 0,
+          loyer: allCashflows.filter(cf => cf.date === latestData?.date).reduce((sum, cf) => sum + (cf.loyer || 0), 0),
+          noiSurLoyer: 0 // À calculer après avoir le loyer total
+        },
+        coc: totalInvestmentAmount > 0 ? ((latestData?.cfni || 0) / totalInvestmentAmount) * 100 : 0,
+        cocDetails: {
+          cfni: latestData?.cfni || 0,
+          dscr: 0, // À calculer
+          yieldBanque: latestData?.crd > 0 ? ((latestData?.noi || 0) / latestData.crd) * 100 : 0
+        },
+        xirr: 0, // À calculer
+        xirrDetails: {
+          years: 3,
+          totalCfni: consolidatedArray.reduce((sum, row) => sum + row.cfni, 0),
+          cfniDerniereAnnee: latestData?.cfni || 0,
+          deltaValeur: consolidatedArray.length > 1 ? (latestData?.valeur || 0) - (consolidatedArray[0]?.valeur || 0) : 0,
+          variationValeurDerniereAnnee: 0,
+          total: 0
+        },
+        chartData: consolidatedArray.map(row => {
+          const rendementNet = row.valeur > 0 ? (row.noi / row.valeur) * 100 : 0;
+          const cocNet = row.fp > 0 ? (row.cfni / row.fp) * 100 : 0;
+          
+          return {
+            date: new Date(row.date).toLocaleDateString('fr-FR'),
+            valeur: row.valeur,
+            fondPropre: row.fp,
+            noi: row.noi,
+            rendementNet,
+            cfni: row.cfni,
+            cocNet,
+            cashFlow: row.cashFlow
+          };
+        })
+      };
+
+      // Calculer noiSurLoyer
+      if (consolidatedKPIs.rendementNetDetails.loyer > 0) {
+        consolidatedKPIs.rendementNetDetails.noiSurLoyer = 
+          (consolidatedKPIs.rendementNetDetails.noi / consolidatedKPIs.rendementNetDetails.loyer) * 100;
+      }
+
+      onDataLoaded(consolidatedKPIs);
     };
-    loadYearly();
-  }, [user, investmentId, investment, kpis]);
+    
+    loadConsolidatedData();
+  }, [user, selectedInvestments, investments, onDataLoaded]);
   
   return null;
 }
@@ -213,139 +281,26 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
     return 0;
   };
   const { investments } = useInvestments();
-  const [kpiData, setKpiData] = React.useState<Record<string, any>>({});
+  const [consolidatedData, setConsolidatedData] = React.useState<ConsolidatedData>({
+    fondPropre: 0,
+    fondPropreDetails: { valeur: 0, crd: 0, ltv: 0 },
+    rendementNet: 0,
+    rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0 },
+    coc: 0,
+    cocDetails: { cfni: 0, dscr: 0, yieldBanque: 0 },
+    xirr: 0,
+    xirrDetails: { years: 3, totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0 },
+    chartData: []
+  });
   
   const selectedInvestmentsList = useMemo(() => {
     return investments.filter(inv => selectedInvestments.has(inv.id));
   }, [investments, selectedInvestments]);
 
-  const handleKPIDataLoaded = React.useCallback((investmentId: string, data: any) => {
-    setKpiData(prev => ({ ...prev, [investmentId]: data }));
+  const handleConsolidatedDataLoaded = React.useCallback((data: ConsolidatedData) => {
+    setConsolidatedData(data);
   }, []);
 
-  const consolidatedData = useMemo((): ConsolidatedData => {
-    const selectedKPIs = Array.from(selectedInvestments).map(id => kpiData[id]).filter(Boolean);
-    
-    if (selectedKPIs.length === 0) {
-      return {
-        fondPropre: 0,
-        fondPropreDetails: { valeur: 0, crd: 0, ltv: 0 },
-        rendementNet: 0,
-        rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0 },
-        coc: 0,
-        cocDetails: { cfni: 0, dscr: 0, yieldBanque: 0 },
-        xirr: 0,
-        xirrDetails: { years: 3, totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0 },
-        chartData: []
-      };
-    }
-
-    // Sommer toutes les données en €
-    const totalFondPropre = selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropre || 0), 0);
-    const totalValeur = selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.valeur || 0), 0);
-    const totalCrd = selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.crd || 0), 0);
-    const totalNOI = selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.noi || 0), 0);
-    const totalLoyer = selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.loyer || 0), 0);
-    const totalCFNI = selectedKPIs.reduce((sum, kpi) => sum + (kpi.cocDetails?.cfni || 0), 0);
-    const totalInvestmentAmount = selectedKPIs.reduce((sum, kpi) => sum + (kpi.investmentAmount || 0), 0);
-    const totalCfniDerniereAnnee = selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.cfniDerniereAnnee || 0), 0);
-    const totalDeltaValeur = selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.deltaValeur || 0), 0);
-    const totalVariationValeurDerniereAnnee = selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.variationValeurDerniereAnnee || 0), 0);
-    const totalXirrTotal = selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.total || 0), 0);
-    
-    // Recalculer les pourcentages à partir des totaux (numérateur/dénominateur)
-    const consolidatedLTV = totalValeur > 0 ? (totalCrd / totalValeur) * 100 : 0;
-    const consolidatedRendementNet = totalValeur > 0 ? (totalNOI / totalValeur) * 100 : 0;
-    const consolidatedNoiSurLoyer = totalLoyer > 0 ? (totalNOI / totalLoyer) * 100 : 0;
-    const consolidatedCOC = totalInvestmentAmount > 0 ? (totalCFNI / totalInvestmentAmount) * 100 : 0;
-    
-    // DSCR et Yield Banque - moyennes pondérées par montant investi
-    const totalWeightedDSCR = selectedKPIs.reduce((sum, kpi) => {
-      const weight = (kpi.investmentAmount || 0);
-      return sum + (kpi.cocDetails?.dscr || 0) * weight;
-    }, 0);
-    const consolidatedDSCR = totalInvestmentAmount > 0 ? totalWeightedDSCR / totalInvestmentAmount : 0;
-    
-    const totalWeightedYieldBanque = selectedKPIs.reduce((sum, kpi) => {
-      const weight = (kpi.investmentAmount || 0);
-      return sum + (kpi.cocDetails?.yieldBanque || 0) * weight;
-    }, 0);
-    const consolidatedYieldBanque = totalInvestmentAmount > 0 ? totalWeightedYieldBanque / totalInvestmentAmount : 0;
-    
-    // Pour XIRR, moyenne pondérée par le montant investi
-    const totalWeightedXIRR = selectedKPIs.reduce((sum, kpi) => {
-      const weight = (kpi.investmentAmount || 0);
-      return sum + (kpi.xirr || 0) * weight;
-    }, 0);
-    const consolidatedXIRR = totalInvestmentAmount > 0 ? totalWeightedXIRR / totalInvestmentAmount : 0;
-
-    // Données pour le tableau synthèse consolidées année par année
-    const yearSet = new Set<number>();
-    selectedKPIs.forEach(kpi => {
-      const yearly = kpi.yearly || {};
-      Object.keys(yearly).forEach(y => yearSet.add(Number(y)));
-    });
-    const years = Array.from(yearSet).sort((a, b) => a - b);
-
-    const chartData = years.map((year) => {
-      const sums = selectedKPIs.reduce((acc: { valeur: number; fp: number; noi: number; cfni: number; cashFlow: number }, kpi: any) => {
-        const y = kpi.yearly?.[String(year)];
-        if (y) {
-          acc.valeur += y.valeur || 0;
-          acc.fp += y.fp || 0;
-          acc.noi += y.noi || 0; // Use actual NOI, not noiAjuste
-          acc.cfni += y.cfni || 0;
-          acc.cashFlow += y.cashFlow || 0;
-        }
-        return acc;
-      }, { valeur: 0, fp: 0, noi: 0, cfni: 0, cashFlow: 0 });
-
-      const rendementNetY = sums.valeur > 0 ? (sums.noi / sums.valeur) * 100 : 0;
-      const cocNetY = sums.fp > 0 ? (sums.cfni / sums.fp) * 100 : 0;
-
-      return {
-        date: `31/12/${year}`,
-        valeur: sums.valeur,
-        fondPropre: sums.fp,
-        noi: sums.noi,
-        rendementNet: rendementNetY,
-        cfni: sums.cfni,
-        cocNet: cocNetY,
-        cashFlow: sums.cashFlow,
-      };
-    });
-
-    return {
-      fondPropre: totalFondPropre,
-      fondPropreDetails: {
-        valeur: totalValeur,
-        crd: totalCrd,
-        ltv: consolidatedLTV
-      },
-      rendementNet: consolidatedRendementNet,
-      rendementNetDetails: {
-        noi: totalNOI,
-        loyer: totalLoyer,
-        noiSurLoyer: consolidatedNoiSurLoyer
-      },
-      coc: consolidatedCOC,
-      cocDetails: {
-        cfni: totalCFNI,
-        dscr: consolidatedDSCR,
-        yieldBanque: consolidatedYieldBanque
-      },
-      xirr: consolidatedXIRR,
-      xirrDetails: {
-        years: 3,
-        totalCfni: totalCFNI,
-        cfniDerniereAnnee: totalCfniDerniereAnnee,
-        deltaValeur: totalDeltaValeur,
-        variationValeurDerniereAnnee: totalVariationValeurDerniereAnnee,
-        total: totalXirrTotal
-      },
-      chartData
-    };
-  }, [selectedInvestments, kpiData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -377,14 +332,11 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
 
   return (
     <div className="space-y-6">
-      {/* Charger les données KPI pour chaque investissement sélectionné */}
-      {Array.from(selectedInvestments).map(investmentId => (
-        <InvestmentKPIData
-          key={investmentId}
-          investmentId={investmentId}
-          onDataLoaded={(data) => handleKPIDataLoaded(investmentId, data)}
-        />
-      ))}
+      {/* Charger les données consolidées */}
+      <ConsolidatedDataLoader
+        selectedInvestments={selectedInvestments}
+        onDataLoaded={handleConsolidatedDataLoaded}
+      />
 
       {/* En-tête avec informations consolidées */}
       <div className="flex items-center justify-between">
