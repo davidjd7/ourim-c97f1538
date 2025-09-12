@@ -2,8 +2,8 @@ import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Home, 
-  Building2, 
+  Building, 
+  Wallet, 
   CreditCard, 
   Settings,
 } from 'lucide-react';
@@ -29,12 +29,12 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {
-    name: 'Biens Immobiliers',
+    name: 'Investissements',
     href: '/investissements',
-    icon: Home,
+    icon: Wallet,
   },
   {
-    name: 'Financements',
+    name: 'Dettes',
     href: '/dettes',
     icon: CreditCard,
   },
@@ -55,12 +55,12 @@ export function AppSidebar() {
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-3 px-2 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground flex-shrink-0">
-            <Building2 className="h-4 w-4" />
+            <Building className="h-4 w-4" />
           </div>
           {!isCollapsed && (
             <div className="animate-fade-in">
-              <h2 className="text-lg font-semibold text-foreground">ImmoGestion</h2>
-              <p className="text-xs text-muted-foreground">Gestion de patrimoine immobilier</p>
+              <h2 className="text-lg font-semibold text-foreground">Ourim</h2>
+              <p className="text-xs text-muted-foreground">Gestion d'investissements</p>
             </div>
           )}
         </div>
@@ -101,7 +101,7 @@ export function AppSidebar() {
               Version 1.0
             </p>
             <p className="text-xs text-primary/80">
-              ImmoGestion
+              Ourim
             </p>
           </div>
         )}

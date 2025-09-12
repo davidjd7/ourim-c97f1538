@@ -9,15 +9,15 @@ export default function Dettes() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Financements</h1>
+          <h1 className="text-3xl font-bold text-foreground">Dettes</h1>
           <p className="text-lg text-muted-foreground">
-            Gestion des emprunts immobiliers
+            Gestion des emprunts et financements
           </p>
         </div>
         
         <Button className="btn-financial gap-2">
           <Plus className="h-4 w-4" />
-          Ajouter Financement
+          Ajouter Dette
         </Button>
       </div>
 
@@ -26,17 +26,17 @@ export default function Dettes() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" />
-            Financements Immobiliers
+            Liste des Dettes
           </CardTitle>
           <CardDescription>
-            Suivi des emprunts immobiliers et de leurs échéanciers
+            Suivi des emprunts et de leurs échéanciers
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12 text-muted-foreground">
             <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucun financement immobilier enregistré</p>
-            <p className="text-sm mt-2">Commencez par ajouter un emprunt immobilier</p>
+            <p>Aucune dette enregistrée</p>
+            <p className="text-sm mt-2">Commencez par ajouter un emprunt</p>
           </div>
         </CardContent>
       </Card>

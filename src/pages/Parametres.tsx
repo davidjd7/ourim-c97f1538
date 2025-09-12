@@ -27,7 +27,7 @@ export default function Parametres() {
 
   const handleSave = () => {
     // Ici on sauvegarderait normalement dans une base de données ou localStorage
-    localStorage.setItem('immoGestionSettings', JSON.stringify(settings));
+    localStorage.setItem('familyOfficeSettings', JSON.stringify(settings));
     
     // Déclencher un événement pour notifier les autres composants
     window.dispatchEvent(new CustomEvent('settingsUpdated'));
@@ -40,7 +40,7 @@ export default function Parametres() {
 
   // Charger les paramètres au démarrage
   React.useEffect(() => {
-    const savedSettings = localStorage.getItem('immoGestionSettings');
+    const savedSettings = localStorage.getItem('familyOfficeSettings');
     if (savedSettings) {
       setSettings(JSON.parse(savedSettings));
     }
@@ -51,7 +51,7 @@ export default function Parametres() {
       <div>
         <h1 className="text-3xl font-bold text-foreground">Paramètres</h1>
         <p className="text-lg text-muted-foreground">
-          Configuration de l'application ImmoGestion
+          Configuration de l'application Family Office
         </p>
       </div>
 
@@ -97,7 +97,7 @@ export default function Parametres() {
                     placeholder="8.00" 
                   />
                   <p className="text-xs text-muted-foreground">
-                    Utilisé pour tous les calculs des biens immobiliers
+                    Utilisé pour tous les calculs des investissements
                   </p>
                 </div>
               </div>
