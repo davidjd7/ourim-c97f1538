@@ -1884,55 +1884,81 @@ export function PerformanceTab({
             {editingDebtCharacteristics && (
               <div className="mt-6 p-4 border rounded-lg bg-accent/20">
                 <h3 className="text-lg font-semibold mb-4">Configuration de la dette</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-0">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Montant Initial (€)</label>
-                    <Input type="number" value={debtCharacteristics.montantInitial} onChange={e => setDebtCharacteristics({
-                      ...debtCharacteristics,
-                      montantInitial: parseFloat(e.target.value) || 0
-                    })} />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Montant Initial (€)</label>
+                      <Input 
+                        type="number" 
+                        placeholder="0" 
+                        value={debtCharacteristics.montantInitial} 
+                        onChange={e => setDebtCharacteristics({
+                          ...debtCharacteristics,
+                          montantInitial: parseFloat(e.target.value) || 0
+                        })} 
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Durée (mois)</label>
+                      <Input 
+                        type="number" 
+                        placeholder="0" 
+                        value={debtCharacteristics.dureeMois} 
+                        onChange={e => setDebtCharacteristics({
+                          ...debtCharacteristics,
+                          dureeMois: parseInt(e.target.value) || 0
+                        })} 
+                      />
+                    </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Durée (mois)</label>
-                    <Input type="number" value={debtCharacteristics.dureeMois} onChange={e => setDebtCharacteristics({
-                      ...debtCharacteristics,
-                      dureeMois: parseInt(e.target.value) || 0
-                    })} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Taux (%)</label>
-                    <Input type="number" step="0.01" value={debtCharacteristics.taux} onChange={e => setDebtCharacteristics({
-                      ...debtCharacteristics,
-                      taux: parseFloat(e.target.value) || 0
-                    })} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Type</label>
-                    <Select value={debtCharacteristics.type} onValueChange={(value: 'Amortissement constant' | 'Annuité constante') => setDebtCharacteristics({
-                      ...debtCharacteristics,
-                      type: value,
-                      amortissementAnnuel: value === 'Amortissement constant' ? debtCharacteristics.amortissementAnnuel : undefined
-                    })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
-                        <SelectItem value="Annuité constante">Annuité constante</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Taux (%)</label>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        value={debtCharacteristics.taux} 
+                        onChange={e => setDebtCharacteristics({
+                          ...debtCharacteristics,
+                          taux: parseFloat(e.target.value) || 0
+                        })} 
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Type d'amortissement</label>
+                      <Select value={debtCharacteristics.type} onValueChange={(value: 'Amortissement constant' | 'Annuité constante') => setDebtCharacteristics({
+                        ...debtCharacteristics,
+                        type: value,
+                        amortissementAnnuel: value === 'Amortissement constant' ? debtCharacteristics.amortissementAnnuel : undefined
+                      })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
+                          <SelectItem value="Annuité constante">Annuité constante</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   
                   {debtCharacteristics.type === 'Amortissement constant' && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Amortissement annuel (%)</label>
-                      <Input type="number" step="0.01" value={debtCharacteristics.amortissementAnnuel || 0} onChange={e => setDebtCharacteristics({
-                        ...debtCharacteristics,
-                        amortissementAnnuel: parseFloat(e.target.value) || 0
-                      })} />
+                      <label className="text-sm font-medium">Amortissement annuel (€)</label>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="0" 
+                        value={debtCharacteristics.amortissementAnnuel || 0} 
+                        onChange={e => setDebtCharacteristics({
+                          ...debtCharacteristics,
+                          amortissementAnnuel: parseFloat(e.target.value) || 0
+                        })} 
+                      />
                     </div>
                   )}
                 </div>
