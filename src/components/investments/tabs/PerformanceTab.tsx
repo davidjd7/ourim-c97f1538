@@ -900,7 +900,8 @@ export function PerformanceTab({
   // Total Earning = Total Gain Valeur + Total Flux
   const totalEarning = totalGainValeur + totalFlux;
 
-  return <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       
       {/* Chart and Synthesis Section */}
       <Card>
