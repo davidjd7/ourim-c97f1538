@@ -2076,7 +2076,8 @@ export function PerformanceTab({
                       </div>
                     )}
                   </div>
-                
+                </div>
+                 
                 <div className="flex gap-2 mt-6">
                   <Button onClick={saveDebtCharacteristics} size="sm" className="flex items-center gap-2">
                     <Save className="h-4 w-4" />
@@ -2098,5 +2099,5 @@ export function PerformanceTab({
         </Card>
       )}
     </div>
-  )
+  );
 }
