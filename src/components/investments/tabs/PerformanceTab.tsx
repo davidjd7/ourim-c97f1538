@@ -185,17 +185,18 @@ export function PerformanceTab({
       } = await supabase.from('debt_characteristics').select('*').eq('asset_id', investmentId).eq('user_id', user?.id).maybeSingle();
       if (error) throw error;
       if (debtData) {
+        const d: any = debtData;
         setDebtCharacteristics({
           id: debtData.id,
           montantInitial: debtData.montant_initial || 0,
           dureeMois: debtData.duree_mois || 0,
           taux: debtData.taux || 0,
-          type: debtData.type as 'Amortissement constant' | 'Annuité constante' || 'Amortissement constant',
+          type: (debtData.type as 'Amortissement constant' | 'Annuité constante') || 'Amortissement constant',
           amortissementAnnuel: debtData.amortissement_annuel || undefined,
-          typeCredit: debtData.type_credit as 'Hypothécaire' | 'Lombard' || 'Hypothécaire',
-          typeTaux: debtData.type_taux as 'Fixe' | 'Variable' || 'Fixe',
-          marge: debtData.marge || undefined,
-          indiceBase: debtData.indice_base || undefined
+          typeCredit: (d?.type_credit as 'Hypothécaire' | 'Lombard') ?? 'Hypothécaire',
+          typeTaux: (d?.type_taux as 'Fixe' | 'Variable') ?? 'Fixe',
+          marge: typeof d?.marge === 'number' ? d.marge : undefined,
+          indiceBase: typeof d?.indice_base === 'string' ? d.indice_base : undefined
         });
       }
     } catch (error) {
@@ -633,7 +634,7 @@ export function PerformanceTab({
   const saveDebtCharacteristics = async () => {
     try {
       if (debtCharacteristics.id) {
-        const { error } = await supabase.from('debt_characteristics').update({
+        const payload: any = {
           montant_initial: debtCharacteristics.montantInitial,
           duree_mois: debtCharacteristics.dureeMois,
           taux: debtCharacteristics.taux,
@@ -643,10 +644,14 @@ export function PerformanceTab({
           type_taux: debtCharacteristics.typeTaux,
           marge: debtCharacteristics.marge,
           indice_base: debtCharacteristics.indiceBase
-        }).eq('id', debtCharacteristics.id);
+        };
+        const { error } = await supabase
+          .from('debt_characteristics')
+          .update(payload)
+          .eq('id', debtCharacteristics.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('debt_characteristics').insert({
+        const payload: any = {
           asset_id: investmentId,
           asset_type: 'immobilier',
           user_id: user?.id,
@@ -659,7 +664,10 @@ export function PerformanceTab({
           type_taux: debtCharacteristics.typeTaux,
           marge: debtCharacteristics.marge,
           indice_base: debtCharacteristics.indiceBase
-        });
+        };
+        const { error } = await supabase
+          .from('debt_characteristics')
+          .insert(payload);
         if (error) throw error;
       }
       await loadDebtCharacteristics();
