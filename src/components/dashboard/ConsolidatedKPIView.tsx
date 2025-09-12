@@ -502,11 +502,20 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                    <TableHead className="text-right">CFNI</TableHead>
                    <TableHead className="text-right">COC net</TableHead>
                    <TableHead className="text-right">CF</TableHead>
+                   <TableHead className="text-right">Gain 1</TableHead>
+                   <TableHead className="text-right">Gain 2</TableHead>
                    <TableHead className="text-right">XIRR glissant</TableHead>
                  </TableRow>
               </TableHeader>
               <TableBody>
                  {consolidatedData.chartData.map((row, index) => {
+                   // Calculs pour les gains (variations par rapport à la ligne précédente)
+                   const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
+                   const variationFP = previousRow ? row.fondPropre - previousRow.fondPropre : 0;
+                   const variationValeur = previousRow ? (row.fondPropre * 1.2) - (previousRow.fondPropre * 1.2) : 0; // Approximation pour la valeur
+                   const gain1 = variationFP + row.cashFlow; // Variation de FP + CF
+                   const gain2 = variationValeur + row.cfni; // Variation de valeur + CFNI
+                   
                    // Calcul XIRR glissant pour cette ligne (depuis le début jusqu'à cette ligne)
                    const xirrGlissant = index > 0 ? calculateConsolidatedXIRR(consolidatedData.chartData.slice(0, index + 1)) : 0;
                    
@@ -523,6 +532,12 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                        <TableCell className="text-right">{formatPercentage(row.cocNet)}</TableCell>
                        <TableCell className="text-right financial-value">
                          {row.cashFlow >= 0 ? '+' : ''}{formatCurrency(row.cashFlow)}
+                       </TableCell>
+                       <TableCell className={`text-right financial-value ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                         {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
+                       </TableCell>
+                       <TableCell className={`text-right financial-value ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                         {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
                        </TableCell>
                        <TableCell className="text-right financial-value">
                          {xirrGlissant.toFixed(1)}%
@@ -545,6 +560,8 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                      {consolidatedData.chartData.reduce((sum, row) => sum + row.cashFlow, 0) >= 0 ? '+' : ''}
                      {formatCurrency(consolidatedData.chartData.reduce((sum, row) => sum + row.cashFlow, 0))}
                    </TableCell>
+                   <TableCell className="text-right">-</TableCell>
+                   <TableCell className="text-right">-</TableCell>
                    <TableCell className="text-right">-</TableCell>
                  </TableRow>
               </TableBody>

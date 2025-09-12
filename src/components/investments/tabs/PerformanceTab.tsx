@@ -904,6 +904,8 @@ export function PerformanceTab({
                          <TableHead className="text-xs text-center">CFNI</TableHead>
                          <TableHead className="text-xs text-center">COC net</TableHead>
                          <TableHead className="text-xs text-center">CF</TableHead>
+                         <TableHead className="text-xs text-center">Gain 1</TableHead>
+                         <TableHead className="text-xs text-center">Gain 2</TableHead>
                          <TableHead className="text-xs text-center">XIRR glissant</TableHead>
                        </TableRow>
                     </TableHeader>
@@ -930,6 +932,13 @@ export function PerformanceTab({
                          const cfni = noiAjuste - rmbtInteret;
                          const cocNet = row.fp > 0 ? (cfni / row.fp) * 100 : 0;
                          const cf = cfni - rmbtCapital;
+                         
+                         // Calculs pour les gains (variations par rapport à la ligne précédente)
+                         const previousRow = index > 0 ? syntheseData[index - 1] : null;
+                         const variationFP = previousRow ? row.fp - previousRow.fp : 0;
+                         const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
+                         const gain1 = variationFP + cf; // Variation de FP + CF
+                         const gain2 = variationValeur + cfni; // Variation de valeur + CFNI
                          
                          // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
                          const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
@@ -959,47 +968,64 @@ export function PerformanceTab({
                            <TableCell className={`financial-value text-xs text-center ${cf >= 0 ? 'text-success' : 'text-destructive'}`}>
                              {cf >= 0 ? '+' : ''}{formatCurrency(cf)}
                            </TableCell>
+                           <TableCell className={`financial-value text-xs text-center ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                             {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
+                           </TableCell>
+                           <TableCell className={`financial-value text-xs text-center ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                             {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
+                           </TableCell>
                            <TableCell className={`financial-value text-xs text-center ${xirrGlissant >= 0 ? 'text-success' : 'text-destructive'}`}>
                              {xirrGlissant.toFixed(1)}%
                            </TableCell>
                          </TableRow>
                        })}
                        {getSyntheseData().length === 0 && <TableRow>
-                           <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-xs">
+                           <TableCell colSpan={11} className="text-center py-8 text-muted-foreground text-xs">
                              Aucune donnée disponible pour la synthèse
                            </TableCell>
                          </TableRow>}
-                      {/* Ligne Total */}
-                      {getSyntheseData().length > 0 && (() => {
-                        const syntheseData = getSyntheseData();
-                        
-                        // Calculer les totaux pour NOI ajusté, CFNI et CF seulement
-                        let totalNoiAjuste = 0;
-                        let totalCfni = 0;
-                        let totalCf = 0;
-                        
-                        syntheseData.forEach((row) => {
-                          // Calculs pour NOI ajusté (EBITDA - immobilisation)
-                          const cashflowDate = cashflows.find(cf => cf.date === row.date);
-                          const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
-                          
-                          const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
-                          const immobilisationAmount = immobilisationDate?.montant || 0;
-                          
-                          const noiAjuste = ebitda - immobilisationAmount;
-                          
-                          const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
-                          const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
-                          const rmbtCapital = debtFlowDate?.rmbtCapital || 0;
-                          
-                          const cfni = noiAjuste - rmbtInteret;
-                          const cf = cfni - rmbtCapital;
-                          
-                          totalNoiAjuste += noiAjuste;
-                          totalCfni += cfni;
-                          totalCf += cf;
-                        });
-                        
+                       {/* Ligne Total */}
+                       {getSyntheseData().length > 0 && (() => {
+                         const syntheseData = getSyntheseData();
+                         
+                         // Calculer les totaux pour NOI ajusté, CFNI, CF, Gain1 et Gain2
+                         let totalNoiAjuste = 0;
+                         let totalCfni = 0;
+                         let totalCf = 0;
+                         let totalGain1 = 0;
+                         let totalGain2 = 0;
+                         
+                         syntheseData.forEach((row, index) => {
+                           // Calculs pour NOI ajusté (EBITDA - immobilisation)
+                           const cashflowDate = cashflows.find(cf => cf.date === row.date);
+                           const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+                           
+                           const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+                           const immobilisationAmount = immobilisationDate?.montant || 0;
+                           
+                           const noiAjuste = ebitda - immobilisationAmount;
+                           
+                           const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+                           const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+                           const rmbtCapital = debtFlowDate?.rmbtCapital || 0;
+                           
+                           const cfni = noiAjuste - rmbtInteret;
+                           const cf = cfni - rmbtCapital;
+                           
+                           // Calculs pour les gains
+                           const previousRow = index > 0 ? syntheseData[index - 1] : null;
+                           const variationFP = previousRow ? row.fp - previousRow.fp : 0;
+                           const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
+                           const gain1 = variationFP + cf;
+                           const gain2 = variationValeur + cfni;
+                           
+                           totalNoiAjuste += noiAjuste;
+                           totalCfni += cfni;
+                           totalCf += cf;
+                           totalGain1 += gain1;
+                           totalGain2 += gain2;
+                         });
+                         
                          return (
                            <TableRow className="border-t-2 border-border bg-muted/30">
                              <TableCell className="font-bold text-xs text-center">
@@ -1026,12 +1052,18 @@ export function PerformanceTab({
                              <TableCell className={`financial-value font-bold text-xs text-center ${totalCf >= 0 ? 'text-success' : 'text-destructive'}`}>
                                {totalCf >= 0 ? '+' : ''}{formatCurrency(totalCf)}
                              </TableCell>
+                             <TableCell className={`financial-value font-bold text-xs text-center ${totalGain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                               {totalGain1 >= 0 ? '+' : ''}{formatCurrency(totalGain1)}
+                             </TableCell>
+                             <TableCell className={`financial-value font-bold text-xs text-center ${totalGain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                               {totalGain2 >= 0 ? '+' : ''}{formatCurrency(totalGain2)}
+                             </TableCell>
                              <TableCell className="financial-value text-xs text-center">
                                {/* Pas de total pour le XIRR glissant */}
                              </TableCell>
                            </TableRow>
                          );
-                     })()}
+                      })()}
                    </TableBody>
                  </Table>
                </div>
