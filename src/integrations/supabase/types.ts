@@ -70,8 +70,13 @@ export type Database = {
           amortissement_annuel: number | null
           asset_id: string
           asset_type: string
+          banque: string | null
+          base: string | null
+          clause_arrosage: string | null
+          couverture_ltv: number | null
           created_at: string
           duree_mois: number | null
+          echeance: string | null
           id: string
           indice_base: string | null
           marge: number | null
@@ -87,8 +92,13 @@ export type Database = {
           amortissement_annuel?: number | null
           asset_id: string
           asset_type?: string
+          banque?: string | null
+          base?: string | null
+          clause_arrosage?: string | null
+          couverture_ltv?: number | null
           created_at?: string
           duree_mois?: number | null
+          echeance?: string | null
           id?: string
           indice_base?: string | null
           marge?: number | null
@@ -104,8 +114,13 @@ export type Database = {
           amortissement_annuel?: number | null
           asset_id?: string
           asset_type?: string
+          banque?: string | null
+          base?: string | null
+          clause_arrosage?: string | null
+          couverture_ltv?: number | null
           created_at?: string
           duree_mois?: number | null
+          echeance?: string | null
           id?: string
           indice_base?: string | null
           marge?: number | null

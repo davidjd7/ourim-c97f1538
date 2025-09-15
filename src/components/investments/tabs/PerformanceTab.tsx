@@ -48,6 +48,11 @@ interface DebtCharacteristics {
   typeTaux?: 'Fixe' | 'Variable';
   marge?: number;
   indiceBase?: string;
+  banque?: string;
+  echeance?: 'Fixe' | 'Découvert';
+  base?: 'OAT 10 ANS' | 'EURIBOR 3M' | 'EURIBOR 6M' | 'Fixe (0%)';
+  couvertureLtv?: number;
+  clauseArrosage?: 'Oui' | 'Non';
 }
 interface DebtFlowRow {
   id?: string;
@@ -82,7 +87,7 @@ export function PerformanceTab({
     montantInitial: 0,
     dureeMois: 0,
     taux: 0,
-    type: 'Amortissement constant',
+    type: 'Annuité constante',
     typeCredit: 'Hypothécaire',
     typeTaux: 'Fixe'
   });
@@ -191,12 +196,17 @@ export function PerformanceTab({
           montantInitial: debtData.montant_initial || 0,
           dureeMois: debtData.duree_mois || 0,
           taux: debtData.taux || 0,
-          type: (debtData.type as 'Amortissement constant' | 'Annuité constante') || 'Amortissement constant',
+          type: (debtData.type as 'Amortissement constant' | 'Annuité constante') || 'Annuité constante',
           amortissementAnnuel: debtData.amortissement_annuel || undefined,
           typeCredit: (d?.type_credit as 'Hypothécaire' | 'Lombard') ?? 'Hypothécaire',
           typeTaux: (d?.type_taux as 'Fixe' | 'Variable') ?? 'Fixe',
           marge: typeof d?.marge === 'number' ? d.marge : undefined,
-          indiceBase: typeof d?.indice_base === 'string' ? d.indice_base : undefined
+          indiceBase: typeof d?.indice_base === 'string' ? d.indice_base : undefined,
+          banque: d?.banque || undefined,
+          echeance: (d?.echeance as 'Fixe' | 'Découvert') || undefined,
+          base: (d?.base as 'OAT 10 ANS' | 'EURIBOR 3M' | 'EURIBOR 6M' | 'Fixe (0%)') || undefined,
+          couvertureLtv: typeof d?.couverture_ltv === 'number' ? d.couverture_ltv : undefined,
+          clauseArrosage: (d?.clause_arrosage as 'Oui' | 'Non') || undefined
         });
       }
     } catch (error) {
@@ -643,7 +653,12 @@ export function PerformanceTab({
           type_credit: debtCharacteristics.typeCredit,
           type_taux: debtCharacteristics.typeTaux,
           marge: debtCharacteristics.marge,
-          indice_base: debtCharacteristics.indiceBase
+          indice_base: debtCharacteristics.indiceBase,
+          banque: debtCharacteristics.banque,
+          echeance: debtCharacteristics.echeance,
+          base: debtCharacteristics.base,
+          couverture_ltv: debtCharacteristics.couvertureLtv,
+          clause_arrosage: debtCharacteristics.clauseArrosage
         };
         const { error } = await supabase
           .from('debt_characteristics')
@@ -663,7 +678,12 @@ export function PerformanceTab({
           type_credit: debtCharacteristics.typeCredit,
           type_taux: debtCharacteristics.typeTaux,
           marge: debtCharacteristics.marge,
-          indice_base: debtCharacteristics.indiceBase
+          indice_base: debtCharacteristics.indiceBase,
+          banque: debtCharacteristics.banque,
+          echeance: debtCharacteristics.echeance,
+          base: debtCharacteristics.base,
+          couverture_ltv: debtCharacteristics.couvertureLtv,
+          clause_arrosage: debtCharacteristics.clauseArrosage
         };
         const { error } = await supabase
           .from('debt_characteristics')
@@ -1956,7 +1976,7 @@ export function PerformanceTab({
               <div className="p-4 border rounded-lg bg-accent/20">
                 <h3 className="text-lg font-semibold mb-4">Configuration de la dette</h3>
                 <div className="space-y-4">
-                  {/* Première ligne - 4 champs */}
+                  {/* Première ligne - Champs communs */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Type de crédit</label>
@@ -1965,13 +1985,26 @@ export function PerformanceTab({
                         typeCredit: value
                       })}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Sélectioner" />
+                          <SelectValue placeholder="Sélectionner" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border border-border z-50">
                           <SelectItem value="Hypothécaire">Hypothécaire</SelectItem>
                           <SelectItem value="Lombard">Lombard</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Banque</label>
+                      <Input 
+                        type="text" 
+                        placeholder="Nom de la banque" 
+                        value={debtCharacteristics.banque || ''} 
+                        onChange={e => setDebtCharacteristics({
+                          ...debtCharacteristics,
+                          banque: e.target.value
+                        })} 
+                      />
                     </div>
                     
                     <div className="space-y-2">
@@ -1986,72 +2019,7 @@ export function PerformanceTab({
                         })} 
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Durée (mois)</label>
-                      <Input 
-                        type="number" 
-                        placeholder="0" 
-                        value={debtCharacteristics.dureeMois} 
-                        onChange={e => setDebtCharacteristics({
-                          ...debtCharacteristics,
-                          dureeMois: parseInt(e.target.value) || 0
-                        })} 
-                      />
-                    </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Type de taux</label>
-                      <Select value={debtCharacteristics.typeTaux} onValueChange={(value: 'Fixe' | 'Variable') => setDebtCharacteristics({
-                        ...debtCharacteristics,
-                        typeTaux: value
-                      })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectioner" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border z-50">
-                          <SelectItem value="Fixe">Fixe</SelectItem>
-                          <SelectItem value="Variable">Variable</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  {/* Deuxième ligne - 3 ou 4 champs selon le type de taux */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        {debtCharacteristics.typeTaux === 'Variable' ? 'Marge (%)' : 'Taux (%)'}
-                      </label>
-                      <Input 
-                        type="number" 
-                        step="0.01" 
-                        placeholder="0.00" 
-                        value={debtCharacteristics.typeTaux === 'Variable' ? (debtCharacteristics.marge || 0) : debtCharacteristics.taux} 
-                        onChange={e => setDebtCharacteristics({
-                          ...debtCharacteristics,
-                          ...(debtCharacteristics.typeTaux === 'Variable' 
-                            ? { marge: parseFloat(e.target.value) || 0 }
-                            : { taux: parseFloat(e.target.value) || 0 })
-                        })} 
-                      />
-                    </div>
-
-                    {debtCharacteristics.typeTaux === 'Variable' && (
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Indice de base</label>
-                        <Input 
-                          type="text" 
-                          placeholder="Ex: EURIBOR 3M" 
-                          value={debtCharacteristics.indiceBase || ''} 
-                          onChange={e => setDebtCharacteristics({
-                            ...debtCharacteristics,
-                            indiceBase: e.target.value
-                          })} 
-                        />
-                      </div>
-                    )}
-                    
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Type d'amortissement</label>
                       <Select value={debtCharacteristics.type} onValueChange={(value: 'Amortissement constant' | 'Annuité constante') => setDebtCharacteristics({
@@ -2068,13 +2036,185 @@ export function PerformanceTab({
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
 
-                    {debtCharacteristics.type === 'Amortissement constant' && (
+                  {/* Deuxième ligne - Selon le type de crédit */}
+                  {debtCharacteristics.typeCredit === 'Hypothécaire' ? (
+                    // Champs pour crédit Hypothécaire
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Amortissement annuel (€)</label>
+                        <label className="text-sm font-medium">Durée (mois)</label>
                         <Input 
                           type="number" 
                           placeholder="0" 
+                          value={debtCharacteristics.dureeMois} 
+                          onChange={e => setDebtCharacteristics({
+                            ...debtCharacteristics,
+                            dureeMois: parseInt(e.target.value) || 0
+                          })} 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Type de taux</label>
+                        <Select value={debtCharacteristics.typeTaux} onValueChange={(value: 'Fixe' | 'Variable') => setDebtCharacteristics({
+                          ...debtCharacteristics,
+                          typeTaux: value
+                        })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border border-border z-50">
+                            <SelectItem value="Fixe">Fixe</SelectItem>
+                            <SelectItem value="Variable">Variable</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                          {debtCharacteristics.typeTaux === 'Variable' ? 'Marge (%)' : 'Taux (%)'}
+                        </label>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          value={debtCharacteristics.typeTaux === 'Variable' ? (debtCharacteristics.marge || 0) : debtCharacteristics.taux} 
+                          onChange={e => setDebtCharacteristics({
+                            ...debtCharacteristics,
+                            ...(debtCharacteristics.typeTaux === 'Variable' 
+                              ? { marge: parseFloat(e.target.value) || 0 }
+                              : { taux: parseFloat(e.target.value) || 0 })
+                          })} 
+                        />
+                      </div>
+
+                      {debtCharacteristics.typeTaux === 'Variable' && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Indice de base</label>
+                          <Input 
+                            type="text" 
+                            placeholder="Ex: EURIBOR 3M" 
+                            value={debtCharacteristics.indiceBase || ''} 
+                            onChange={e => setDebtCharacteristics({
+                              ...debtCharacteristics,
+                              indiceBase: e.target.value
+                            })} 
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    // Champs pour crédit Lombard
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Échéance</label>
+                        <Select value={debtCharacteristics.echeance} onValueChange={(value: 'Fixe' | 'Découvert') => setDebtCharacteristics({
+                          ...debtCharacteristics,
+                          echeance: value
+                        })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border border-border z-50">
+                            <SelectItem value="Fixe">Fixe</SelectItem>
+                            <SelectItem value="Découvert">Découvert</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {debtCharacteristics.echeance === 'Fixe' && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Durée (mois)</label>
+                          <Input 
+                            type="number" 
+                            placeholder="0" 
+                            value={debtCharacteristics.dureeMois} 
+                            onChange={e => setDebtCharacteristics({
+                              ...debtCharacteristics,
+                              dureeMois: parseInt(e.target.value) || 0
+                            })} 
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Base</label>
+                        <Select value={debtCharacteristics.base} onValueChange={(value: 'OAT 10 ANS' | 'EURIBOR 3M' | 'EURIBOR 6M' | 'Fixe (0%)') => setDebtCharacteristics({
+                          ...debtCharacteristics,
+                          base: value
+                        })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border border-border z-50">
+                            <SelectItem value="OAT 10 ANS">OAT 10 ANS</SelectItem>
+                            <SelectItem value="EURIBOR 3M">EURIBOR 3M</SelectItem>
+                            <SelectItem value="EURIBOR 6M">EURIBOR 6M</SelectItem>
+                            <SelectItem value="Fixe (0%)">Fixe (0%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Marge (%)</label>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          value={debtCharacteristics.marge || 0} 
+                          onChange={e => setDebtCharacteristics({
+                            ...debtCharacteristics,
+                            marge: parseFloat(e.target.value) || 0
+                          })} 
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Troisième ligne - Champs spécifiques Lombard et amortissement constant */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {debtCharacteristics.typeCredit === 'Lombard' && (
+                      <>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Couverture LTV (%)</label>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="0.00" 
+                            value={debtCharacteristics.couvertureLtv || 0} 
+                            onChange={e => setDebtCharacteristics({
+                              ...debtCharacteristics,
+                              couvertureLtv: parseFloat(e.target.value) || 0
+                            })} 
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Clause d'arrosage</label>
+                          <Select value={debtCharacteristics.clauseArrosage} onValueChange={(value: 'Oui' | 'Non') => setDebtCharacteristics({
+                            ...debtCharacteristics,
+                            clauseArrosage: value
+                          })}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border border-border z-50">
+                              <SelectItem value="Oui">Oui</SelectItem>
+                              <SelectItem value="Non">Non</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </>
+                    )}
+
+                    {debtCharacteristics.type === 'Amortissement constant' && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Amortissement annuel (%)</label>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
                           value={debtCharacteristics.amortissementAnnuel || 0} 
                           onChange={e => setDebtCharacteristics({
                             ...debtCharacteristics,
