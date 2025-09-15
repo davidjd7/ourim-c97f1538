@@ -5,13 +5,16 @@ import './index.css'
 import { ImmobilierProvider } from '@/contexts/ImmobilierContext';
 import { CompanyProvider } from '@/contexts/CompanyContext';
 import { ColumnVisibilityProvider } from '@/contexts/ColumnVisibilityContext';
+import { SearchProvider } from '@/contexts/SearchContext';
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ColumnVisibilityProvider>
       <CompanyProvider>
         <ImmobilierProvider>
-          <App />
+          <SearchProvider>
+            <App />
+          </SearchProvider>
         </ImmobilierProvider>
       </CompanyProvider>
     </ColumnVisibilityProvider>
