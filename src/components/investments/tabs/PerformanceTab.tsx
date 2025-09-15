@@ -14,7 +14,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { toast } from 'sonner';
-import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { YearPicker } from '@/components/ui/year-picker';
 import { FIELD_CONFIG, type DebtCharacteristics as FieldConfigDebtCharacteristics } from './debt/fieldConfig';
@@ -64,6 +65,7 @@ export function PerformanceTab({
   const { user } = useAuth();
   const { canEdit } = useUserRole();
   const { notifyInvestmentDataChanged } = useInvestments();
+  const { toast: toastHook } = useToast();
 
   // Data arrays
   const [cashflows, setCashflows] = useState<CashflowRow[]>([]);
@@ -98,6 +100,7 @@ export function PerformanceTab({
   } | null>(null);
   const [editingDebtCharacteristics, setEditingDebtCharacteristics] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploadingDebtFile, setUploadingDebtFile] = useState(false);
   useEffect(() => {
     if (user && investmentId) {
       Promise.all([loadCashflows(), loadImmobilisations(), loadValorisations(), loadDebtCharacteristics(), loadDebtFlows()]).finally(() => setLoading(false));
@@ -873,6 +876,76 @@ export function PerformanceTab({
       setEditingDebtFlow(null);
     }
   };
+
+  // Debt document upload function
+  const handleAddDebtDocument = () => {
+    if (!user || !canEdit) return;
+
+    // Create a hidden file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png';
+    input.multiple = true;
+    
+    input.onchange = async (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (!files || files.length === 0) return;
+
+      setUploadingDebtFile(true);
+      const uploadedFiles = [];
+
+      try {
+        for (const file of Array.from(files)) {
+          // Generate unique file name
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+          const filePath = `${user.id}/${investmentId}/${fileName}`;
+
+          // Upload to Supabase Storage
+          const { error: uploadError } = await supabase.storage
+            .from('investment-documents')
+            .upload(filePath, file);
+
+          if (uploadError) throw uploadError;
+
+          // Save metadata to database with 'debt' type
+          const { data: document, error: dbError } = await supabase
+            .from('documents')
+            .insert({
+              user_id: user.id,
+              immobilier_id: investmentId,
+              name: file.name,
+              type: 'debt', // Special type for debt documents
+              file_path: filePath,
+              file_size: file.size,
+              mime_type: file.type
+            })
+            .select()
+            .single();
+
+          if (dbError) throw dbError;
+          uploadedFiles.push(document);
+        }
+        
+        toastHook({
+          title: "Documents ajoutés",
+          description: `${uploadedFiles.length} document(s) de dette ajouté(s) avec succès.`,
+        });
+      } catch (error) {
+        console.error('Error uploading debt documents:', error);
+        toastHook({
+          title: "Erreur",
+          description: "Erreur lors de l'ajout des documents de dette.",
+          variant: "destructive",
+        });
+      } finally {
+        setUploadingDebtFile(false);
+      }
+    };
+    
+    input.click();
+  };
+
   if (loading) {
     return <div className="space-y-6">
         <div className="flex items-center justify-center h-64">
@@ -1934,11 +2007,23 @@ export function PerformanceTab({
       {/* Section Dette */}
       {debtCharacteristics.id ? (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
               Dette
             </CardTitle>
+            {canEdit && (
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="flex items-center gap-2" 
+                onClick={handleAddDebtDocument}
+                disabled={uploadingDebtFile}
+              >
+                <Upload className="h-4 w-4" />
+                {uploadingDebtFile ? 'Upload...' : 'Associer fichier'}
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-8">
             
