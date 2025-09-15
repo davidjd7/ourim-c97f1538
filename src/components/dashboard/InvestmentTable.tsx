@@ -63,6 +63,7 @@ function InvestmentKPIRow({
         loyer: Number(kpis.rendementNetDetails?.loyer ?? 0),
         rendementNet: Number(kpis.rendementNet ?? 0),
         gain1: Number(kpis.xirrDetails?.gain1 ?? 0),
+        totalReturnCalculated: Number(kpis.xirrDetails?.gain1 ?? 0) / Number(kpis.fondPropre || 1) * 100,
         // Year information for Last columns
         lastVarValeurYear: kpis.xirrDetails?.lastVarValeurYear ?? 0,
         lastCfniYear: kpis.xirrDetails?.lastCfniYear ?? 0,
@@ -104,10 +105,12 @@ function InvestmentKPIRow({
       case 'fondPropre':
         return formatCurrency(kpis.fondPropre);
       case 'totalReturn':
+        const gain1 = kpis.xirrDetails?.gain1 || 0;
+        const fondPropre = kpis.fondPropre || 1; // Avoid division by zero
         return (
           <>
-            {kpis.totalReturn >= 0 ? '+' : ''}
-            {formatPercentage(kpis.totalReturn)}
+            {(gain1 / fondPropre * 100) >= 0 ? '+' : ''}
+            {((gain1 / fondPropre * 100).toFixed(1))}%
           </>
         );
       case 'totalCfni':
@@ -194,7 +197,9 @@ function InvestmentKPIRow({
       let value = 0;
       switch (columnKey) {
         case 'totalReturn':
-          value = kpis.totalReturn || 0;
+          const gain1Value = kpis.xirrDetails?.gain1 || 0;
+          const fondPropreValue = kpis.fondPropre || 1;
+          value = (gain1Value / fondPropreValue * 100);
           break;
         case 'totalCfni':
           value = kpis.xirrDetails?.totalCfni || 0;

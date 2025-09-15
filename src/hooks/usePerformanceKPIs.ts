@@ -52,7 +52,7 @@ export function usePerformanceKPIs(investmentId: string) {
     rendementNet: 0,
     rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
     totalReturn: 0,
-    totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, year: 0 },
+    totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
     xirr: 0,
     xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
   });
@@ -271,7 +271,7 @@ export function usePerformanceKPIs(investmentId: string) {
         rendementNet: 0,
         rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
         totalReturn: 0,
-        totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, year: 0 },
+        totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
         xirr: 0,
         xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
       });
@@ -388,18 +388,28 @@ export function usePerformanceKPIs(investmentId: string) {
         year: rendementNetYear
       };
 
+      // Calculate value variation between the 2 most recent valorisations (chronologically)
+      const sortedValorisations = [...valorisations].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const variationValeurDerniereAnnee = sortedValorisations.length >= 2 
+        ? sortedValorisations[sortedValorisations.length - 1].valeur - sortedValorisations[sortedValorisations.length - 2].valeur
+        : 0;
+
       // Total Return calculations = (CFNI + Δ Valeur) / FP
-      // We'll calculate delta valeur here, same as XIRR logic below
-      const totalReturnDeltaValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
+      // Delta valeur corresponds to the variation over the last year
+      const totalReturnDeltaValeur = variationValeurDerniereAnnee;
       const totalReturn = latestSynthese?.fp && latestSynthese.fp > 0 ? ((cfni + totalReturnDeltaValeur) / latestSynthese.fp) * 100 : 0;
       
       // COC net (cash pur) = CFNI / FP
       const cocNet = latestSynthese?.fp && latestSynthese.fp > 0 ? (cfni / latestSynthese.fp) * 100 : 0;
       
+      // Sum of CFNI + Delta valeur (absolute value)
+      const cfniPlusDeltaValeur = cfni + totalReturnDeltaValeur;
+      
       const totalReturnDetails = {
         cfni: cfni,
         deltaValeur: totalReturnDeltaValeur,
         cocNet: cocNet,
+        cfniPlusDeltaValeur: cfniPlusDeltaValeur,
         year: rendementNetYear
       };
 
@@ -445,12 +455,6 @@ export function usePerformanceKPIs(investmentId: string) {
 
       // Calculate value difference between most recent and oldest date
       const deltaValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
-      
-      // Calculate value variation between the 2 most recent valorisations (chronologically)
-      const sortedValorisations = [...valorisations].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      const variationValeurDerniereAnnee = sortedValorisations.length >= 2 
-        ? sortedValorisations[sortedValorisations.length - 1].valeur - sortedValorisations[sortedValorisations.length - 2].valeur
-        : 0;
       
       // Total = somme de totalCfni + deltaValeur
       const total = totalCfni + deltaValeur;
@@ -512,7 +516,7 @@ export function usePerformanceKPIs(investmentId: string) {
         rendementNet: 0,
         rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
         totalReturn: 0,
-        totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, year: 0 },
+        totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
         xirr: 0,
         xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
       });

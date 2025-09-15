@@ -385,6 +385,9 @@ export default function InvestissementDetail() {
                   <p className="text-2xl font-bold financial-value">
                     {kpis.totalReturn >= 0 ? '+' : ''}{formatPercentage(kpis.totalReturn)}
                   </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {formatCurrency(Math.abs(kpis.totalReturnDetails.cfniPlusDeltaValeur || 0))}
+                  </p>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
                   <div>COC net: {kpis.totalReturnDetails.cocNet?.toFixed(1) || '0.0'}%</div>
