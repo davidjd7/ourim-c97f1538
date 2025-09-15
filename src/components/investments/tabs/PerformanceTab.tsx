@@ -15,7 +15,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
-import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon, Upload } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCard, BarChart3, TrendingDown as TrendIcon, Upload, Download, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { YearPicker } from '@/components/ui/year-picker';
 import { FIELD_CONFIG, type DebtCharacteristics as FieldConfigDebtCharacteristics } from './debt/fieldConfig';
@@ -80,6 +80,11 @@ export function PerformanceTab({
     typeTaux: 'Fixe'
   });
   const [debtFlows, setDebtFlows] = useState<DebtFlowRow[]>([]);
+  const [debtDocument, setDebtDocument] = useState<{
+    id: string;
+    name: string;
+    file_path: string;
+  } | null>(null);
 
   // Editing states
   const [editingCashflow, setEditingCashflow] = useState<{
@@ -177,7 +182,7 @@ export function PerformanceTab({
       const {
         data: debtData,
         error
-      } = await supabase.from('debt_characteristics').select('*').eq('asset_id', investmentId).eq('user_id', user?.id).maybeSingle();
+      } = await supabase.from('debt_characteristics').select('*, documents(id, name, file_path)').eq('asset_id', investmentId).eq('user_id', user?.id).maybeSingle();
       if (error) throw error;
       if (debtData) {
         const d: any = debtData;
@@ -198,6 +203,21 @@ export function PerformanceTab({
           couvertureLtv: typeof d?.couverture_ltv === 'number' ? d.couverture_ltv : undefined,
           clauseArrosage: (d?.clause_arrosage as 'Oui' | 'Non') || undefined
         });
+        
+        // Load associated document if exists
+        if (debtData.debt_document_id) {
+          const { data: docData, error: docError } = await supabase
+            .from('documents')
+            .select('id, name, file_path')
+            .eq('id', debtData.debt_document_id)
+            .single();
+            
+          if (!docError && docData) {
+            setDebtDocument(docData);
+          }
+        } else {
+          setDebtDocument(null);
+        }
       }
     } catch (error) {
       console.error('Error loading debt characteristics:', error);
@@ -879,73 +899,96 @@ export function PerformanceTab({
 
   // Debt document upload function
   const handleAddDebtDocument = () => {
-    if (!user || !canEdit) return;
+    if (!user || !canEdit || !debtCharacteristics.id) return;
 
     // Create a hidden file input
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png';
-    input.multiple = true;
+    input.multiple = false; // Only allow single file
     
     input.onchange = async (e) => {
       const files = (e.target as HTMLInputElement).files;
       if (!files || files.length === 0) return;
 
+      const file = files[0];
       setUploadingDebtFile(true);
-      const uploadedFiles = [];
 
       try {
-        for (const file of Array.from(files)) {
-          // Generate unique file name
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-          const filePath = `${user.id}/${investmentId}/${fileName}`;
+        // Generate unique file name
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const filePath = `${user.id}/${investmentId}/${fileName}`;
 
-          // Upload to Supabase Storage
-          const { error: uploadError } = await supabase.storage
-            .from('investment-documents')
-            .upload(filePath, file);
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('investment-documents')
+          .upload(filePath, file);
 
-          if (uploadError) {
-            console.error('Storage upload error:', uploadError);
-            throw new Error(`Erreur lors de l'upload: ${uploadError.message}`);
-          }
-
-          // Save metadata to database with 'debt' type
-          const { data: document, error: dbError } = await supabase
-            .from('documents')
-            .insert({
-              user_id: user.id,
-              immobilier_id: investmentId,
-              name: file.name,
-              type: 'debt', // Special type for debt documents
-              file_path: filePath,
-              file_size: file.size,
-              mime_type: file.type
-            })
-            .select()
-            .single();
-
-          if (dbError) {
-            console.error('Database insert error:', dbError);
-            // Clean up uploaded file if database insert fails
-            await supabase.storage
-              .from('investment-documents')
-              .remove([filePath]);
-            throw new Error(`Erreur lors de l'enregistrement: ${dbError.message}`);
-          }
-          uploadedFiles.push(document);
+        if (uploadError) {
+          console.error('Storage upload error:', uploadError);
+          throw new Error(`Erreur lors de l'upload: ${uploadError.message}`);
         }
+
+        // Save metadata to database with 'debt' type
+        const { data: document, error: dbError } = await supabase
+          .from('documents')
+          .insert({
+            user_id: user.id,
+            immobilier_id: investmentId,
+            name: file.name,
+            type: 'debt',
+            file_path: filePath,
+            file_size: file.size,
+            mime_type: file.type
+          })
+          .select()
+          .single();
+
+        if (dbError) {
+          console.error('Database insert error:', dbError);
+          // Clean up uploaded file if database insert fails
+          await supabase.storage
+            .from('investment-documents')
+            .remove([filePath]);
+          throw new Error(`Erreur lors de l'enregistrement: ${dbError.message}`);
+        }
+
+        // Associate document with debt characteristics
+        const { error: updateError } = await supabase
+          .from('debt_characteristics')
+          .update({ debt_document_id: document.id })
+          .eq('id', debtCharacteristics.id);
+
+        if (updateError) {
+          console.error('Error updating debt characteristics:', updateError);
+          // Clean up uploaded file and document if association fails
+          await supabase.storage
+            .from('investment-documents')
+            .remove([filePath]);
+          await supabase
+            .from('documents')
+            .delete()
+            .eq('id', document.id);
+          throw new Error(`Erreur lors de l'association: ${updateError.message}`);
+        }
+
+        // Update local state
+        setDebtDocument({
+          id: document.id,
+          name: document.name,
+          file_path: document.file_path
+        });
         
         toastHook({
-          title: "Documents ajoutés",
-          description: `${uploadedFiles.length} document(s) de dette ajouté(s) avec succès.`,
+          title: "Document associé",
+          description: `Le document "${file.name}" a été associé à la dette.`,
         });
       } catch (error) {
-        console.error('Error uploading debt documents:', error);
+        console.error('Error uploading debt document:', error);
         toastHook({
           title: "Erreur",
-          description: error instanceof Error ? error.message : "Erreur lors de l'ajout des documents de dette.",
+          description: error instanceof Error ? error.message : "Erreur lors de l'ajout du document de dette.",
           variant: "destructive",
         });
       } finally {
@@ -954,6 +997,81 @@ export function PerformanceTab({
     };
     
     input.click();
+  };
+
+  // Download debt document function
+  const handleDownloadDebtDocument = async () => {
+    if (!debtDocument) return;
+
+    try {
+      const { data, error } = await supabase.storage
+        .from('investment-documents')
+        .download(debtDocument.file_path);
+
+      if (error) throw error;
+
+      // Create download link
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = debtDocument.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toastHook({
+        title: "Erreur",
+        description: "Erreur lors du téléchargement du document.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Delete debt document function
+  const handleDeleteDebtDocument = async () => {
+    if (!debtDocument || !debtCharacteristics.id) return;
+
+    try {
+      // Remove association from debt characteristics
+      const { error: updateError } = await supabase
+        .from('debt_characteristics')
+        .update({ debt_document_id: null })
+        .eq('id', debtCharacteristics.id);
+
+      if (updateError) throw updateError;
+
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('investment-documents')
+        .remove([debtDocument.file_path]);
+
+      if (storageError) console.error('Storage deletion error:', storageError);
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', debtDocument.id);
+
+      if (dbError) throw dbError;
+
+      // Update local state
+      setDebtDocument(null);
+      
+      toastHook({
+        title: "Document supprimé",
+        description: "Le document a été supprimé avec succès.",
+      });
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toastHook({
+        title: "Erreur",
+        description: "Erreur lors de la suppression du document.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -2038,16 +2156,38 @@ export function PerformanceTab({
                 ) : (
                   <>
                     {canEdit && (
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="flex items-center gap-2" 
-                        onClick={handleAddDebtDocument}
-                        disabled={uploadingDebtFile}
-                      >
-                        <Upload className="h-4 w-4" />
-                        {uploadingDebtFile ? 'Upload...' : 'Associer fichier'}
-                      </Button>
+                      debtDocument ? (
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="flex items-center gap-2" 
+                            onClick={handleDownloadDebtDocument}
+                          >
+                            <FileText className="h-4 w-4" />
+                            {debtDocument.name}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="flex items-center gap-2 text-destructive hover:text-destructive" 
+                            onClick={handleDeleteDebtDocument}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="flex items-center gap-2" 
+                          onClick={handleAddDebtDocument}
+                          disabled={uploadingDebtFile}
+                        >
+                          <Upload className="h-4 w-4" />
+                          {uploadingDebtFile ? 'Upload...' : 'Associer fichier'}
+                        </Button>
+                      )
                     )}
                     <Button onClick={() => setEditingDebtCharacteristics(true)} size="sm" variant="outline" className="flex items-center gap-2">
                       <Edit className="h-4 w-4" />

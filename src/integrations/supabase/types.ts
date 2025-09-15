@@ -75,6 +75,7 @@ export type Database = {
           clause_arrosage: string | null
           couverture_ltv: number | null
           created_at: string
+          debt_document_id: string | null
           duree_mois: number | null
           echeance: string | null
           id: string
@@ -98,6 +99,7 @@ export type Database = {
           clause_arrosage?: string | null
           couverture_ltv?: number | null
           created_at?: string
+          debt_document_id?: string | null
           duree_mois?: number | null
           echeance?: string | null
           id?: string
@@ -121,6 +123,7 @@ export type Database = {
           clause_arrosage?: string | null
           couverture_ltv?: number | null
           created_at?: string
+          debt_document_id?: string | null
           duree_mois?: number | null
           echeance?: string | null
           id?: string
@@ -135,7 +138,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "debt_characteristics_debt_document_id_fkey"
+            columns: ["debt_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       debt_flows: {
         Row: {
