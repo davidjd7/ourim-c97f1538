@@ -1381,81 +1381,109 @@ export function PerformanceTab({
                        {getSyntheseData().length > 0 && (() => {
                          const syntheseData = getSyntheseData();
                          
-                         // Calculer les totaux pour NOI ajusté, CFNI, CF, Gain1 et Gain2
-                         let totalNoi = 0;
-                         let totalCfni = 0;
-                         let totalCf = 0;
-                         let totalGain1 = 0;
-                         let totalGain2 = 0;
+                          // Calculer les totaux pour NOI ajusté, CFNI, CF, Gain1 et Gain2
+                          // Et les moyennes pour Rendement net, COC net et Total Return
+                          // Et la somme pour Δ Valeur
+                          let totalNoi = 0;
+                          let totalCfni = 0;
+                          let totalCf = 0;
+                          let totalGain1 = 0;
+                          let totalGain2 = 0;
+                          let totalVariationValeur = 0;
+                          let sumRendementNet = 0;
+                          let sumCocNet = 0;
+                          let sumTotalReturn = 0;
+                          let count = 0;
                          
-                         syntheseData.forEach((row, index) => {
-                           // Calculs pour NOI ajusté (EBITDA - immobilisation)
-                           const cashflowDate = cashflows.find(cf => cf.date === row.date);
-                           const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
-                           
-                           const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
-                           const immobilisationAmount = immobilisationDate?.montant || 0;
-                           
-                           const noiAjuste = ebitda - immobilisationAmount;
-                           
-                           const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
-                           const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
-                           const rmbtCapital = debtFlowDate?.rmbtCapital || 0;
-                           
-                           const cfni = noiAjuste - rmbtInteret;
-                           const cf = cfni - rmbtCapital;
-                           
-                           // Calculs pour les gains
-                           const previousRow = index > 0 ? syntheseData[index - 1] : null;
-                           const variationFP = previousRow ? row.fp - previousRow.fp : 0;
-                           const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
-                           const gain1 = variationFP + cf;
-                           const gain2 = variationValeur + cfni;
-                           
-                           totalNoi += ebitda;
-                           totalCfni += cfni;
-                           totalCf += cf;
-                           totalGain1 += gain1;
-                           totalGain2 += gain2;
-                         });
-                         
-                         return (
-                           <TableRow className="border-t-2 border-border bg-muted/30">
-                             <TableCell className="font-bold text-xs text-center">
-                               Total
-                             </TableCell>
-                             <TableCell className="financial-value text-xs text-center">
-                               {/* Pas de total pour la Valeur */}
-                             </TableCell>
-                             <TableCell className="financial-value text-xs text-center">
-                               {/* Pas de total pour le FP */}
-                             </TableCell>
-                              <TableCell className={`financial-value font-bold text-xs text-center ${totalNoi >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                {totalNoi >= 0 ? '+' : ''}{formatCurrency(totalNoi)}
-                             </TableCell>
-                             <TableCell className="financial-value text-xs text-center">
-                               {/* Pas de total pour le rendement net */}
-                             </TableCell>
-                             <TableCell className={`financial-value font-bold text-xs text-center ${totalCfni >= 0 ? 'text-success' : 'text-destructive'}`}>
-                               {totalCfni >= 0 ? '+' : ''}{formatCurrency(totalCfni)}
-                             </TableCell>
-                             <TableCell className="financial-value text-xs text-center">
-                               {/* Pas de total pour le COC net */}
-                             </TableCell>
-                             <TableCell className={`financial-value font-bold text-xs text-center ${totalCf >= 0 ? 'text-success' : 'text-destructive'}`}>
-                               {totalCf >= 0 ? '+' : ''}{formatCurrency(totalCf)}
-                             </TableCell>
-                             <TableCell className={`financial-value font-bold text-xs text-center ${totalGain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
-                               {totalGain1 >= 0 ? '+' : ''}{formatCurrency(totalGain1)}
-                             </TableCell>
-                             <TableCell className={`financial-value font-bold text-xs text-center ${totalGain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
-                               {totalGain2 >= 0 ? '+' : ''}{formatCurrency(totalGain2)}
-                             </TableCell>
-                             <TableCell className="financial-value text-xs text-center">
-                               {/* Pas de total pour le XIRR glissant */}
-                             </TableCell>
-                           </TableRow>
-                         );
+                          syntheseData.forEach((row, index) => {
+                            // Calculs pour NOI ajusté (EBITDA - immobilisation)
+                            const cashflowDate = cashflows.find(cf => cf.date === row.date);
+                            const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
+                            
+                            const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
+                            const immobilisationAmount = immobilisationDate?.montant || 0;
+                            
+                            const noiAjuste = ebitda - immobilisationAmount;
+                            
+                            const debtFlowDate = debtFlows.find(debt => debt.date === row.date);
+                            const rmbtInteret = debtFlowDate?.rmbtInteret || 0;
+                            const rmbtCapital = debtFlowDate?.rmbtCapital || 0;
+                            
+                            const cfni = noiAjuste - rmbtInteret;
+                            const cf = cfni - rmbtCapital;
+                            
+                            // Calculs pour les gains
+                            const previousRow = index > 0 ? syntheseData[index - 1] : null;
+                            const variationFP = previousRow ? row.fp - previousRow.fp : 0;
+                            const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
+                            const gain1 = variationFP + cf;
+                            const gain2 = variationValeur + cfni;
+                            
+                            // Calculs pour les moyennes
+                            const rendementNet = row.valeur > 0 ? (ebitda / row.valeur) * 100 : 0;
+                            const cocNet = row.fp > 0 ? (cfni / row.fp) * 100 : 0;
+                            const totalReturn = row.fp > 0 ? (gain1 / row.fp) * 100 : 0;
+                            
+                            totalNoi += ebitda;
+                            totalCfni += cfni;
+                            totalCf += cf;
+                            totalGain1 += gain1;
+                            totalGain2 += gain2;
+                            totalVariationValeur += variationValeur;
+                            sumRendementNet += rendementNet;
+                            sumCocNet += cocNet;
+                            sumTotalReturn += totalReturn;
+                            count++;
+                          });
+                          
+                          // Calculer les moyennes
+                          const avgRendementNet = count > 0 ? sumRendementNet / count : 0;
+                          const avgCocNet = count > 0 ? sumCocNet / count : 0;
+                          const avgTotalReturn = count > 0 ? sumTotalReturn / count : 0;
+                          
+                          return (
+                            <TableRow className="border-t-2 border-border bg-muted/30">
+                              <TableCell className="font-bold text-xs text-center">
+                                Total
+                              </TableCell>
+                              <TableCell className="financial-value text-xs text-center">
+                                {/* Pas de total pour la Valeur */}
+                              </TableCell>
+                              <TableCell className="financial-value text-xs text-center">
+                                {/* Pas de total pour le FP */}
+                              </TableCell>
+                               <TableCell className={`financial-value font-bold text-xs text-center ${totalNoi >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                 {totalNoi >= 0 ? '+' : ''}{formatCurrency(totalNoi)}
+                              </TableCell>
+                              <TableCell className={`financial-value font-bold text-xs text-center ${avgRendementNet >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {avgRendementNet.toFixed(1)}%
+                              </TableCell>
+                              <TableCell className={`financial-value font-bold text-xs text-center ${totalCfni >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {totalCfni >= 0 ? '+' : ''}{formatCurrency(totalCfni)}
+                              </TableCell>
+                              <TableCell className={`financial-value font-bold text-xs text-center ${avgCocNet >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {avgCocNet.toFixed(1)}%
+                              </TableCell>
+                              <TableCell className={`financial-value font-bold text-xs text-center ${totalCf >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {totalCf >= 0 ? '+' : ''}{formatCurrency(totalCf)}
+                              </TableCell>
+                              <TableCell className={`financial-value font-bold text-xs text-center ${totalVariationValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {totalVariationValeur >= 0 ? '+' : ''}{formatCurrency(totalVariationValeur)}
+                              </TableCell>
+                              <TableCell className={`financial-value font-bold text-xs text-center ${totalGain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {totalGain1 >= 0 ? '+' : ''}{formatCurrency(totalGain1)}
+                              </TableCell>
+                              <TableCell className="financial-value text-xs text-center">
+                                {/* Rien pour Gain 2 */}
+                              </TableCell>
+                              <TableCell className={`financial-value font-bold text-xs text-center ${avgTotalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {avgTotalReturn.toFixed(1)}%
+                              </TableCell>
+                              <TableCell className="financial-value text-xs text-center">
+                                {/* Pas de total pour le XIRR glissant */}
+                              </TableCell>
+                            </TableRow>
+                          );
                       })()}
                    </TableBody>
                      </Table>
