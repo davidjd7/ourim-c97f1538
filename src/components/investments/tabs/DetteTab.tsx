@@ -146,13 +146,43 @@ export function DetteTab({ investmentId }: DetteTabProps) {
   };
 
   const calculateProgress = (initial: number, remaining: number) => {
-    return ((initial - remaining) / initial) * 100;
+    if (!initial || initial <= 0) return 0;
+    const v = ((initial - remaining) / initial) * 100;
+    if (isNaN(v) || !isFinite(v)) return 0;
+    return Math.max(0, Math.min(100, v));
   };
 
+  const safeFormatPercentage = (value?: number | null) => {
+    if (value === null || value === undefined || isNaN(Number(value))) return '-';
+    return `${Number(value).toFixed(2)}%`;
+  };
+
+  const validateDebt = () => {
+    const mi = parseFloat(newDebt.montant_initial || '0');
+    const dm = parseInt(newDebt.duree_mois || '0');
+    const tx = parseFloat(newDebt.taux || '0');
+    if (mi <= 0 || dm <= 0 || isNaN(mi) || isNaN(dm)) {
+      toast.error('Veuillez renseigner un Montant Tiré (>0) et une Durée (mois) (>0).');
+      return false;
+    }
+    if (isNaN(tx)) {
+      toast.error('Veuillez renseigner un Taux valide.');
+      return false;
+    }
+    if (newDebt.type_credit === 'Lombard') {
+      const mt = parseFloat(newDebt.montant_tirable || '0');
+      if (mt <= 0 || isNaN(mt)) {
+        toast.error('Pour un crédit Lombard, renseignez le Montant Tirable (>0).');
+        return false;
+      }
+    }
+    return true;
+  };
   const handleAddDebt = async () => {
     if (!user) return;
 
     try {
+      if (!validateDebt()) return;
       const debtData = {
         asset_id: investmentId,
         asset_type: 'immobilier',
@@ -239,6 +269,7 @@ export function DetteTab({ investmentId }: DetteTabProps) {
     if (!user || !editingDebt) return;
 
     try {
+      if (!validateDebt()) return;
       const updateData = {
         montant_initial: newDebt.montant_initial ? parseFloat(newDebt.montant_initial) : 0,
         duree_mois: newDebt.duree_mois ? parseInt(newDebt.duree_mois) : 0,
@@ -665,7 +696,7 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground">Taux (%)</p>
-                          <p className="font-medium">{formatPercentage(debt.taux)}</p>
+                          <p className="font-medium">{safeFormatPercentage(debt.taux as any)}</p>
                         </div>
                       </div>
 
@@ -680,69 +711,49 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                         </div>
                       </div>
 
-                      {/* Additional fields if they exist */}
-                      {(debt.type_credit || debt.banque || debt.marge || debt.type_taux) && (
-                        <div className="border-t pt-4 mt-4">
-                          <div className="grid grid-cols-3 gap-4">
-                            {debt.type_credit && (
-                              <div>
-                                <p className="text-sm text-muted-foreground">Type de crédit</p>
-                                <p className="font-medium">{debt.type_credit}</p>
-                              </div>
-                            )}
-                            {debt.banque && (
-                              <div>
-                                <p className="text-sm text-muted-foreground">Banque</p>
-                                <p className="font-medium">{debt.banque}</p>
-                              </div>
-                            )}
-                            {debt.marge && (
-                              <div>
-                                <p className="text-sm text-muted-foreground">Marge (%)</p>
-                                <p className="font-medium">{formatPercentage(debt.marge)}</p>
-                              </div>
-                            )}
+                      {/* Détails additionnels, même mise en page que le formulaire */}
+                      <div className="border-t pt-4 mt-4">
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Type de crédit</p>
+                            <p className="font-medium">{debt.type_credit || '-'}</p>
                           </div>
-                          {(debt.type_taux || debt.echeance || debt.base) && (
-                            <div className="grid grid-cols-3 gap-4 mt-4">
-                              {debt.type_taux && (
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Type de taux</p>
-                                  <p className="font-medium">{debt.type_taux}</p>
-                                </div>
-                              )}
-                              {debt.echeance && (
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Échéance</p>
-                                  <p className="font-medium">{debt.echeance}</p>
-                                </div>
-                              )}
-                              {debt.base && (
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Base</p>
-                                  <p className="font-medium">{debt.base}</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {debt.type_credit === 'Lombard' && (debt.montant_tirable || debt.couverture_ltv) && (
-                            <div className="grid grid-cols-2 gap-4 mt-4">
-                              {debt.montant_tirable && (
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Montant Tirable (€)</p>
-                                  <p className="font-medium">{formatCurrency(debt.montant_tirable)}</p>
-                                </div>
-                              )}
-                              {debt.couverture_ltv && (
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Couverture LTV (%)</p>
-                                  <p className="font-medium">{formatPercentage(debt.couverture_ltv)}</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                          <div>
+                            <p className="text-sm text-muted-foreground">Banque</p>
+                            <p className="font-medium">{debt.banque || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Marge (%)</p>
+                            <p className="font-medium">{safeFormatPercentage(debt.marge as any)}</p>
+                          </div>
                         </div>
-                      )}
+                        <div className="grid grid-cols-3 gap-4 mt-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Type de taux</p>
+                            <p className="font-medium">{debt.type_taux || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Échéance</p>
+                            <p className="font-medium">{debt.echeance || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Base</p>
+                            <p className="font-medium">{debt.base || '-'}</p>
+                          </div>
+                        </div>
+                        {debt.type_credit === 'Lombard' && (
+                          <div className="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                              <p className="text-sm text-muted-foreground">Montant Tirable (€)</p>
+                              <p className="font-medium">{debt.montant_tirable !== null && debt.montant_tirable !== undefined ? formatCurrency(debt.montant_tirable) : '-'}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground">Couverture LTV (%)</p>
+                              <p className="font-medium">{safeFormatPercentage(debt.couverture_ltv as any)}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       
                       <div className="border-t pt-4 mt-4">
                         <div className="flex justify-between items-center mb-2">
