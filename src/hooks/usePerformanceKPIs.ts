@@ -50,9 +50,9 @@ export function usePerformanceKPIs(investmentId: string) {
     fondPropre: 0,
     fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
     rendementNet: 0,
-    rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0 },
-    coc: 0,
-    cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
+    rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
+    totalReturn: 0,
+    totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, year: 0 },
     xirr: 0,
     xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
   });
@@ -265,16 +265,16 @@ export function usePerformanceKPIs(investmentId: string) {
       const syntheseData = getSyntheseData(cashflows, immobilisations, debtFlows, valorisations);
 
       if (syntheseData.length === 0) {
-        setKpis({ 
-          fondPropre: 0,
-          fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
-          rendementNet: 0,
-          rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0 },
-          coc: 0,
-          cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
-          xirr: 0,
-          xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
-        });
+      setKpis({ 
+        fondPropre: 0,
+        fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
+        rendementNet: 0,
+        rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
+        totalReturn: 0,
+        totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, year: 0 },
+        xirr: 0,
+        xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
+      });
         return;
       }
 
@@ -345,25 +345,31 @@ export function usePerformanceKPIs(investmentId: string) {
       const rendementNet = latestSynthese?.valeur && latestSynthese.valeur > 0 ? (latestNOI / latestSynthese.valeur) * 100 : 0;
       const rendementNetYear = latestChartData?.year || 0;
       const noiSurLoyer = latestLoyer > 0 ? (latestNOI / latestLoyer) * 100 : 0;
-      const rendementNetDetails = {
-        noi: latestNOI,
-        loyer: latestLoyer,
-        noiSurLoyer: noiSurLoyer,
-        year: rendementNetYear
-      };
-
-      // COC calculations with additional metrics
-      const latestImmobilisation = immobilisations.find(immo => 
-        sortedCashflows.length > 0 ? immo.date === sortedCashflows[0].date : false
-      );
-      const noiAjuste = latestNOI - (latestImmobilisation?.montant || 0);
       
-      // Get latest debt flow data
+      // Get latest debt flow data for yield calculations
       const sortedDebtFlows = [...debtFlows].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       const latestDebtFlow = sortedDebtFlows[0];
       const rmbtInteret = latestDebtFlow?.rmbtInteret || 0;
       const rmbtCapital = latestDebtFlow?.rmbtCapital || 0;
       
+      // Get latest immobilisation
+      const latestImmobilisation = immobilisations.find(immo => 
+        sortedCashflows.length > 0 ? immo.date === sortedCashflows[0].date : false
+      );
+      const noiAjuste = latestNOI - (latestImmobilisation?.montant || 0);
+      
+      // Yield Banque = NOI / Dette
+      const yieldBanque = latestSynthese?.crd && latestSynthese.crd > 0 ? (noiAjuste / latestSynthese.crd) * 100 : 0;
+      
+      const rendementNetDetails = {
+        noi: latestNOI,
+        loyer: latestLoyer,
+        noiSurLoyer: noiSurLoyer,
+        year: rendementNetYear,
+        yieldBanque: yieldBanque
+      };
+
+      // COC calculations with additional metrics - Moving this after rendementNetDetails
       const cfni = noiAjuste - rmbtInteret;
       const cocCalculated = latestSynthese?.fp && latestSynthese.fp > 0 ? (cfni / latestSynthese.fp) * 100 : 0;
       
@@ -373,15 +379,27 @@ export function usePerformanceKPIs(investmentId: string) {
       // ICR = NOI / Rmbt Interet
       const icr = rmbtInteret > 0 ? noiAjuste / rmbtInteret : 0;
       
-      // Yield Banque = NOI / Dette
-      const yieldBanque = latestSynthese?.crd && latestSynthese.crd > 0 ? (noiAjuste / latestSynthese.crd) * 100 : 0;
-      
       const cocDetails = {
         cfni: cfni,
         dernierCF: latestSynthese?.flux || 0,
         dscr: dscr,
         icr: icr,
         yieldBanque: yieldBanque,
+        year: rendementNetYear
+      };
+
+      // Total Return calculations = (CFNI + Δ Valeur) / FP
+      // We'll calculate delta valeur here, same as XIRR logic below
+      const totalReturnDeltaValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
+      const totalReturn = latestSynthese?.fp && latestSynthese.fp > 0 ? ((cfni + totalReturnDeltaValeur) / latestSynthese.fp) * 100 : 0;
+      
+      // COC net (cash pur) = CFNI / FP
+      const cocNet = latestSynthese?.fp && latestSynthese.fp > 0 ? (cfni / latestSynthese.fp) * 100 : 0;
+      
+      const totalReturnDetails = {
+        cfni: cfni,
+        deltaValeur: totalReturnDeltaValeur,
+        cocNet: cocNet,
         year: rendementNetYear
       };
 
@@ -480,8 +498,8 @@ export function usePerformanceKPIs(investmentId: string) {
         fondPropreDetails,
         rendementNet,
         rendementNetDetails,
-        coc: cocCalculated,
-        cocDetails,
+        totalReturn,
+        totalReturnDetails,
         xirr,
         xirrDetails
       });
@@ -492,9 +510,9 @@ export function usePerformanceKPIs(investmentId: string) {
         fondPropre: 0,
         fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
         rendementNet: 0,
-        rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0 },
-        coc: 0,
-        cocDetails: { cfni: 0, dernierCF: 0, dscr: 0, icr: 0, yieldBanque: 0, year: 0 },
+        rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
+        totalReturn: 0,
+        totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, year: 0 },
         xirr: 0,
         xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
       });

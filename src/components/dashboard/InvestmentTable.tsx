@@ -50,7 +50,7 @@ function InvestmentKPIRow({
     if (!loading && kpis) {
       const data = {
         fondPropre: Number(kpis.fondPropre ?? 0),
-        coc: Number(kpis.coc ?? 0),
+        totalReturn: Number(kpis.totalReturn ?? 0),
         totalCfni: Number(kpis.xirrDetails?.totalCfni ?? 0),
         xirr: Number(kpis.xirr ?? 0),
         // Nouvelles valeurs
@@ -103,11 +103,11 @@ function InvestmentKPIRow({
         return <InvestmentTags investmentId={investment.id} />;
       case 'fondPropre':
         return formatCurrency(kpis.fondPropre);
-      case 'coc':
+      case 'totalReturn':
         return (
           <>
-            {kpis.coc >= 0 ? '+' : ''}
-            {formatPercentage(kpis.coc)}
+            {kpis.totalReturn >= 0 ? '+' : ''}
+            {formatPercentage(kpis.totalReturn)}
           </>
         );
       case 'totalCfni':
@@ -193,8 +193,8 @@ function InvestmentKPIRow({
     if (!loading && (columnType === 'currency' || columnType === 'percentage')) {
       let value = 0;
       switch (columnKey) {
-        case 'coc':
-          value = kpis.coc || 0;
+        case 'totalReturn':
+          value = kpis.totalReturn || 0;
           break;
         case 'totalCfni':
           value = kpis.xirrDetails?.totalCfni || 0;

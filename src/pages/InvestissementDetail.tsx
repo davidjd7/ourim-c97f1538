@@ -368,33 +368,28 @@ export default function InvestissementDetail() {
                   </p>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <div>NOI: {formatCurrency(kpis.rendementNetDetails.noi)}</div>
+                  <div>NOI: {formatCurrency(kpis.rendementNetDetails.noi)} ({kpis.rendementNetDetails.noiSurLoyer?.toFixed(1) || '0.0'}% du loyer)</div>
                   <div>Loyer: {formatCurrency(kpis.rendementNetDetails.loyer || 0)}</div>
-                  <div>NOI sur loyer: {kpis.rendementNetDetails.noiSurLoyer?.toFixed(1) || '0.0'}%</div>
+                  <div>Yield Banque: {kpis.rendementNetDetails.yieldBanque?.toFixed(1) || '0.0'}%</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* COC (Cash on Cash) */}
+          {/* Total Return */}
           <div className="card-financial">
             <div className="p-4">
-              <p className="text-sm text-muted-foreground font-bold mb-3">COC (2024)</p>
+              <p className="text-sm text-muted-foreground font-bold mb-3">Total Return (2024)</p>
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold financial-value">
-                    {kpis.coc >= 0 ? '+' : ''}{formatPercentage(kpis.coc)}
+                    {kpis.totalReturn >= 0 ? '+' : ''}{formatPercentage(kpis.totalReturn)}
                   </p>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    CFNI: {formatCurrency(kpis.cocDetails.cfni)}
-                  </div>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <div>
-                    DSCR: {kpis.cocDetails.dscr.toFixed(2)}
-                  </div>
-                  <div>Yield Banque: {kpis.cocDetails.yieldBanque?.toFixed(1) || '0.0'}%</div>
-                  <div className="text-xs">Dernier CF: {formatCurrency(kpis.cocDetails.dernierCF || 0)}</div>
+                  <div>COC net: {kpis.totalReturnDetails.cocNet?.toFixed(1) || '0.0'}%</div>
+                  <div>CFNI: {formatCurrency(kpis.totalReturnDetails.cfni)}</div>
+                  <div>Δ Valeur: {formatCurrency(kpis.totalReturnDetails.deltaValeur)}</div>
                 </div>
               </div>
             </div>
