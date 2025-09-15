@@ -1001,15 +1001,23 @@ export function PerformanceTab({
                                </TooltipContent>
                              </Tooltip>
                            </TableHead>
-                           <TableHead className="text-xs text-center min-w-[70px]">
-                             <Tooltip>
-                               <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
-                               <TooltipContent>
-                                 <p>Delta valeur + CFNI</p>
-                               </TooltipContent>
-                             </Tooltip>
-                           </TableHead>
-                           <TableHead className="text-xs text-center min-w-[80px]">XIRR glissant</TableHead>
+                            <TableHead className="text-xs text-center min-w-[70px]">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delta valeur + CFNI</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center min-w-[80px]">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Total Return</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Gain 1 / FP</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center min-w-[80px]">XIRR glissant</TableHead>
                          </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1043,8 +1051,11 @@ export function PerformanceTab({
                              const gain1 = variationFP + cf; // Variation de FP + CF
                              const gain2 = variationValeur + cfni; // Variation de valeur + CFNI
                              
-                             // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
-                             const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
+                              // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
+                              const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
+                              
+                              // Calcul Total Return = Gain 1 / FP
+                              const totalReturn = row.fp > 0 ? (gain1 / row.fp) * 100 : 0;
                              
                              return <TableRow key={index}>
                                <TableCell className="font-medium text-xs text-center">
@@ -1074,12 +1085,15 @@ export function PerformanceTab({
                                <TableCell className={`financial-value font-medium text-xs text-center ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
                                  {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
                                </TableCell>
-                               <TableCell className={`financial-value font-medium text-xs text-center ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                 {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
-                               </TableCell>
-                               <TableCell className="financial-value font-medium text-xs text-center">
-                                 {xirrGlissant.toFixed(1)}%
-                               </TableCell>
+                                <TableCell className={`financial-value font-medium text-xs text-center ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                  {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
+                                </TableCell>
+                                <TableCell className={`financial-value text-xs text-center ${totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                  {totalReturn.toFixed(1)}%
+                                </TableCell>
+                                <TableCell className="financial-value font-medium text-xs text-center">
+                                  {xirrGlissant.toFixed(1)}%
+                                </TableCell>
                              </TableRow>;
                           })}
                       </TableBody>
@@ -1241,15 +1255,23 @@ export function PerformanceTab({
                                 </TooltipContent>
                               </Tooltip>
                             </TableHead>
-                            <TableHead className="text-xs text-center">
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Delta valeur + CFNI</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableHead>
-                            <TableHead className="text-xs text-center">XIRR glissant</TableHead>
+                             <TableHead className="text-xs text-center">
+                               <Tooltip>
+                                 <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
+                                 <TooltipContent>
+                                   <p>Delta valeur + CFNI</p>
+                                 </TooltipContent>
+                               </Tooltip>
+                             </TableHead>
+                             <TableHead className="text-xs text-center">
+                               <Tooltip>
+                                 <TooltipTrigger className="cursor-help">Total Return</TooltipTrigger>
+                                 <TooltipContent>
+                                   <p>Gain 1 / FP</p>
+                                 </TooltipContent>
+                               </Tooltip>
+                             </TableHead>
+                             <TableHead className="text-xs text-center">XIRR glissant</TableHead>
                           </TableRow>
                        </TableHeader>
                   <TableBody>
@@ -1283,8 +1305,11 @@ export function PerformanceTab({
                          const gain1 = variationFP + cf; // Variation de FP + CF
                          const gain2 = variationValeur + cfni; // Variation de valeur + CFNI
                          
-                         // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
-                         const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
+                          // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
+                          const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
+                          
+                          // Calcul Total Return = Gain 1 / FP
+                          const totalReturn = row.fp > 0 ? (gain1 / row.fp) * 100 : 0;
                          
                          return <TableRow key={index}>
                            <TableCell className="font-medium text-xs text-center">
@@ -1314,18 +1339,21 @@ export function PerformanceTab({
                            <TableCell className={`financial-value text-xs text-center ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
                              {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
                            </TableCell>
-                           <TableCell className={`financial-value text-xs text-center ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
-                             {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
-                           </TableCell>
-                           <TableCell className={`financial-value text-xs text-center ${xirrGlissant >= 0 ? 'text-success' : 'text-destructive'}`}>
-                             {xirrGlissant.toFixed(1)}%
-                           </TableCell>
+                            <TableCell className={`financial-value text-xs text-center ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
+                            </TableCell>
+                            <TableCell className={`financial-value text-xs text-center ${totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {totalReturn.toFixed(1)}%
+                            </TableCell>
+                            <TableCell className={`financial-value text-xs text-center ${xirrGlissant >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {xirrGlissant.toFixed(1)}%
+                            </TableCell>
                          </TableRow>
                        })}
                        {getSyntheseData().length === 0 && <TableRow>
-                           <TableCell colSpan={11} className="text-center py-8 text-muted-foreground text-xs">
-                             Aucune donnée disponible pour la synthèse
-                           </TableCell>
+                            <TableCell colSpan={12} className="text-center py-8 text-muted-foreground text-xs">
+                              Aucune donnée disponible pour la synthèse
+                            </TableCell>
                          </TableRow>}
                        {/* Ligne Total */}
                        {getSyntheseData().length > 0 && (() => {
