@@ -2007,23 +2007,11 @@ export function PerformanceTab({
       {/* Section Dette */}
       {debtCharacteristics.id ? (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
               Dette
             </CardTitle>
-            {canEdit && (
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="flex items-center gap-2" 
-                onClick={handleAddDebtDocument}
-                disabled={uploadingDebtFile}
-              >
-                <Upload className="h-4 w-4" />
-                {uploadingDebtFile ? 'Upload...' : 'Associer fichier'}
-              </Button>
-            )}
           </CardHeader>
           <CardContent className="space-y-8">
             
@@ -2039,6 +2027,18 @@ export function PerformanceTab({
                   </Button>
                 ) : (
                   <>
+                    {canEdit && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="flex items-center gap-2" 
+                        onClick={handleAddDebtDocument}
+                        disabled={uploadingDebtFile}
+                      >
+                        <Upload className="h-4 w-4" />
+                        {uploadingDebtFile ? 'Upload...' : 'Associer fichier'}
+                      </Button>
+                    )}
                     <Button onClick={() => setEditingDebtCharacteristics(true)} size="sm" variant="outline" className="flex items-center gap-2">
                       <Edit className="h-4 w-4" />
                       Modifier
