@@ -985,22 +985,30 @@ export function PerformanceTab({
                                </TooltipContent>
                              </Tooltip>
                            </TableHead>
-                           <TableHead className="text-xs text-center min-w-[60px]">
-                             <Tooltip>
-                               <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
-                               <TooltipContent>
-                                 <p>Cashflow</p>
-                               </TooltipContent>
-                             </Tooltip>
-                           </TableHead>
-                           <TableHead className="text-xs text-center min-w-[70px]">
-                             <Tooltip>
-                               <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
-                               <TooltipContent>
-                                 <p>Delta FP + CF</p>
-                               </TooltipContent>
-                             </Tooltip>
-                           </TableHead>
+                            <TableHead className="text-xs text-center min-w-[60px]">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Cashflow</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center min-w-[70px]">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Δ Valeur</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Variation de valeur (n vs n-1)</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
+                            <TableHead className="text-xs text-center min-w-[70px]">
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delta FP + CF</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableHead>
                             <TableHead className="text-xs text-center min-w-[70px]">
                               <Tooltip>
                                 <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
@@ -1079,12 +1087,15 @@ export function PerformanceTab({
                                <TableCell className="financial-value font-medium text-xs text-center">
                                  {formatPercentage(cocNet)}
                                </TableCell>
-                               <TableCell className={`financial-value font-medium text-xs text-center ${cf >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                 {cf >= 0 ? '+' : ''}{formatCurrency(cf)}
-                               </TableCell>
-                               <TableCell className={`financial-value font-medium text-xs text-center ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                 {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
-                               </TableCell>
+                                <TableCell className={`financial-value font-medium text-xs text-center ${cf >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                  {cf >= 0 ? '+' : ''}{formatCurrency(cf)}
+                                </TableCell>
+                                <TableCell className={`financial-value text-xs text-center ${variationValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                  {variationValeur >= 0 ? '+' : ''}{formatCurrency(variationValeur)}
+                                </TableCell>
+                                <TableCell className={`financial-value font-medium text-xs text-center ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                  {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
+                                </TableCell>
                                 <TableCell className={`financial-value font-medium text-xs text-center ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
                                   {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
                                 </TableCell>
@@ -1239,22 +1250,30 @@ export function PerformanceTab({
                                 </TooltipContent>
                               </Tooltip>
                             </TableHead>
-                            <TableHead className="text-xs text-center">
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Cashflow</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableHead>
-                            <TableHead className="text-xs text-center">
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Delta FP + CF</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableHead>
+                             <TableHead className="text-xs text-center">
+                               <Tooltip>
+                                 <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
+                                 <TooltipContent>
+                                   <p>Cashflow</p>
+                                 </TooltipContent>
+                               </Tooltip>
+                             </TableHead>
+                             <TableHead className="text-xs text-center">
+                               <Tooltip>
+                                 <TooltipTrigger className="cursor-help">Δ Valeur</TooltipTrigger>
+                                 <TooltipContent>
+                                   <p>Variation de valeur (n vs n-1)</p>
+                                 </TooltipContent>
+                               </Tooltip>
+                             </TableHead>
+                             <TableHead className="text-xs text-center">
+                               <Tooltip>
+                                 <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                                 <TooltipContent>
+                                   <p>Delta FP + CF</p>
+                                 </TooltipContent>
+                               </Tooltip>
+                             </TableHead>
                              <TableHead className="text-xs text-center">
                                <Tooltip>
                                  <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
@@ -1333,12 +1352,15 @@ export function PerformanceTab({
                            <TableCell className={`financial-value text-xs text-center ${cocNet >= 0 ? 'text-success' : 'text-destructive'}`}>
                              {cocNet.toFixed(1)}%
                            </TableCell>
-                           <TableCell className={`financial-value text-xs text-center ${cf >= 0 ? 'text-success' : 'text-destructive'}`}>
-                             {cf >= 0 ? '+' : ''}{formatCurrency(cf)}
-                           </TableCell>
-                           <TableCell className={`financial-value text-xs text-center ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
-                             {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
-                           </TableCell>
+                            <TableCell className={`financial-value text-xs text-center ${cf >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {cf >= 0 ? '+' : ''}{formatCurrency(cf)}
+                            </TableCell>
+                            <TableCell className={`financial-value text-xs text-center ${variationValeur >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {variationValeur >= 0 ? '+' : ''}{formatCurrency(variationValeur)}
+                            </TableCell>
+                            <TableCell className={`financial-value text-xs text-center ${gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {gain1 >= 0 ? '+' : ''}{formatCurrency(gain1)}
+                            </TableCell>
                             <TableCell className={`financial-value text-xs text-center ${gain2 >= 0 ? 'text-success' : 'text-destructive'}`}>
                               {gain2 >= 0 ? '+' : ''}{formatCurrency(gain2)}
                             </TableCell>
@@ -1351,7 +1373,7 @@ export function PerformanceTab({
                          </TableRow>
                        })}
                        {getSyntheseData().length === 0 && <TableRow>
-                            <TableCell colSpan={12} className="text-center py-8 text-muted-foreground text-xs">
+                            <TableCell colSpan={13} className="text-center py-8 text-muted-foreground text-xs">
                               Aucune donnée disponible pour la synthèse
                             </TableCell>
                          </TableRow>}
