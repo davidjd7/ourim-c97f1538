@@ -3,26 +3,35 @@ import { InvestmentTable } from '@/components/dashboard/InvestmentTable';
 import { ConsolidatedKPIView } from '@/components/dashboard/ConsolidatedKPIView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { BarChart3, Table, Search, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { BarChart3, Table, Search, X, Building2, TrendingUp } from 'lucide-react';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { useNavigate } from 'react-router-dom';
+import { useInvestmentSearch } from '@/hooks/useInvestmentSearch';
 
 type ViewMode = 'table' | 'kpi';
 
 export default function Investissements() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [selectedInvestments, setSelectedInvestments] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchResults, setShowSearchResults] = useState(false);
   const { investments } = useInvestments();
   const navigate = useNavigate();
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const {
+    searchQuery,
+    searchResults,
+    showResults,
+    setSearchQuery,
+    setShowResults,
+    filteredInvestments
+  } = useInvestmentSearch(investments);
 
   // Close search dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowSearchResults(false);
+        setShowResults(false);
       }
     };
 
@@ -30,33 +39,51 @@ export default function Investissements() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [setShowResults]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showResults) {
+        setShowResults(false);
+        setSearchQuery('');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showResults, setShowResults, setSearchQuery]);
 
   const handleSelectedRowsChange = (selectedRows: Set<string>) => {
     setSelectedInvestments(selectedRows);
   };
 
-  // Filter investments based on search query
-  const filteredInvestments = investments.filter(investment =>
-    investment.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const searchResults = searchQuery.length > 0 ? filteredInvestments.slice(0, 5) : [];
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setShowSearchResults(value.length > 0);
-  };
-
   const handleSearchResultClick = (investmentId: string) => {
     navigate(`/investissement/${investmentId}`);
     setSearchQuery('');
-    setShowSearchResults(false);
+    setShowResults(false);
   };
 
   const clearSearch = () => {
     setSearchQuery('');
-    setShowSearchResults(false);
+    setShowResults(false);
+  };
+
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <mark key={index} className="bg-primary/20 text-primary font-medium">
+          {part}
+        </mark>
+      ) : part
+    );
   };
 
   const totalCount = filteredInvestments.length;
@@ -115,15 +142,20 @@ export default function Investissements() {
             type="text"
             placeholder="Rechercher un investissement..."
             value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10 pr-10"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10 focus:ring-2 focus:ring-primary/20"
+            aria-label="Rechercher un investissement"
+            aria-expanded={showResults}
+            aria-haspopup="listbox"
+            role="combobox"
           />
           {searchQuery && (
             <Button
               variant="ghost"
               size="sm"
               onClick={clearSearch}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+              aria-label="Effacer la recherche"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -131,34 +163,79 @@ export default function Investissements() {
         </div>
         
         {/* Search Results Dropdown */}
-        {showSearchResults && searchResults.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-            {searchResults.map((investment) => (
+        {showResults && searchResults.length > 0 && (
+          <div 
+            className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto backdrop-blur-sm"
+            role="listbox"
+            aria-label="Résultats de recherche"
+          >
+            {searchResults.map((investment, index) => (
               <div
                 key={investment.id}
                 onClick={() => handleSearchResultClick(investment.id)}
-                className="flex items-center gap-2 px-4 py-2 hover:bg-muted cursor-pointer transition-colors"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-accent/50 cursor-pointer transition-all duration-200 first:rounded-t-lg last:rounded-b-lg border-b border-border/50 last:border-b-0"
+                role="option"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSearchResultClick(investment.id);
+                  }
+                }}
               >
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                   {investment.type === 'IMMO' ? (
-                    <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                    <Building2 className="h-5 w-5 text-primary shrink-0" />
                   ) : (
-                    <div className="h-2 w-2 bg-green-500 rounded-full" />
+                    <TrendingUp className="h-5 w-5 text-secondary shrink-0" />
                   )}
-                  <span className="font-medium">{investment.name}</span>
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <span className="font-medium text-foreground truncate">
+                      {highlightText(investment.name, searchQuery)}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant={investment.type === 'IMMO' ? 'default' : 'secondary'} 
+                        className="text-xs"
+                      >
+                        {investment.type === 'IMMO' ? 'Immobilier' : 'Private Equity'}
+                      </Badge>
+                      {investment.investmentAmount && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Intl.NumberFormat('fr-FR', {
+                            style: 'currency',
+                            currency: 'EUR',
+                            minimumFractionDigits: 0,
+                          }).format(investment.investmentAmount)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {investment.type === 'IMMO' ? 'Immobilier' : 'Private Equity'}
-                </span>
               </div>
             ))}
           </div>
         )}
         
         {/* No results message */}
-        {showSearchResults && searchQuery && searchResults.length === 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 px-4 py-2">
-            <span className="text-muted-foreground">Aucun investissement trouvé</span>
+        {showResults && searchQuery.length >= 2 && searchResults.length === 0 && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-50 px-4 py-6 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <Search className="h-8 w-8 text-muted-foreground/50" />
+              <span className="text-muted-foreground">Aucun investissement trouvé</span>
+              <span className="text-xs text-muted-foreground/75">
+                Essayez avec d'autres termes de recherche
+              </span>
+            </div>
+          </div>
+        )}
+        
+        {/* Minimum characters hint */}
+        {showResults && searchQuery.length > 0 && searchQuery.length < 2 && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-50 px-4 py-3">
+            <span className="text-xs text-muted-foreground">
+              Saisissez au moins 2 caractères pour rechercher
+            </span>
           </div>
         )}
       </div>
