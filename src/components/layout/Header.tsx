@@ -114,10 +114,6 @@ export function Header() {
                 <Building2 className="mr-2 h-4 w-4" />
                 Actif Private Equity
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                Dette
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
