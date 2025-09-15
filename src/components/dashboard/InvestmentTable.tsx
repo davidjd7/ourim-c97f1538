@@ -11,12 +11,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Building, TrendingUp, ChevronUp, ChevronDown } from 'lucide-react';
+import { ExternalLink, Building, TrendingUp, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
 import { useColumnVisibility } from '@/contexts/ColumnVisibilityContext';
+import { useColumnFilters } from '@/contexts/ColumnFiltersContext';
+import { useFilteredInvestments } from '@/hooks/useFilteredInvestments';
+import { useInvestmentTags } from '@/hooks/useInvestmentTags';
 import { ColumnSelector } from './ColumnSelector';
 import { InvestmentTags } from '@/components/investments/InvestmentTags';
+import { FilterIcon } from './filters/FilterIcon';
 
 // Component for displaying KPI values for each investment
 function InvestmentKPIRow({ 
@@ -305,13 +309,19 @@ export function InvestmentTable({
   filteredInvestments?: any[];
 }) {
   const { investments } = useInvestments();
-  const investmentsToUse = filteredInvestments || investments;
+  const baseInvestments = filteredInvestments || investments;
   const { visibleColumns, isInitialized } = useColumnVisibility();
+  const { hasActiveFilters, clearAllFilters } = useColumnFilters();
+  const { investmentTags } = useInvestmentTags();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   
   // KPI map for sorting by computed values - now holds all KPI data
   const [kpiMap, setKpiMap] = useState<Record<string, any>>({});
+  
+  // Apply column filters to investments using the custom hook
+  const columnFilteredInvestments = useFilteredInvestments(baseInvestments, kpiMap, investmentTags);
+  const investmentsToUse = columnFilteredInvestments;
 
   const handleKpisLoaded = (id: string, data: any) => {
     setKpiMap((prev) => {
@@ -418,6 +428,24 @@ export function InvestmentTable({
 
   return (
     <div className="card-financial">
+      {hasActiveFilters && (
+        <div className="p-4 border-b bg-muted/30">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              Filtres actifs
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              className="h-auto p-1 text-xs"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Effacer tous les filtres
+            </Button>
+          </div>
+        </div>
+      )}
       <Table>
         <TableHeader>
           <TableRow>
@@ -440,6 +468,7 @@ export function InvestmentTable({
                   column.align === 'right' ? 'justify-end' : ''
                 }`}>
                   {column.label}
+                  <FilterIcon column={column} />
                   {column.sortable && getSortIcon(column.key)}
                 </div>
               </TableHead>
