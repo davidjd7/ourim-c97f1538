@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Edit, Save, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, Save, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -207,6 +207,38 @@ export default function InvestissementDetail() {
     navigate(getBackPath());
   };
 
+  // Navigation between investments
+  const getCurrentInvestmentIndex = () => {
+    if (!investment) return -1;
+    return investments.findIndex(inv => inv.id === investment.id);
+  };
+
+  const getPreviousInvestment = () => {
+    const currentIndex = getCurrentInvestmentIndex();
+    if (currentIndex <= 0) return null;
+    return investments[currentIndex - 1];
+  };
+
+  const getNextInvestment = () => {
+    const currentIndex = getCurrentInvestmentIndex();
+    if (currentIndex === -1 || currentIndex >= investments.length - 1) return null;
+    return investments[currentIndex + 1];
+  };
+
+  const navigateToPreviousInvestment = () => {
+    const prev = getPreviousInvestment();
+    if (prev) {
+      navigate(`/investissement/${prev.id}`);
+    }
+  };
+
+  const navigateToNextInvestment = () => {
+    const next = getNextInvestment();
+    if (next) {
+      navigate(`/investissement/${next.id}`);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with back button and investment title */}
@@ -288,6 +320,33 @@ export default function InvestissementDetail() {
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Navigation arrows - only show for existing investments */}
+          {!isNewInvestment && !isEditMode && (
+            <>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={navigateToPreviousInvestment}
+                disabled={!getPreviousInvestment()}
+                className="h-8 w-8"
+                title="Investissement précédent"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={navigateToNextInvestment}
+                disabled={!getNextInvestment()}
+                className="h-8 w-8"
+                title="Investissement suivant"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <div className="w-px h-6 bg-border mx-1" />
+            </>
+          )}
+
           {isEditMode ? (
             <>
               <Button onClick={handleSaveChanges} size="sm">
