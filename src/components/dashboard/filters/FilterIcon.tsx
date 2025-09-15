@@ -1,5 +1,5 @@
 import React from 'react';
-import { Filter } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FilterPopover } from './FilterPopover';
@@ -38,7 +38,7 @@ export function FilterIcon({ column, onFilterApplied }: FilterIconProps) {
             setOpen(!open);
           }}
         >
-          <Filter className="h-3 w-3" />
+          <SlidersHorizontal className="h-3 w-3" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
