@@ -23,6 +23,14 @@ interface DebtCharacteristics {
   amortissement_annuel?: number;
   type_credit?: string;
   montant_tirable?: number;
+  banque?: string;
+  base?: string;
+  echeance?: string;
+  marge?: number;
+  couverture_ltv?: number;
+  type_taux?: string;
+  indice_base?: string;
+  clause_arrosage?: string;
   created_at: string;
 }
 
@@ -57,7 +65,15 @@ export function DetteTab({ investmentId }: DetteTabProps) {
     type: 'Amortissement constant',
     amortissement_annuel: '',
     type_credit: 'Hypothécaire',
-    montant_tirable: ''
+    montant_tirable: '',
+    banque: '',
+    base: '',
+    echeance: '',
+    marge: '',
+    couverture_ltv: '',
+    type_taux: 'Fixe',
+    indice_base: '',
+    clause_arrosage: ''
   });
 
   useEffect(() => {
@@ -147,7 +163,15 @@ export function DetteTab({ investmentId }: DetteTabProps) {
         type: newDebt.type,
         amortissement_annuel: newDebt.amortissement_annuel ? parseFloat(newDebt.amortissement_annuel) : null,
         type_credit: newDebt.type_credit,
-        montant_tirable: newDebt.montant_tirable ? parseFloat(newDebt.montant_tirable) : null
+        montant_tirable: newDebt.montant_tirable ? parseFloat(newDebt.montant_tirable) : null,
+        banque: newDebt.banque || null,
+        base: newDebt.base || null,
+        echeance: newDebt.echeance || null,
+        marge: newDebt.marge ? parseFloat(newDebt.marge) : null,
+        couverture_ltv: newDebt.couverture_ltv ? parseFloat(newDebt.couverture_ltv) : null,
+        type_taux: newDebt.type_taux || 'Fixe',
+        indice_base: newDebt.indice_base || null,
+        clause_arrosage: newDebt.clause_arrosage || null
       };
 
       const { data, error } = await supabase
@@ -167,7 +191,15 @@ export function DetteTab({ investmentId }: DetteTabProps) {
           type: 'Amortissement constant',
           amortissement_annuel: '',
           type_credit: 'Hypothécaire',
-          montant_tirable: ''
+          montant_tirable: '',
+          banque: '',
+          base: '',
+          echeance: '',
+          marge: '',
+          couverture_ltv: '',
+          type_taux: 'Fixe',
+          indice_base: '',
+          clause_arrosage: ''
         });
         setIsAddingDebt(false);
         toast.success('Dette ajoutée avec succès');
@@ -188,7 +220,15 @@ export function DetteTab({ investmentId }: DetteTabProps) {
         type: debtToEdit.type || 'Amortissement constant',
         amortissement_annuel: debtToEdit.amortissement_annuel?.toString() || '',
         type_credit: debtToEdit.type_credit || 'Hypothécaire',
-        montant_tirable: debtToEdit.montant_tirable?.toString() || ''
+        montant_tirable: debtToEdit.montant_tirable?.toString() || '',
+        banque: debtToEdit.banque || '',
+        base: debtToEdit.base || '',
+        echeance: debtToEdit.echeance || '',
+        marge: debtToEdit.marge?.toString() || '',
+        couverture_ltv: debtToEdit.couverture_ltv?.toString() || '',
+        type_taux: debtToEdit.type_taux || 'Fixe',
+        indice_base: debtToEdit.indice_base || '',
+        clause_arrosage: debtToEdit.clause_arrosage || ''
       });
       setEditingDebt(debtId);
       setIsAddingDebt(true);
@@ -206,7 +246,15 @@ export function DetteTab({ investmentId }: DetteTabProps) {
         type: newDebt.type,
         amortissement_annuel: newDebt.amortissement_annuel ? parseFloat(newDebt.amortissement_annuel) : null,
         type_credit: newDebt.type_credit,
-        montant_tirable: newDebt.montant_tirable ? parseFloat(newDebt.montant_tirable) : null
+        montant_tirable: newDebt.montant_tirable ? parseFloat(newDebt.montant_tirable) : null,
+        banque: newDebt.banque || null,
+        base: newDebt.base || null,
+        echeance: newDebt.echeance || null,
+        marge: newDebt.marge ? parseFloat(newDebt.marge) : null,
+        couverture_ltv: newDebt.couverture_ltv ? parseFloat(newDebt.couverture_ltv) : null,
+        type_taux: newDebt.type_taux || 'Fixe',
+        indice_base: newDebt.indice_base || null,
+        clause_arrosage: newDebt.clause_arrosage || null
       };
 
       const { data, error } = await supabase
@@ -230,7 +278,15 @@ export function DetteTab({ investmentId }: DetteTabProps) {
           type: 'Amortissement constant',
           amortissement_annuel: '',
           type_credit: 'Hypothécaire',
-          montant_tirable: ''
+          montant_tirable: '',
+          banque: '',
+          base: '',
+          echeance: '',
+          marge: '',
+          couverture_ltv: '',
+          type_taux: 'Fixe',
+          indice_base: '',
+          clause_arrosage: ''
         });
         setEditingDebt(null);
         setIsAddingDebt(false);
@@ -272,7 +328,15 @@ export function DetteTab({ investmentId }: DetteTabProps) {
       type: 'Amortissement constant',
       amortissement_annuel: '',
       type_credit: 'Hypothécaire',
-      montant_tirable: ''
+      montant_tirable: '',
+      banque: '',
+      base: '',
+      echeance: '',
+      marge: '',
+      couverture_ltv: '',
+      type_taux: 'Fixe',
+      indice_base: '',
+      clause_arrosage: ''
     });
   };
 
@@ -319,13 +383,14 @@ export function DetteTab({ investmentId }: DetteTabProps) {
           {/* Add Debt Form */}
           {isAddingDebt && (
             <div className="mb-6 p-4 border rounded-lg bg-accent/20">
+              <h3 className="font-medium mb-4">Configuration de la dette</h3>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="type_credit">Type de crédit</Label>
                     <Select value={newDebt.type_credit} onValueChange={(value) => setNewDebt({ ...newDebt, type_credit: value, montant_tirable: value === 'Lombard' ? newDebt.montant_tirable : '' })}>
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Sélectionner" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Hypothécaire">Hypothécaire</SelectItem>
@@ -334,6 +399,71 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div>
+                    <Label htmlFor="echeance">Échéance</Label>
+                    <Select value={newDebt.echeance || ''} onValueChange={(value) => setNewDebt({ ...newDebt, echeance: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Mensuelle">Mensuelle</SelectItem>
+                        <SelectItem value="Trimestrielle">Trimestrielle</SelectItem>
+                        <SelectItem value="Semestrielle">Semestrielle</SelectItem>
+                        <SelectItem value="Annuelle">Annuelle</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="type">Type d'amortissement</Label>
+                    <Select value={newDebt.type} onValueChange={(value) => setNewDebt({ ...newDebt, type: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
+                        <SelectItem value="Annuité constante">Annuité constante</SelectItem>
+                        <SelectItem value="In fine">In fine</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="banque">Banque</Label>
+                    <Input
+                      id="banque"
+                      value={newDebt.banque || ''}
+                      onChange={(e) => setNewDebt({ ...newDebt, banque: e.target.value })}
+                      placeholder="Nom de la banque"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="base">Base</Label>
+                    <Select value={newDebt.base || ''} onValueChange={(value) => setNewDebt({ ...newDebt, base: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="360">360</SelectItem>
+                        <SelectItem value="365">365</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="amortissement_annuel">Amortissement annuel (%)</Label>
+                    <Input
+                      id="amortissement_annuel"
+                      type="number"
+                      step="0.01"
+                      value={newDebt.amortissement_annuel}
+                      onChange={(e) => setNewDebt({ ...newDebt, amortissement_annuel: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="montant_initial">Montant Tiré (€)</Label>
                     <Input
@@ -345,10 +475,21 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                       placeholder="0"
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="marge">Marge (%)</Label>
+                    <Input
+                      id="marge"
+                      type="number"
+                      step="0.01"
+                      value={newDebt.marge || ''}
+                      onChange={(e) => setNewDebt({ ...newDebt, marge: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  {newDebt.type_credit === 'Lombard' && (
+                {newDebt.type_credit === 'Lombard' && (
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="montant_tirable">Montant Tirable (€)</Label>
                       <Input
@@ -360,20 +501,21 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                         placeholder="0"
                       />
                     </div>
-                  )}
-                  <div>
-                    <Label htmlFor="duree_mois">Durée (mois)</Label>
-                    <Input
-                      id="duree_mois"
-                      type="number"
-                      value={newDebt.duree_mois}
-                      onChange={(e) => setNewDebt({ ...newDebt, duree_mois: e.target.value })}
-                      placeholder="0"
-                    />
+                    <div>
+                      <Label htmlFor="couverture_ltv">Couverture LTV (%)</Label>
+                      <Input
+                        id="couverture_ltv"
+                        type="number"
+                        step="0.01"
+                        value={newDebt.couverture_ltv || ''}
+                        onChange={(e) => setNewDebt({ ...newDebt, couverture_ltv: e.target.value })}
+                        placeholder="0"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="taux">Taux (%)</Label>
                     <Input
@@ -386,40 +528,35 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="type">Type d'amortissement</Label>
-                    <Select value={newDebt.type} onValueChange={(value) => setNewDebt({ ...newDebt, type: value })}>
+                    <Label htmlFor="type_taux">Type de taux</Label>
+                    <Select value={newDebt.type_taux || 'Fixe'} onValueChange={(value) => setNewDebt({ ...newDebt, type_taux: value })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
-                        <SelectItem value="Échéance constante">Échéance constante</SelectItem>
-                        <SelectItem value="In fine">In fine</SelectItem>
+                        <SelectItem value="Fixe">Fixe</SelectItem>
+                        <SelectItem value="Variable">Variable</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-
-                {newDebt.type === 'Amortissement constant' && (
                   <div>
-                    <Label htmlFor="amortissement_annuel">Amortissement annuel (€)</Label>
+                    <Label htmlFor="duree_mois">Durée (mois)</Label>
                     <Input
-                      id="amortissement_annuel"
+                      id="duree_mois"
                       type="number"
-                      step="0.01"
-                      value={newDebt.amortissement_annuel}
-                      onChange={(e) => setNewDebt({ ...newDebt, amortissement_annuel: e.target.value })}
+                      value={newDebt.duree_mois}
+                      onChange={(e) => setNewDebt({ ...newDebt, duree_mois: e.target.value })}
                       placeholder="0"
                     />
                   </div>
-                )}
+                </div>
 
                 <div className="flex gap-2">
                   <Button 
                     size="sm" 
                     onClick={editingDebt ? handleUpdateDebt : handleAddDebt}
                   >
-                    {editingDebt ? 'Modifier' : 'Ajouter'}
+                    {editingDebt ? 'Modifier' : 'Sauvegarder'}
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleCancelEdit}>
                     Annuler
@@ -489,52 +626,138 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                   
                   return (
                     <div key={debt.id} className="border rounded-lg p-4 bg-card">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline">{debt.type_credit || 'Hypothécaire'}</Badge>
-                          <Badge variant="secondary">{debt.type}</Badge>
-                          <div className="text-sm text-muted-foreground">
-                            <p>{formatPercentage(debt.taux)} • {debt.duree_mois} mois</p>
-                            <p className="font-medium">Montant Tiré: {formatCurrency(debt.montant_initial)}</p>
-                            {debt.type_credit === 'Lombard' && debt.montant_tirable && (
-                              <p className="font-medium">Montant Tirable: {formatCurrency(debt.montant_tirable)}</p>
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium">Caractéristiques</h4>
+                            {canEdit && (
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEditDebt(debt.id)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit2 className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDeleteDebt(debt.id)}
+                                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="text-right">
-                            <p className="text-sm text-muted-foreground">Capital restant</p>
-                            <p className="font-semibold financial-value text-destructive">
-                              {formatCurrency(currentDebt)}
-                            </p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Montant Tiré (€)</p>
+                          <p className="font-medium">{formatCurrency(debt.montant_initial)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Durée (mois)</p>
+                          <p className="font-medium">{debt.duree_mois} mois</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Taux (%)</p>
+                          <p className="font-medium">{formatPercentage(debt.taux)}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Type</p>
+                          <p className="font-medium">{debt.type}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Amortissement annuel (%)</p>
+                          <p className="font-medium">{debt.amortissement_annuel ? formatPercentage(debt.amortissement_annuel) : '-'}</p>
+                        </div>
+                      </div>
+
+                      {/* Additional fields if they exist */}
+                      {(debt.type_credit || debt.banque || debt.marge || debt.type_taux) && (
+                        <div className="border-t pt-4 mt-4">
+                          <div className="grid grid-cols-3 gap-4">
+                            {debt.type_credit && (
+                              <div>
+                                <p className="text-sm text-muted-foreground">Type de crédit</p>
+                                <p className="font-medium">{debt.type_credit}</p>
+                              </div>
+                            )}
+                            {debt.banque && (
+                              <div>
+                                <p className="text-sm text-muted-foreground">Banque</p>
+                                <p className="font-medium">{debt.banque}</p>
+                              </div>
+                            )}
+                            {debt.marge && (
+                              <div>
+                                <p className="text-sm text-muted-foreground">Marge (%)</p>
+                                <p className="font-medium">{formatPercentage(debt.marge)}</p>
+                              </div>
+                            )}
                           </div>
-                          {canEdit && (
-                            <div className="flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditDebt(debt.id)}
-                              >
-                                <Edit2 className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleDeleteDebt(debt.id)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                          {(debt.type_taux || debt.echeance || debt.base) && (
+                            <div className="grid grid-cols-3 gap-4 mt-4">
+                              {debt.type_taux && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Type de taux</p>
+                                  <p className="font-medium">{debt.type_taux}</p>
+                                </div>
+                              )}
+                              {debt.echeance && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Échéance</p>
+                                  <p className="font-medium">{debt.echeance}</p>
+                                </div>
+                              )}
+                              {debt.base && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Base</p>
+                                  <p className="font-medium">{debt.base}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {debt.type_credit === 'Lombard' && (debt.montant_tirable || debt.couverture_ltv) && (
+                            <div className="grid grid-cols-2 gap-4 mt-4">
+                              {debt.montant_tirable && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Montant Tirable (€)</p>
+                                  <p className="font-medium">{formatCurrency(debt.montant_tirable)}</p>
+                                </div>
+                              )}
+                              {debt.couverture_ltv && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Couverture LTV (%)</p>
+                                  <p className="font-medium">{formatPercentage(debt.couverture_ltv)}</p>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                      </div>
+                      )}
                       
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Remboursé: {formatPercentage(progress)}</span>
-                          <span>Reste à rembourser: {formatCurrency(currentDebt)}</span>
+                      <div className="border-t pt-4 mt-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <p className="text-sm text-muted-foreground">Capital restant</p>
+                          <p className="font-semibold financial-value text-destructive">
+                            {formatCurrency(currentDebt)}
+                          </p>
                         </div>
-                        <Progress value={progress} className="h-2" />
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Remboursé: {formatPercentage(progress)}</span>
+                            <span>Reste à rembourser: {formatCurrency(currentDebt)}</span>
+                          </div>
+                          <Progress value={progress} className="h-2" />
+                        </div>
                       </div>
                     </div>
                   );
