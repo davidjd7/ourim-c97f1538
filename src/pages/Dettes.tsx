@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,20 +27,10 @@ function DebtRowWithLTV({ debt }: { debt: any }) {
     return 'destructive';
   };
 
-  const handleAssetClick = () => {
-    navigate(`/investissement/${debt.asset_id}`);
-  };
-
   return (
     <TableRow>
       <TableCell>
-        <button
-          onClick={handleAssetClick}
-          className="flex items-center gap-2 text-left hover:text-primary transition-colors"
-        >
-          <span className="font-medium">{debt.asset_name}</span>
-          <ExternalLink className="h-3 w-3" />
-        </button>
+        <span className="font-medium">{debt.asset_name}</span>
       </TableCell>
       <TableCell>{debt.banque || 'N/A'}</TableCell>
       <TableCell>{debt.type_credit || 'N/A'}</TableCell>
@@ -56,6 +46,15 @@ function DebtRowWithLTV({ debt }: { debt: any }) {
         ) : (
           'N/A'
         )}
+      </TableCell>
+      <TableCell>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => navigate(`/investissement/${debt.asset_id}`)}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Button>
       </TableCell>
     </TableRow>
   );
@@ -77,24 +76,15 @@ export default function Dettes() {
           </div>
         </div>
 
-        <Card className="card-financial">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-primary" />
-              Liste des Dettes
-            </CardTitle>
-            <CardDescription>
-              Emprunts liés aux actifs immobiliers
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="card-financial">
+          <div className="p-6">
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -111,14 +101,14 @@ export default function Dettes() {
           </div>
         </div>
 
-        <Card className="card-financial">
-          <CardContent className="pt-6">
+        <div className="card-financial">
+          <div className="p-6">
             <div className="text-center py-12 text-destructive">
               <p>Erreur lors du chargement des dettes</p>
               <p className="text-sm mt-2">{error}</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -136,44 +126,38 @@ export default function Dettes() {
       </div>
 
       {/* Debts Table */}
-      <Card className="card-financial">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-primary" />
-            Liste des Dettes ({debts.length})
-          </CardTitle>
-          <CardDescription>
-            Emprunts liés aux actifs immobiliers
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {debts.length === 0 ? (
+      {debts.length === 0 ? (
+        <div className="card-financial">
+          <div className="p-6">
             <div className="text-center py-12 text-muted-foreground">
               <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Aucune dette trouvée</p>
               <p className="text-sm mt-2">Les dettes sont liées aux actifs dans leurs détails respectifs</p>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom de l'actif</TableHead>
-                  <TableHead>Banque</TableHead>
-                  <TableHead>Type de crédit</TableHead>
-                  <TableHead className="text-right">Montant Initial</TableHead>
-                  <TableHead className="text-right">Capital Restant Dû</TableHead>
-                  <TableHead className="text-right">LTV</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {debts.map((debt) => (
-                  <DebtRowWithLTV key={debt.id} debt={debt} />
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      ) : (
+        <div className="card-financial">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom de l'actif</TableHead>
+                <TableHead>Banque</TableHead>
+                <TableHead>Type de crédit</TableHead>
+                <TableHead className="text-right">Montant Initial</TableHead>
+                <TableHead className="text-right">Capital Restant Dû</TableHead>
+                <TableHead className="text-right">LTV</TableHead>
+                <TableHead className="w-[50px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {debts.map((debt) => (
+                <DebtRowWithLTV key={debt.id} debt={debt} />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
