@@ -295,11 +295,17 @@ function InvestmentKPIRow({
 type SortKey = string;
 type SortDirection = 'asc' | 'desc' | null;
 
-export function InvestmentTable({ selectedRows, onSelectedRowsChange }: { 
+export function InvestmentTable({ 
+  selectedRows, 
+  onSelectedRowsChange, 
+  filteredInvestments 
+}: { 
   selectedRows: Set<string>;
   onSelectedRowsChange?: (selectedRows: Set<string>) => void; 
+  filteredInvestments?: any[];
 }) {
   const { investments } = useInvestments();
+  const investmentsToUse = filteredInvestments || investments;
   const { visibleColumns, isInitialized } = useColumnVisibility();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
@@ -341,9 +347,9 @@ export function InvestmentTable({ selectedRows, onSelectedRowsChange }: {
   };
 
   const sortedInvestments = useMemo(() => {
-    if (!sortKey || !sortDirection) return investments;
+    if (!sortKey || !sortDirection) return investmentsToUse;
 
-    return [...investments].sort((a, b) => {
+    return [...investmentsToUse].sort((a, b) => {
       let aValue: any;
       let bValue: any;
 
@@ -371,7 +377,7 @@ export function InvestmentTable({ selectedRows, onSelectedRowsChange }: {
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [investments, sortKey, sortDirection, kpiMap]);
+  }, [investmentsToUse, sortKey, sortDirection, kpiMap]);
 
   const getSortIcon = (key: SortKey) => {
     if (sortKey !== key) return null;
