@@ -227,6 +227,7 @@ export type Database = {
           id: string
           immobilier_id: string
           loyer: number | null
+          note: string | null
           retrait_amort: number | null
           retrait_autres: number | null
           rex: number | null
@@ -239,6 +240,7 @@ export type Database = {
           id?: string
           immobilier_id: string
           loyer?: number | null
+          note?: string | null
           retrait_amort?: number | null
           retrait_autres?: number | null
           rex?: number | null
@@ -251,6 +253,7 @@ export type Database = {
           id?: string
           immobilier_id?: string
           loyer?: number | null
+          note?: string | null
           retrait_amort?: number | null
           retrait_autres?: number | null
           rex?: number | null

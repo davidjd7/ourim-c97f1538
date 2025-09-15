@@ -25,6 +25,7 @@ interface CashflowRow {
   rex: number;
   retraitAmort: number;
   retraitAutres: number;
+  note: string;
 }
 interface ImmobilisationRow {
   id?: string;
@@ -120,7 +121,8 @@ export function PerformanceTab({
         loyer: cf.loyer || 0,
         rex: cf.rex || 0,
         retraitAmort: cf.retrait_amort || 0,
-        retraitAutres: cf.retrait_autres || 0
+        retraitAutres: cf.retrait_autres || 0,
+        note: cf.note || ''
       })) || [];
       setCashflows(formattedCashflows);
     } catch (error) {
@@ -503,7 +505,8 @@ export function PerformanceTab({
       loyer: 0,
       rex: 0,
       retraitAmort: 0,
-      retraitAutres: 0
+      retraitAutres: 0,
+      note: ''
     };
     const newIndex = cashflows.length;
     setCashflows([...cashflows, newRow]);
@@ -520,7 +523,8 @@ export function PerformanceTab({
           loyer: row.loyer,
           rex: row.rex,
           retrait_amort: row.retraitAmort,
-          retrait_autres: row.retraitAutres
+          retrait_autres: row.retraitAutres,
+          note: row.note
         }).eq('id', row.id);
         if (error) throw error;
       } else {
@@ -531,7 +535,8 @@ export function PerformanceTab({
           loyer: row.loyer,
           rex: row.rex,
           retrait_amort: row.retraitAmort,
-          retrait_autres: row.retraitAutres
+          retrait_autres: row.retraitAutres,
+          note: row.note
         });
         if (error) throw error;
       }
@@ -1668,14 +1673,15 @@ export function PerformanceTab({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Loyer</TableHead>
-                  <TableHead>REX</TableHead>
-                  <TableHead>Retrait Amort</TableHead>
-                  <TableHead>Retrait Autres</TableHead>
-                  <TableHead>NOI</TableHead>
-                  <TableHead>NOI sur loyer</TableHead>
-                  <TableHead>Actions</TableHead>
+                   <TableHead>Date</TableHead>
+                   <TableHead>Loyer</TableHead>
+                   <TableHead>REX</TableHead>
+                   <TableHead>Retrait Amort</TableHead>
+                   <TableHead>Retrait Autres</TableHead>
+                   <TableHead>NOI</TableHead>
+                   <TableHead>NOI sur loyer</TableHead>
+                   <TableHead>Commentaire</TableHead>
+                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1733,8 +1739,25 @@ export function PerformanceTab({
                         {cashflow.loyer && cashflow.loyer > 0 
                           ? `${((calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) / cashflow.loyer) * 100).toFixed(1)}%` 
                           : 'N/A'}
-                      </TableCell>
-                    <TableCell>
+                       </TableCell>
+                     <TableCell>
+                       {editingCashflow && editingCashflow.index === index ? 
+                         <Input 
+                           type="text" 
+                           value={editingCashflow.row.note} 
+                           onChange={e => setEditingCashflow({
+                             ...editingCashflow,
+                             row: {
+                               ...editingCashflow.row,
+                               note: e.target.value
+                             }
+                           })} 
+                           placeholder="Commentaire..."
+                         /> : 
+                         <span className="text-muted-foreground">{cashflow.note || '-'}</span>
+                       }
+                     </TableCell>
+                     <TableCell>
                       <div className="flex items-center gap-2">
                         {editingCashflow && editingCashflow.index === index ? <Button size="sm" variant="ghost" onClick={() => saveCashflow(editingCashflow.row)} className="h-8 w-8 p-0">
                             <Save className="h-4 w-4 text-success" />
@@ -1770,10 +1793,10 @@ export function PerformanceTab({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Montant</TableHead>
-                  <TableHead>Note</TableHead>
-                  <TableHead>Actions</TableHead>
+                   <TableHead>Date</TableHead>
+                   <TableHead>Montant</TableHead>
+                   <TableHead>Commentaire</TableHead>
+                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
