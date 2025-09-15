@@ -81,6 +81,7 @@ export type Database = {
           indice_base: string | null
           marge: number | null
           montant_initial: number | null
+          montant_tirable: number | null
           taux: number | null
           type: string | null
           type_credit: string | null
@@ -103,6 +104,7 @@ export type Database = {
           indice_base?: string | null
           marge?: number | null
           montant_initial?: number | null
+          montant_tirable?: number | null
           taux?: number | null
           type?: string | null
           type_credit?: string | null
@@ -125,6 +127,7 @@ export type Database = {
           indice_base?: string | null
           marge?: number | null
           montant_initial?: number | null
+          montant_tirable?: number | null
           taux?: number | null
           type?: string | null
           type_credit?: string | null

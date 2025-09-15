@@ -21,6 +21,8 @@ interface DebtCharacteristics {
   taux: number;
   type: string;
   amortissement_annuel?: number;
+  type_credit?: string;
+  montant_tirable?: number;
   created_at: string;
 }
 
@@ -53,7 +55,9 @@ export function DetteTab({ investmentId }: DetteTabProps) {
     duree_mois: '',
     taux: '',
     type: 'Amortissement constant',
-    amortissement_annuel: ''
+    amortissement_annuel: '',
+    type_credit: 'Hypothécaire',
+    montant_tirable: ''
   });
 
   useEffect(() => {
@@ -141,7 +145,9 @@ export function DetteTab({ investmentId }: DetteTabProps) {
         duree_mois: newDebt.duree_mois ? parseInt(newDebt.duree_mois) : 0,
         taux: newDebt.taux ? parseFloat(newDebt.taux) : 0,
         type: newDebt.type,
-        amortissement_annuel: newDebt.amortissement_annuel ? parseFloat(newDebt.amortissement_annuel) : null
+        amortissement_annuel: newDebt.amortissement_annuel ? parseFloat(newDebt.amortissement_annuel) : null,
+        type_credit: newDebt.type_credit,
+        montant_tirable: newDebt.montant_tirable ? parseFloat(newDebt.montant_tirable) : null
       };
 
       const { data, error } = await supabase
@@ -159,7 +165,9 @@ export function DetteTab({ investmentId }: DetteTabProps) {
           duree_mois: '',
           taux: '',
           type: 'Amortissement constant',
-          amortissement_annuel: ''
+          amortissement_annuel: '',
+          type_credit: 'Hypothécaire',
+          montant_tirable: ''
         });
         setIsAddingDebt(false);
         toast.success('Dette ajoutée avec succès');
@@ -178,7 +186,9 @@ export function DetteTab({ investmentId }: DetteTabProps) {
         duree_mois: debtToEdit.duree_mois?.toString() || '',
         taux: debtToEdit.taux?.toString() || '',
         type: debtToEdit.type || 'Amortissement constant',
-        amortissement_annuel: debtToEdit.amortissement_annuel?.toString() || ''
+        amortissement_annuel: debtToEdit.amortissement_annuel?.toString() || '',
+        type_credit: debtToEdit.type_credit || 'Hypothécaire',
+        montant_tirable: debtToEdit.montant_tirable?.toString() || ''
       });
       setEditingDebt(debtId);
       setIsAddingDebt(true);
@@ -194,7 +204,9 @@ export function DetteTab({ investmentId }: DetteTabProps) {
         duree_mois: newDebt.duree_mois ? parseInt(newDebt.duree_mois) : 0,
         taux: newDebt.taux ? parseFloat(newDebt.taux) : 0,
         type: newDebt.type,
-        amortissement_annuel: newDebt.amortissement_annuel ? parseFloat(newDebt.amortissement_annuel) : null
+        amortissement_annuel: newDebt.amortissement_annuel ? parseFloat(newDebt.amortissement_annuel) : null,
+        type_credit: newDebt.type_credit,
+        montant_tirable: newDebt.montant_tirable ? parseFloat(newDebt.montant_tirable) : null
       };
 
       const { data, error } = await supabase
@@ -216,7 +228,9 @@ export function DetteTab({ investmentId }: DetteTabProps) {
           duree_mois: '',
           taux: '',
           type: 'Amortissement constant',
-          amortissement_annuel: ''
+          amortissement_annuel: '',
+          type_credit: 'Hypothécaire',
+          montant_tirable: ''
         });
         setEditingDebt(null);
         setIsAddingDebt(false);
@@ -256,7 +270,9 @@ export function DetteTab({ investmentId }: DetteTabProps) {
       duree_mois: '',
       taux: '',
       type: 'Amortissement constant',
-      amortissement_annuel: ''
+      amortissement_annuel: '',
+      type_credit: 'Hypothécaire',
+      montant_tirable: ''
     });
   };
 
@@ -306,7 +322,20 @@ export function DetteTab({ investmentId }: DetteTabProps) {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="montant_initial">Montant initial (€)</Label>
+                    <Label htmlFor="type_credit">Type de crédit</Label>
+                    <Select value={newDebt.type_credit} onValueChange={(value) => setNewDebt({ ...newDebt, type_credit: value, montant_tirable: value === 'Lombard' ? newDebt.montant_tirable : '' })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Hypothécaire">Hypothécaire</SelectItem>
+                        <SelectItem value="Lombard">Lombard</SelectItem>
+                        <SelectItem value="Autre">Autre</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="montant_initial">Montant Tiré (€)</Label>
                     <Input
                       id="montant_initial"
                       type="number"
@@ -316,6 +345,22 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                       placeholder="0"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {newDebt.type_credit === 'Lombard' && (
+                    <div>
+                      <Label htmlFor="montant_tirable">Montant Tirable (€)</Label>
+                      <Input
+                        id="montant_tirable"
+                        type="number"
+                        step="0.01"
+                        value={newDebt.montant_tirable}
+                        onChange={(e) => setNewDebt({ ...newDebt, montant_tirable: e.target.value })}
+                        placeholder="0"
+                      />
+                    </div>
+                  )}
                   <div>
                     <Label htmlFor="duree_mois">Durée (mois)</Label>
                     <Input
@@ -446,10 +491,14 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                     <div key={debt.id} className="border rounded-lg p-4 bg-card">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
-                          <Badge variant="outline">{debt.type}</Badge>
+                          <Badge variant="outline">{debt.type_credit || 'Hypothécaire'}</Badge>
+                          <Badge variant="secondary">{debt.type}</Badge>
                           <div className="text-sm text-muted-foreground">
                             <p>{formatPercentage(debt.taux)} • {debt.duree_mois} mois</p>
-                            <p className="font-medium">Montant: {formatCurrency(debt.montant_initial)}</p>
+                            <p className="font-medium">Montant Tiré: {formatCurrency(debt.montant_initial)}</p>
+                            {debt.type_credit === 'Lombard' && debt.montant_tirable && (
+                              <p className="font-medium">Montant Tirable: {formatCurrency(debt.montant_tirable)}</p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
