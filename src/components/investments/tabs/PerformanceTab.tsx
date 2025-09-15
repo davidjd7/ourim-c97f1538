@@ -906,7 +906,10 @@ export function PerformanceTab({
             .from('investment-documents')
             .upload(filePath, file);
 
-          if (uploadError) throw uploadError;
+          if (uploadError) {
+            console.error('Storage upload error:', uploadError);
+            throw new Error(`Erreur lors de l'upload: ${uploadError.message}`);
+          }
 
           // Save metadata to database with 'debt' type
           const { data: document, error: dbError } = await supabase
@@ -923,7 +926,14 @@ export function PerformanceTab({
             .select()
             .single();
 
-          if (dbError) throw dbError;
+          if (dbError) {
+            console.error('Database insert error:', dbError);
+            // Clean up uploaded file if database insert fails
+            await supabase.storage
+              .from('investment-documents')
+              .remove([filePath]);
+            throw new Error(`Erreur lors de l'enregistrement: ${dbError.message}`);
+          }
           uploadedFiles.push(document);
         }
         
@@ -935,7 +945,7 @@ export function PerformanceTab({
         console.error('Error uploading debt documents:', error);
         toastHook({
           title: "Erreur",
-          description: "Erreur lors de l'ajout des documents de dette.",
+          description: error instanceof Error ? error.message : "Erreur lors de l'ajout des documents de dette.",
           variant: "destructive",
         });
       } finally {

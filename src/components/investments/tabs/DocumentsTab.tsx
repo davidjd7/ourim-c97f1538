@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 interface Document {
   id: string;
   name: string;
-  type: 'contract' | 'financial' | 'legal' | 'other';
+  type: 'contract' | 'financial' | 'legal' | 'other' | 'debt';
   created_at: string;
   file_size: number;
   file_path: string;
@@ -27,6 +27,7 @@ const documentTypeConfig = {
   contract: { label: 'Contrat', className: 'bg-blue-50 text-blue-700 border-blue-200' },
   financial: { label: 'Financier', className: 'bg-green-50 text-green-700 border-green-200' },
   legal: { label: 'Juridique', className: 'bg-purple-50 text-purple-700 border-purple-200' },
+  debt: { label: 'Dette', className: 'bg-red-50 text-red-700 border-red-200' },
   other: { label: 'Autre', className: 'bg-gray-50 text-gray-700 border-gray-200' }
 };
 
@@ -53,7 +54,7 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
       if (error) throw error;
       setDocuments((data || []).map(doc => ({
         ...doc,
-        type: doc.type as 'contract' | 'financial' | 'legal' | 'other'
+        type: doc.type as 'contract' | 'financial' | 'legal' | 'other' | 'debt'
       })));
     } catch (error) {
       console.error('Error loading documents:', error);
@@ -71,11 +72,12 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
     loadDocuments();
   }, [user, investmentId]);
 
-  const getFileType = (filename: string): 'contract' | 'financial' | 'legal' | 'other' => {
+  const getFileType = (filename: string): 'contract' | 'financial' | 'legal' | 'other' | 'debt' => {
     const lowerName = filename.toLowerCase();
     if (lowerName.includes('contrat') || lowerName.includes('contract')) return 'contract';
     if (lowerName.includes('financier') || lowerName.includes('financial')) return 'financial';
     if (lowerName.includes('juridique') || lowerName.includes('legal') || lowerName.includes('notaire')) return 'legal';
+    if (lowerName.includes('dette') || lowerName.includes('debt') || lowerName.includes('credit')) return 'debt';
     return 'other';
   };
 
