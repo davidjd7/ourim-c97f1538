@@ -1161,10 +1161,10 @@ export function PerformanceTab({
               </div>
             </div>
 
-            {/* Version desktop - côte à côte */}
-            <div className="hidden lg:flex lg:items-start lg:gap-4">
-              {/* Tableau - 60% de la largeur */}
-              <div className="w-3/5 flex-shrink-0">
+            {/* Version desktop - stack vertical */}
+            <div className="hidden lg:block">
+              {/* Tableau en premier */}
+              <div className="mb-6">
                 <div className="max-h-[400px] overflow-y-auto">
                   <TooltipProvider delayDuration={0}>
                     <Table>
@@ -1393,8 +1393,8 @@ export function PerformanceTab({
                  </div>
                </div>
 
-              {/* Graphique - 40% de la largeur */}
-              <div className="w-2/5 flex-shrink-0">
+              {/* Graphique en dessous - pleine largeur */}
+              <div className="w-full">
                 <ChartContainer config={chartConfig} className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart
