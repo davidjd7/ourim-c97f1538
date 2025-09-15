@@ -1435,18 +1435,20 @@ export function PerformanceTab({
                          const syntheseData = getSyntheseData();
                          
                           // Calculer les totaux pour NOI ajusté, CFNI, CF, Gain1 et Gain2
-                          // Et les moyennes pour Rendement net, COC net et Total Return
-                          // Et la somme pour Δ Valeur
-                          let totalNoi = 0;
-                          let totalCfni = 0;
-                          let totalCf = 0;
-                          let totalGain1 = 0;
-                          let totalGain2 = 0;
-                          let totalVariationValeur = 0;
-                          let sumRendementNet = 0;
-                          let sumCocNet = 0;
-                          let sumTotalReturn = 0;
-                          let count = 0;
+                           // Et les moyennes pour Rendement net, COC net et Total Return
+                           // Et la somme pour Δ Valeur
+                           let totalNoi = 0;
+                           let totalCfni = 0;
+                           let totalCf = 0;
+                           let totalGain1 = 0;
+                           let totalGain2 = 0;
+                           let totalVariationValeur = 0;
+                           let sumRendementNet = 0;
+                           let sumCocNet = 0;
+                           let sumTotalReturn = 0;
+                           let countRendementNet = 0;
+                           let countCocNet = 0;
+                           let countTotalReturn = 0;
                          
                           syntheseData.forEach((row, index) => {
                             // Calculs pour NOI ajusté (EBITDA - immobilisation)
@@ -1480,19 +1482,29 @@ export function PerformanceTab({
                             totalNoi += ebitda;
                             totalCfni += cfni;
                             totalCf += cf;
-                            totalGain1 += gain1;
-                            totalGain2 += gain2;
-                            totalVariationValeur += variationValeur;
-                            sumRendementNet += rendementNet;
-                            sumCocNet += cocNet;
-                            sumTotalReturn += totalReturn;
-                            count++;
+                             totalGain1 += gain1;
+                             totalGain2 += gain2;
+                             totalVariationValeur += variationValeur;
+                             
+                             // Ajouter aux moyennes seulement si la valeur n'est pas 0
+                             if (rendementNet !== 0) {
+                               sumRendementNet += rendementNet;
+                               countRendementNet++;
+                             }
+                             if (cocNet !== 0) {
+                               sumCocNet += cocNet;
+                               countCocNet++;
+                             }
+                             if (totalReturn !== 0) {
+                               sumTotalReturn += totalReturn;
+                               countTotalReturn++;
+                             }
                           });
                           
-                          // Calculer les moyennes
-                          const avgRendementNet = count > 0 ? sumRendementNet / count : 0;
-                          const avgCocNet = count > 0 ? sumCocNet / count : 0;
-                          const avgTotalReturn = count > 0 ? sumTotalReturn / count : 0;
+                           // Calculer les moyennes en excluant les valeurs à 0
+                           const avgRendementNet = countRendementNet > 0 ? sumRendementNet / countRendementNet : 0;
+                           const avgCocNet = countCocNet > 0 ? sumCocNet / countCocNet : 0;
+                           const avgTotalReturn = countTotalReturn > 0 ? sumTotalReturn / countTotalReturn : 0;
                           
                           return (
                             <TableRow className="border-t-2 border-border bg-muted/30">
