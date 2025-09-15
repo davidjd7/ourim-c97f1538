@@ -12,6 +12,156 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Configuration centralisée des champs
+interface FieldConfig {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'select';
+  options?: { value: string; label: string }[];
+  required?: boolean | ((formData: any) => boolean);
+  defaultValue?: string;
+  step?: string;
+  placeholder?: string;
+  format?: 'currency' | 'percentage';
+  condition?: (formData: any) => boolean;
+}
+
+const FIELD_CONFIG: FieldConfig[] = [
+  {
+    key: 'type_credit',
+    label: 'Type de crédit',
+    type: 'select',
+    options: [
+      { value: 'Hypothécaire', label: 'Hypothécaire' },
+      { value: 'Lombard', label: 'Lombard' },
+      { value: 'Autre', label: 'Autre' }
+    ],
+    required: true,
+    defaultValue: 'Hypothécaire'
+  },
+  {
+    key: 'banque',
+    label: 'Banque',
+    type: 'text',
+    placeholder: 'Nom de la banque'
+  },
+  {
+    key: 'echeance',
+    label: 'Échéance',
+    type: 'select',
+    options: [
+      { value: 'Mensuelle', label: 'Mensuelle' },
+      { value: 'Trimestrielle', label: 'Trimestrielle' },
+      { value: 'Semestrielle', label: 'Semestrielle' },
+      { value: 'Annuelle', label: 'Annuelle' }
+    ]
+  },
+  {
+    key: 'type',
+    label: 'Type d\'amortissement',
+    type: 'select',
+    options: [
+      { value: 'Amortissement constant', label: 'Amortissement constant' },
+      { value: 'Annuité constante', label: 'Annuité constante' },
+      { value: 'In fine', label: 'In fine' }
+    ],
+    required: true,
+    defaultValue: 'Amortissement constant'
+  },
+  {
+    key: 'base',
+    label: 'Base',
+    type: 'select',
+    options: [
+      { value: '360', label: '360' },
+      { value: '365', label: '365' }
+    ]
+  },
+  {
+    key: 'amortissement_annuel',
+    label: 'Amortissement annuel (%)',
+    type: 'number',
+    step: '0.01',
+    placeholder: '0',
+    format: 'percentage'
+  },
+  {
+    key: 'montant_initial',
+    label: 'Montant Tiré (€)',
+    type: 'number',
+    step: '0.01',
+    placeholder: '0',
+    required: true,
+    format: 'currency'
+  },
+  {
+    key: 'marge',
+    label: 'Marge (%)',
+    type: 'number',
+    step: '0.01',
+    placeholder: '0',
+    format: 'percentage'
+  },
+  {
+    key: 'taux',
+    label: 'Taux (%)',
+    type: 'number',
+    step: '0.01',
+    placeholder: '0.00',
+    required: true,
+    format: 'percentage'
+  },
+  {
+    key: 'type_taux',
+    label: 'Type de taux',
+    type: 'select',
+    options: [
+      { value: 'Fixe', label: 'Fixe' },
+      { value: 'Variable', label: 'Variable' }
+    ],
+    defaultValue: 'Fixe'
+  },
+  {
+    key: 'indice_base',
+    label: 'Indice de base',
+    type: 'text',
+    placeholder: 'Ex: EURIBOR 3M',
+    condition: (formData: any) => formData.type_taux === 'Variable'
+  },
+  {
+    key: 'duree_mois',
+    label: 'Durée (mois)',
+    type: 'number',
+    placeholder: '0',
+    required: true
+  },
+  {
+    key: 'montant_tirable',
+    label: 'Montant Tirable (€)',
+    type: 'number',
+    step: '0.01',
+    placeholder: '0',
+    format: 'currency',
+    condition: (formData: any) => formData.type_credit === 'Lombard',
+    required: (formData: any) => formData.type_credit === 'Lombard'
+  },
+  {
+    key: 'couverture_ltv',
+    label: 'Couverture LTV (%)',
+    type: 'number',
+    step: '0.01',
+    placeholder: '0',
+    format: 'percentage',
+    condition: (formData: any) => formData.type_credit === 'Lombard'
+  },
+  {
+    key: 'clause_arrosage',
+    label: 'Clause d\'arrosage',
+    type: 'text',
+    placeholder: 'Description de la clause'
+  }
+];
+
 interface DebtCharacteristics {
   id: string;
   asset_id: string;
@@ -132,6 +282,85 @@ export function DetteTab({ investmentId }: DetteTabProps) {
     return `${value.toFixed(2)}%`;
   };
 
+  const formatFieldValue = (field: FieldConfig, value: any) => {
+    if (value === null || value === undefined || value === '') return '-';
+    
+    switch (field.format) {
+      case 'currency':
+        return formatCurrency(Number(value));
+      case 'percentage':
+        return formatPercentage(Number(value));
+      default:
+        return String(value);
+    }
+  };
+
+  const shouldShowField = (field: FieldConfig, formData: any) => {
+    return !field.condition || field.condition(formData);
+  };
+
+  const isFieldRequired = (field: FieldConfig, formData: any) => {
+    if (typeof field.required === 'function') {
+      return field.required(formData);
+    }
+    return field.required || false;
+  };
+
+  const renderFormField = (field: FieldConfig) => {
+    if (!shouldShowField(field, newDebt)) return null;
+
+    const value = (newDebt as any)[field.key] || '';
+    const isRequired = isFieldRequired(field, newDebt);
+
+    return (
+      <div key={field.key}>
+        <Label htmlFor={field.key}>
+          {field.label}
+          {isRequired && <span className="text-destructive ml-1">*</span>}
+        </Label>
+        {field.type === 'select' ? (
+          <Select 
+            value={value} 
+            onValueChange={(newValue) => setNewDebt({ ...newDebt, [field.key]: newValue })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner" />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Input
+            id={field.key}
+            type={field.type}
+            step={field.step}
+            value={value}
+            onChange={(e) => setNewDebt({ ...newDebt, [field.key]: e.target.value })}
+            placeholder={field.placeholder}
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderDisplayField = (field: FieldConfig, debt: DebtCharacteristics) => {
+    if (!shouldShowField(field, debt)) return null;
+
+    const value = (debt as any)[field.key];
+
+    return (
+      <div key={field.key}>
+        <p className="text-sm text-muted-foreground">{field.label}</p>
+        <p className="font-medium">{formatFieldValue(field, value)}</p>
+      </div>
+    );
+  };
+
   const calculateCurrentDebt = (characteristics: DebtCharacteristics) => {
     const relatedFlows = debtFlows
       .filter(flow => flow.debt_characteristics_id === characteristics.id)
@@ -150,11 +379,6 @@ export function DetteTab({ investmentId }: DetteTabProps) {
     const v = ((initial - remaining) / initial) * 100;
     if (isNaN(v) || !isFinite(v)) return 0;
     return Math.max(0, Math.min(100, v));
-  };
-
-  const safeFormatPercentage = (value?: number | null) => {
-    if (value === null || value === undefined || isNaN(Number(value))) return '-';
-    return `${Number(value).toFixed(2)}%`;
   };
 
   const validateDebt = () => {
@@ -416,170 +640,9 @@ export function DetteTab({ investmentId }: DetteTabProps) {
             <div className="mb-6 p-4 border rounded-lg bg-accent/20">
               <h3 className="font-medium mb-4">Configuration de la dette</h3>
               <div className="space-y-4">
+                {/* Render form fields in 3-column grid */}
                 <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="type_credit">Type de crédit</Label>
-                    <Select value={newDebt.type_credit} onValueChange={(value) => setNewDebt({ ...newDebt, type_credit: value, montant_tirable: value === 'Lombard' ? newDebt.montant_tirable : '' })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Hypothécaire">Hypothécaire</SelectItem>
-                        <SelectItem value="Lombard">Lombard</SelectItem>
-                        <SelectItem value="Autre">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="echeance">Échéance</Label>
-                    <Select value={newDebt.echeance || ''} onValueChange={(value) => setNewDebt({ ...newDebt, echeance: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Mensuelle">Mensuelle</SelectItem>
-                        <SelectItem value="Trimestrielle">Trimestrielle</SelectItem>
-                        <SelectItem value="Semestrielle">Semestrielle</SelectItem>
-                        <SelectItem value="Annuelle">Annuelle</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="type">Type d'amortissement</Label>
-                    <Select value={newDebt.type} onValueChange={(value) => setNewDebt({ ...newDebt, type: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Amortissement constant">Amortissement constant</SelectItem>
-                        <SelectItem value="Annuité constante">Annuité constante</SelectItem>
-                        <SelectItem value="In fine">In fine</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="banque">Banque</Label>
-                    <Input
-                      id="banque"
-                      value={newDebt.banque || ''}
-                      onChange={(e) => setNewDebt({ ...newDebt, banque: e.target.value })}
-                      placeholder="Nom de la banque"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="base">Base</Label>
-                    <Select value={newDebt.base || ''} onValueChange={(value) => setNewDebt({ ...newDebt, base: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="360">360</SelectItem>
-                        <SelectItem value="365">365</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="amortissement_annuel">Amortissement annuel (%)</Label>
-                    <Input
-                      id="amortissement_annuel"
-                      type="number"
-                      step="0.01"
-                      value={newDebt.amortissement_annuel}
-                      onChange={(e) => setNewDebt({ ...newDebt, amortissement_annuel: e.target.value })}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="montant_initial">Montant Tiré (€)</Label>
-                    <Input
-                      id="montant_initial"
-                      type="number"
-                      step="0.01"
-                      value={newDebt.montant_initial}
-                      onChange={(e) => setNewDebt({ ...newDebt, montant_initial: e.target.value })}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="marge">Marge (%)</Label>
-                    <Input
-                      id="marge"
-                      type="number"
-                      step="0.01"
-                      value={newDebt.marge || ''}
-                      onChange={(e) => setNewDebt({ ...newDebt, marge: e.target.value })}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                {newDebt.type_credit === 'Lombard' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="montant_tirable">Montant Tirable (€)</Label>
-                      <Input
-                        id="montant_tirable"
-                        type="number"
-                        step="0.01"
-                        value={newDebt.montant_tirable}
-                        onChange={(e) => setNewDebt({ ...newDebt, montant_tirable: e.target.value })}
-                        placeholder="0"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="couverture_ltv">Couverture LTV (%)</Label>
-                      <Input
-                        id="couverture_ltv"
-                        type="number"
-                        step="0.01"
-                        value={newDebt.couverture_ltv || ''}
-                        onChange={(e) => setNewDebt({ ...newDebt, couverture_ltv: e.target.value })}
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="taux">Taux (%)</Label>
-                    <Input
-                      id="taux"
-                      type="number"
-                      step="0.01"
-                      value={newDebt.taux}
-                      onChange={(e) => setNewDebt({ ...newDebt, taux: e.target.value })}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="type_taux">Type de taux</Label>
-                    <Select value={newDebt.type_taux || 'Fixe'} onValueChange={(value) => setNewDebt({ ...newDebt, type_taux: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Fixe">Fixe</SelectItem>
-                        <SelectItem value="Variable">Variable</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="duree_mois">Durée (mois)</Label>
-                    <Input
-                      id="duree_mois"
-                      type="number"
-                      value={newDebt.duree_mois}
-                      onChange={(e) => setNewDebt({ ...newDebt, duree_mois: e.target.value })}
-                      placeholder="0"
-                    />
-                  </div>
+                  {FIELD_CONFIG.map((field) => renderFormField(field))}
                 </div>
 
                 <div className="flex gap-2">
@@ -686,73 +749,7 @@ export function DetteTab({ investmentId }: DetteTabProps) {
                       </div>
 
                       <div className="grid grid-cols-3 gap-4 mb-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Montant Tiré (€)</p>
-                          <p className="font-medium">{formatCurrency(debt.montant_initial)}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Durée (mois)</p>
-                          <p className="font-medium">{debt.duree_mois} mois</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Taux (%)</p>
-                          <p className="font-medium">{safeFormatPercentage(debt.taux as any)}</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Type</p>
-                          <p className="font-medium">{debt.type}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Amortissement annuel (%)</p>
-                          <p className="font-medium">{debt.amortissement_annuel ? formatPercentage(debt.amortissement_annuel) : '-'}</p>
-                        </div>
-                      </div>
-
-                      {/* Détails additionnels, même mise en page que le formulaire */}
-                      <div className="border-t pt-4 mt-4">
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <p className="text-sm text-muted-foreground">Type de crédit</p>
-                            <p className="font-medium">{debt.type_credit || '-'}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Banque</p>
-                            <p className="font-medium">{debt.banque || '-'}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Marge (%)</p>
-                            <p className="font-medium">{safeFormatPercentage(debt.marge as any)}</p>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 mt-4">
-                          <div>
-                            <p className="text-sm text-muted-foreground">Type de taux</p>
-                            <p className="font-medium">{debt.type_taux || '-'}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Échéance</p>
-                            <p className="font-medium">{debt.echeance || '-'}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Base</p>
-                            <p className="font-medium">{debt.base || '-'}</p>
-                          </div>
-                        </div>
-                        {debt.type_credit === 'Lombard' && (
-                          <div className="grid grid-cols-2 gap-4 mt-4">
-                            <div>
-                              <p className="text-sm text-muted-foreground">Montant Tirable (€)</p>
-                              <p className="font-medium">{debt.montant_tirable !== null && debt.montant_tirable !== undefined ? formatCurrency(debt.montant_tirable) : '-'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">Couverture LTV (%)</p>
-                              <p className="font-medium">{safeFormatPercentage(debt.couverture_ltv as any)}</p>
-                            </div>
-                          </div>
-                        )}
+                        {FIELD_CONFIG.map((field) => renderDisplayField(field, debt))}
                       </div>
                       
                       <div className="border-t pt-4 mt-4">
