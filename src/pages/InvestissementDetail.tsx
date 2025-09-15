@@ -376,48 +376,48 @@ export default function InvestissementDetail() {
             </div>
           </div>
 
-          {/* Total Return */}
-          <div className="card-financial">
-            <div className="p-4">
-              <p className="text-sm text-muted-foreground font-bold mb-3">Total Return (2024)</p>
-              <div className="flex justify-between items-start">
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold financial-value">
-                    {kpis.totalReturn >= 0 ? '+' : ''}{formatPercentage(kpis.totalReturn)}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {formatCurrency(Math.abs(kpis.totalReturnDetails.cfniPlusDeltaValeur || 0))}
-                  </p>
-                </div>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <div>COC net: {kpis.totalReturnDetails.cocNet?.toFixed(1) || '0.0'}%</div>
-                  <div>CFNI: {formatCurrency(kpis.totalReturnDetails.cfni)}</div>
-                  <div>Δ Valeur: {formatCurrency(kpis.totalReturnDetails.deltaValeur)}</div>
-                </div>
-              </div>
-            </div>
-          </div>
+           {/* Total Return */}
+           <div className="card-financial">
+             <div className="p-4">
+               <p className="text-sm text-muted-foreground font-bold mb-3">Total Return (2024)</p>
+               <div className="flex justify-between items-start">
+                 <div className="flex flex-col">
+                   <p className={`text-2xl font-bold ${kpis.totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
+                     {kpis.totalReturn >= 0 ? '+' : ''}{formatPercentage(kpis.totalReturn)}
+                   </p>
+                   <p className="text-sm text-muted-foreground mt-1">
+                     {formatCurrency(Math.abs(kpis.totalReturnDetails.cfniPlusDeltaValeur || 0))}
+                   </p>
+                 </div>
+                 <div className="text-xs text-muted-foreground space-y-1">
+                   <div>COC net: {kpis.totalReturnDetails.cocNet?.toFixed(1) || '0.0'}%</div>
+                   <div>CFNI: {formatCurrency(kpis.totalReturnDetails.cfni)}</div>
+                   <div>Δ Valeur: {formatCurrency(kpis.totalReturnDetails.deltaValeur)}</div>
+                 </div>
+               </div>
+             </div>
+           </div>
 
-          {/* XIRR */}
-          <div className="card-financial">
-            <div className="p-4">
-              <p className="text-sm text-muted-foreground font-bold mb-3">XIRR ({kpis.xirrDetails.years}Y)</p>
-              <div className="flex justify-between items-start">
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold financial-value">
-                    {formatPercentage(kpis.xirr)}
-                  </p>
-                </div>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <div>
-                    CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)} ({kpis.xirrDetails.cfniDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.cfniDerniereAnnee)})
-                  </div>
-                  <div>
-                    Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)} ({kpis.xirrDetails.variationValeurDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)})
-                  </div>
-                  <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
-                </div>
-              </div>
+           {/* XIRR */}
+           <div className="card-financial">
+             <div className="p-4">
+               <p className="text-sm text-muted-foreground font-bold mb-3">XIRR ({kpis.xirrDetails.years}Y)</p>
+               <div className="flex justify-between items-start">
+                 <div className="flex flex-col">
+                   <p className={`text-2xl font-bold ${kpis.xirr >= 0 ? 'text-success' : 'text-destructive'}`}>
+                     {formatPercentage(kpis.xirr)}
+                   </p>
+                 </div>
+                 <div className="text-xs text-muted-foreground space-y-1">
+                   <div>
+                     CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)} ({kpis.xirrDetails.cfniDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.cfniDerniereAnnee)})
+                   </div>
+                   <div>
+                     Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)} ({kpis.xirrDetails.variationValeurDerniereAnnee >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)})
+                   </div>
+                   <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
+                 </div>
+               </div>
             </div>
           </div>
         </div>
