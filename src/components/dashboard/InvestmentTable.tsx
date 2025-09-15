@@ -68,6 +68,12 @@ function InvestmentKPIRow({
         lastVarValeurYear: kpis.xirrDetails?.lastVarValeurYear ?? 0,
         lastCfniYear: kpis.xirrDetails?.lastCfniYear ?? 0,
         gain1Year: kpis.xirrDetails?.gain1Year ?? 0,
+        // Year information for NOI, Rendement Net, Total Return
+        noiYear: kpis.rendementNetDetails?.year ?? 0,
+        rendementNetYear: kpis.rendementNetDetails?.year ?? 0,
+        totalReturnYear: kpis.totalReturnDetails?.year ?? 0,
+        // COC net value
+        cocNet: Number(kpis.totalReturnDetails?.cocNet ?? 0),
       };
       onKpisLoaded?.(investment.id, data);
     }
@@ -107,10 +113,12 @@ function InvestmentKPIRow({
       case 'totalReturn':
         const gain1 = kpis.xirrDetails?.gain1 || 0;
         const fondPropre = kpis.fondPropre || 1; // Avoid division by zero
+        const totalReturnYear = kpis.totalReturnDetails?.year;
         return (
           <>
             {(gain1 / fondPropre * 100) >= 0 ? '+' : ''}
             {((gain1 / fondPropre * 100).toFixed(1))}%
+            {totalReturnYear && <span className="text-xs text-muted-foreground ml-1">({totalReturnYear})</span>}
           </>
         );
       case 'totalCfni':
@@ -157,14 +165,22 @@ function InvestmentKPIRow({
       case 'crd':
         return formatCurrency(kpis.fondPropreDetails?.crd || 0);
       case 'noi':
-        return formatCurrency(kpis.rendementNetDetails?.noi || 0);
+        const noiYear = kpis.rendementNetDetails?.year;
+        return (
+          <>
+            {formatCurrency(kpis.rendementNetDetails?.noi || 0)}
+            {noiYear && <span className="text-xs text-muted-foreground ml-1">({noiYear})</span>}
+          </>
+        );
       case 'loyer':
         return formatCurrency(kpis.rendementNetDetails?.loyer || 0);
       case 'rendementNet':
+        const rendementNetYear = kpis.rendementNetDetails?.year;
         return (
           <>
             {kpis.rendementNet >= 0 ? '+' : ''}
             {formatPercentage(kpis.rendementNet)}
+            {rendementNetYear && <span className="text-xs text-muted-foreground ml-1">({rendementNetYear})</span>}
           </>
         );
       case 'gain1':
@@ -174,6 +190,13 @@ function InvestmentKPIRow({
             {kpis.xirrDetails?.gain1 >= 0 ? '+' : ''}
             {formatCurrency(kpis.xirrDetails?.gain1 || 0)}
             {gain1Year && <span className="text-xs text-muted-foreground ml-1">({gain1Year})</span>}
+          </>
+        );
+      case 'coc':
+        return (
+          <>
+            {kpis.totalReturnDetails?.cocNet >= 0 ? '+' : ''}
+            {formatPercentage(kpis.totalReturnDetails?.cocNet || 0)}
           </>
         );
       default:
@@ -221,6 +244,9 @@ function InvestmentKPIRow({
           break;
         case 'gain1':
           value = kpis.xirrDetails?.gain1 || 0;
+          break;
+        case 'coc':
+          value = kpis.totalReturnDetails?.cocNet || 0;
           break;
         default:
           value = 0;
