@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { colDbg } from '@/lib/columnDebug';
 export interface ColumnConfig {
@@ -52,7 +52,7 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [isInitialized, setIsInitialized] = useState(false);
   const [storageKey, setStorageKey] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const userIdRef = useRef<string | null>(null);
 
   // Centralized function to load columns for a specific user
   const loadColumnsForUser = useCallback(async (userId: string | null) => {
@@ -120,32 +120,32 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
     let authSubscription: any = null;
 
     const initializeAuth = async () => {
-      // Get initial user
-      const { data: { user } } = await supabase.auth.getUser();
-      const initialUserId = user?.id ?? null;
-      setCurrentUserId(initialUserId);
+      // Get initial session
+      const { data: { session } } = await supabase.auth.getSession();
+      const initialUserId = session?.user?.id ?? null;
+      userIdRef.current = initialUserId;
+      colDbg.log('auth.init', { initialUserId });
       await loadColumnsForUser(initialUserId);
 
       // Listen for auth changes
-      authSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         const newUserId = session?.user?.id ?? null;
-        colDbg.log('auth.change', { event, oldUserId: currentUserId, newUserId });
-        
-        if (newUserId !== currentUserId) {
-          setCurrentUserId(newUserId);
-          await loadColumnsForUser(newUserId);
-        }
+        const oldUserId = userIdRef.current;
+        colDbg.log('auth.change', { event, oldUserId, newUserId });
+        userIdRef.current = newUserId;
+        await loadColumnsForUser(newUserId);
       });
+      authSubscription = data?.subscription;
     };
 
     initializeAuth();
 
     return () => {
-      if (authSubscription?.subscription) {
-        authSubscription.subscription.unsubscribe();
+      if (authSubscription) {
+        authSubscription.unsubscribe();
       }
     };
-  }, [loadColumnsForUser, currentUserId]);
+  }, [loadColumnsForUser]);
 
 // Centralized persistence - save to localStorage when columns change
 useEffect(() => {
