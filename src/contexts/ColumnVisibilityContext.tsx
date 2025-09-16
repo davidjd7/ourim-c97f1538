@@ -82,6 +82,17 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
     initializeColumns();
   }, []);
 
+  // Centralized persistence - save to localStorage when columns change
+  useEffect(() => {
+    if (isInitialized && storageKey && columns.length > 0) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(columns));
+      } catch (error) {
+        console.error('Error saving columns to localStorage:', error);
+      }
+    }
+  }, [columns, isInitialized, storageKey]);
+
   const updateColumnVisibility = useCallback((key: string, visible: boolean) => {
     setColumns((current) => {
       // Empêcher la modification des colonnes obligatoires
@@ -90,17 +101,9 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
         return current; // Ne pas modifier les colonnes obligatoires
       }
       
-      const updated = current.map((col) => (col.key === key ? { ...col, visible } : col));
-      if (isInitialized && storageKey) {
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(updated));
-        } catch (error) {
-          console.error('Error saving column visibility:', error);
-        }
-      }
-      return updated;
+      return current.map((col) => (col.key === key ? { ...col, visible } : col));
     });
-  }, [isInitialized, storageKey]);
+  }, []);
 
   const reorderColumns = useCallback((oldIndex: number, newIndex: number) => {
     setColumns((current) => {
@@ -109,27 +112,25 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
       newColumns.splice(newIndex, 0, reorderedColumn);
       
       // Update order values
-      const updatedColumns = newColumns.map((col, index) => ({ ...col, order: index }));
-      
-      if (isInitialized && storageKey) {
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(updatedColumns));
-        } catch (error) {
-          console.error('Error saving column order:', error);
-        }
-      }
-      return updatedColumns;
+      return newColumns.map((col, index) => ({ ...col, order: index }));
     });
-  }, [isInitialized, storageKey]);
+  }, []);
 
-  const value: ColumnVisibilityContextValue = useMemo(() => ({
-    columns: columns.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-    visibleColumns: columns.filter((c) => c.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-    hiddenColumns: columns.filter((c) => !c.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-    updateColumnVisibility,
-    reorderColumns,
-    isInitialized,
-  }), [columns, updateColumnVisibility, reorderColumns, isInitialized]);
+  const value: ColumnVisibilityContextValue = useMemo(() => {
+    // Create immutable sorted copies to avoid mutation during render
+    const sortedColumns = [...columns].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const sortedVisible = sortedColumns.filter((c) => c.visible);
+    const sortedHidden = sortedColumns.filter((c) => !c.visible);
+
+    return {
+      columns: sortedColumns,
+      visibleColumns: sortedVisible,
+      hiddenColumns: sortedHidden,
+      updateColumnVisibility,
+      reorderColumns,
+      isInitialized,
+    };
+  }, [columns, updateColumnVisibility, reorderColumns, isInitialized]);
 
   return (
     <ColumnVisibilityContext.Provider value={value}>
