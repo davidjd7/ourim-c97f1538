@@ -303,6 +303,39 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
     try {
       console.info('Deleting investment:', id);
       
+      // First, get all debt characteristics for this asset
+      const { data: debtCharacteristics } = await supabase
+        .from('debt_characteristics')
+        .select('id')
+        .eq('asset_id', id)
+        .eq('user_id', user.id);
+
+      // Delete debt flows for each debt characteristic
+      if (debtCharacteristics && debtCharacteristics.length > 0) {
+        const debtIds = debtCharacteristics.map(debt => debt.id);
+        
+        const { error: flowsError } = await supabase
+          .from('debt_flows')
+          .delete()
+          .in('debt_characteristics_id', debtIds)
+          .eq('user_id', user.id);
+
+        if (flowsError) {
+          console.error('Error deleting debt flows:', flowsError);
+        }
+      }
+
+      // Delete debt characteristics for this asset
+      const { error: debtError } = await supabase
+        .from('debt_characteristics')
+        .delete()
+        .eq('asset_id', id)
+        .eq('user_id', user.id);
+
+      if (debtError) {
+        console.error('Error deleting debt characteristics:', debtError);
+      }
+
       // Delete from Supabase
       const { error } = await supabase
         .from('immobilier_investments')
