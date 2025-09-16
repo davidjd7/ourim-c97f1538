@@ -42,7 +42,7 @@ interface ColumnVisibilityContextValue {
   visibleColumns: ColumnConfig[];
   hiddenColumns: ColumnConfig[];
   updateColumnVisibility: (key: string, visible: boolean) => void;
-  reorderColumns: (activeId: string, overId: string) => void;
+  reorderColumns: (oldIndex: number, newIndex: number) => void;
   isInitialized: boolean;
 }
 
@@ -113,21 +113,6 @@ useEffect(() => {
   };
 
   initializeColumns();
-
-  // Listen for auth state changes to reload/migrate columns
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-    colDbg.log('auth state change', { event, hasSession: !!session });
-    
-    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-      // Reload columns with new auth context
-      setIsInitialized(false);
-      await initializeColumns();
-    }
-  });
-
-  return () => {
-    subscription.unsubscribe();
-  };
 }, []);
 
 // Centralized persistence - save to localStorage when columns change
@@ -156,41 +141,17 @@ const updateColumnVisibility = useCallback((key: string, visible: boolean) => {
   });
 }, []);
 
-const reorderColumns = useCallback((activeId: string, overId: string) => {
-  if (!activeId || !overId || activeId === overId) return;
-
-  colDbg.log('reorderColumns', { activeId, overId });
-
-  setColumns(prev => {
-    // Work on a sorted copy to ensure consistent indices
-    const sortedColumns = [...prev].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+const reorderColumns = useCallback((oldIndex: number, newIndex: number) => {
+  setColumns((current) => {
+    const before = colDbg.snap(current);
+    const newColumns = [...current];
+    const [reorderedColumn] = newColumns.splice(oldIndex, 1);
+    newColumns.splice(newIndex, 0, reorderedColumn);
     
-    const activeIndex = sortedColumns.findIndex(col => col.key === activeId);
-    const overIndex = sortedColumns.findIndex(col => col.key === overId);
-    
-    colDbg.log('reorder indices', { activeIndex, overIndex, sortedCount: sortedColumns.length });
-    
-    if (activeIndex === -1 || overIndex === -1) {
-      colDbg.log('reorder failed - invalid indices');
-      return prev;
-    }
-
-    const reorderedColumns = [...sortedColumns];
-    const [removed] = reorderedColumns.splice(activeIndex, 1);
-    reorderedColumns.splice(overIndex, 0, removed);
-
-    // Recalculate order values based on new positions
-    const finalColumns = reorderedColumns.map((col, index) => ({
-      ...col,
-      order: index
-    }));
-
-    colDbg.log('reorder result', { 
-      before: colDbg.snap(sortedColumns), 
-      after: colDbg.snap(finalColumns) 
-    });
-
-    return finalColumns;
+    // Update order values
+    const updatedColumns = newColumns.map((col, index) => ({ ...col, order: index }));
+    colDbg.log('order.reorder', { oldIndex, newIndex, moved: reorderedColumn?.key, before, after: colDbg.snap(updatedColumns) });
+    return updatedColumns;
   });
 }, []);
 

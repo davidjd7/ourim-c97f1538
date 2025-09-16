@@ -120,20 +120,24 @@ const handleColumnToggle = (key: string, visible: boolean) => {
 
 const handleDragEnd = (event: DragEndEvent) => {
   const { active, over } = event;
-  
-  colDbg.log('drag end', { 
-    activeId: active.id, 
-    overId: over?.id,
-    totalVisible: visibleColumns.length 
-  });
-  
-  if (!over || active.id === over.id) {
-    colDbg.log('drag cancelled - no target or same position');
-    return;
+  colDbg.log('dnd.end', { active: active?.id, over: over?.id });
+
+  if (over && active.id !== over.id) {
+    const allColumns = [...visibleColumns];
+    const oldIndex = allColumns.findIndex((col) => col.key === active.id);
+    const newIndex = allColumns.findIndex((col) => col.key === over.id);
+    colDbg.log('dnd.indexes.local', { oldIndex, newIndex });
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      // Calculate global indices for reordering
+      const allColumnsGlobal = [...visibleColumns, ...hiddenColumns].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const globalOldIndex = allColumnsGlobal.findIndex((col) => col.key === active.id);
+      const globalNewIndex = allColumnsGlobal.findIndex((col) => col.key === over.id);
+      colDbg.log('dnd.indexes.global', { globalOldIndex, globalNewIndex, order: allColumnsGlobal.map(c => c.key) });
+      
+      reorderColumns(globalOldIndex, globalNewIndex);
+    }
   }
-  
-  // Pass string IDs directly to reorderColumns
-  reorderColumns(active.id as string, over.id as string);
 };
 
   return (
