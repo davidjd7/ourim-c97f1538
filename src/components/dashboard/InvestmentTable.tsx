@@ -119,11 +119,13 @@ function InvestmentKPIRow({
         const fondPropre = kpis.fondPropre || 1; // Avoid division by zero
         const totalReturnYear = kpis.totalReturnDetails?.year;
         return (
-          <>
-            {(gain1 / fondPropre * 100) >= 0 ? '+' : ''}
-            {((gain1 / fondPropre * 100).toFixed(1))}%
-            {totalReturnYear && <span className="text-xs text-muted-foreground ml-1">({totalReturnYear})</span>}
-          </>
+          <div className="flex flex-col items-end">
+            <span>
+              {(gain1 / fondPropre * 100) >= 0 ? '+' : ''}
+              {((gain1 / fondPropre * 100).toFixed(1))}%
+            </span>
+            {totalReturnYear && <span className="text-xs text-muted-foreground">({totalReturnYear})</span>}
+          </div>
         );
       case 'totalCfni':
         return (
@@ -149,73 +151,83 @@ function InvestmentKPIRow({
       case 'lastVarValeur':
         const lastVarValeurYear = kpis.xirrDetails?.lastVarValeurYear;
         return (
-          <>
-            {kpis.xirrDetails?.variationValeurDerniereAnnee >= 0 ? '+' : ''}
-            {formatCurrency(kpis.xirrDetails?.variationValeurDerniereAnnee || 0)}
-            {lastVarValeurYear && <span className="text-xs text-muted-foreground ml-1">({lastVarValeurYear})</span>}
-          </>
+          <div className="flex flex-col items-end">
+            <span>
+              {kpis.xirrDetails?.variationValeurDerniereAnnee >= 0 ? '+' : ''}
+              {formatCurrency(kpis.xirrDetails?.variationValeurDerniereAnnee || 0)}
+            </span>
+            {lastVarValeurYear && <span className="text-xs text-muted-foreground">({lastVarValeurYear})</span>}
+          </div>
         );
       case 'lastCfni':
         const lastCfniYear = kpis.xirrDetails?.lastCfniYear;
         return (
-          <>
-            {kpis.xirrDetails?.cfniDerniereAnnee >= 0 ? '+' : ''}
-            {formatCurrency(kpis.xirrDetails?.cfniDerniereAnnee || 0)}
-            {lastCfniYear && <span className="text-xs text-muted-foreground ml-1">({lastCfniYear})</span>}
-          </>
+          <div className="flex flex-col items-end">
+            <span>
+              {kpis.xirrDetails?.cfniDerniereAnnee >= 0 ? '+' : ''}
+              {formatCurrency(kpis.xirrDetails?.cfniDerniereAnnee || 0)}
+            </span>
+            {lastCfniYear && <span className="text-xs text-muted-foreground">({lastCfniYear})</span>}
+          </div>
         );
       case 'ltv':
         return formatPercentage(kpis.fondPropreDetails?.ltv || 0);
       case 'crd':
         const crdYear = kpis.fondPropreDetails?.year;
         return (
-          <>
-            {formatCurrency(kpis.fondPropreDetails?.crd || 0)}
-            {crdYear && <span className="text-xs text-muted-foreground ml-1">({crdYear})</span>}
-          </>
+          <div className="flex flex-col items-end">
+            <span>{formatCurrency(kpis.fondPropreDetails?.crd || 0)}</span>
+            {crdYear && <span className="text-xs text-muted-foreground">({crdYear})</span>}
+          </div>
         );
       case 'noi':
         const noiYear = kpis.rendementNetDetails?.year;
         return (
-          <>
-            {formatCurrency(kpis.rendementNetDetails?.noi || 0)}
-            {noiYear && <span className="text-xs text-muted-foreground ml-1">({noiYear})</span>}
-          </>
+          <div className="flex flex-col items-end">
+            <span>{formatCurrency(kpis.rendementNetDetails?.noi || 0)}</span>
+            {noiYear && <span className="text-xs text-muted-foreground">({noiYear})</span>}
+          </div>
         );
       case 'loyer':
         const loyerYear = kpis.rendementNetDetails?.year;
         return (
-          <>
-            {formatCurrency(kpis.rendementNetDetails?.loyer || 0)}
-            {loyerYear && <span className="text-xs text-muted-foreground ml-1">({loyerYear})</span>}
-          </>
+          <div className="flex flex-col items-end">
+            <span>{formatCurrency(kpis.rendementNetDetails?.loyer || 0)}</span>
+            {loyerYear && <span className="text-xs text-muted-foreground">({loyerYear})</span>}
+          </div>
         );
       case 'rendementNet':
         const rendementNetYear = kpis.rendementNetDetails?.year;
         return (
-          <>
-            {kpis.rendementNet >= 0 ? '+' : ''}
-            {formatPercentage(kpis.rendementNet)}
-            {rendementNetYear && <span className="text-xs text-muted-foreground ml-1">({rendementNetYear})</span>}
-          </>
+          <div className="flex flex-col items-end">
+            <span>
+              {kpis.rendementNet >= 0 ? '+' : ''}
+              {formatPercentage(kpis.rendementNet)}
+            </span>
+            {rendementNetYear && <span className="text-xs text-muted-foreground">({rendementNetYear})</span>}
+          </div>
         );
       case 'gain1':
         const gain1Year = kpis.xirrDetails?.gain1Year;
         return (
-          <>
-            {kpis.xirrDetails?.gain1 >= 0 ? '+' : ''}
-            {formatCurrency(kpis.xirrDetails?.gain1 || 0)}
-            {gain1Year && <span className="text-xs text-muted-foreground ml-1">({gain1Year})</span>}
-          </>
+          <div className="flex flex-col items-end">
+            <span>
+              {kpis.xirrDetails?.gain1 >= 0 ? '+' : ''}
+              {formatCurrency(kpis.xirrDetails?.gain1 || 0)}
+            </span>
+            {gain1Year && <span className="text-xs text-muted-foreground">({gain1Year})</span>}
+          </div>
         );
       case 'coc':
         const cocYear = kpis.totalReturnDetails?.year;
         return (
-          <>
-            {kpis.totalReturnDetails?.cocNet >= 0 ? '+' : ''}
-            {formatPercentage(kpis.totalReturnDetails?.cocNet || 0)}
-            {cocYear && <span className="text-xs text-muted-foreground ml-1">({cocYear})</span>}
-          </>
+          <div className="flex flex-col items-end">
+            <span>
+              {kpis.totalReturnDetails?.cocNet >= 0 ? '+' : ''}
+              {formatPercentage(kpis.totalReturnDetails?.cocNet || 0)}
+            </span>
+            {cocYear && <span className="text-xs text-muted-foreground">({cocYear})</span>}
+          </div>
         );
       default:
         return '-';
