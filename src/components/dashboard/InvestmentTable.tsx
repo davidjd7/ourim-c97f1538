@@ -167,7 +167,13 @@ function InvestmentKPIRow({
       case 'ltv':
         return formatPercentage(kpis.fondPropreDetails?.ltv || 0);
       case 'crd':
-        return formatCurrency(kpis.fondPropreDetails?.crd || 0);
+        const crdYear = kpis.fondPropreDetails?.year;
+        return (
+          <>
+            {formatCurrency(kpis.fondPropreDetails?.crd || 0)}
+            {crdYear && <span className="text-xs text-muted-foreground ml-1">({crdYear})</span>}
+          </>
+        );
       case 'noi':
         const noiYear = kpis.rendementNetDetails?.year;
         return (
@@ -177,7 +183,13 @@ function InvestmentKPIRow({
           </>
         );
       case 'loyer':
-        return formatCurrency(kpis.rendementNetDetails?.loyer || 0);
+        const loyerYear = kpis.rendementNetDetails?.year;
+        return (
+          <>
+            {formatCurrency(kpis.rendementNetDetails?.loyer || 0)}
+            {loyerYear && <span className="text-xs text-muted-foreground ml-1">({loyerYear})</span>}
+          </>
+        );
       case 'rendementNet':
         const rendementNetYear = kpis.rendementNetDetails?.year;
         return (
