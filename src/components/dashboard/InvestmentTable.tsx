@@ -197,10 +197,12 @@ function InvestmentKPIRow({
           </>
         );
       case 'coc':
+        const cocYear = kpis.totalReturnDetails?.year;
         return (
           <>
             {kpis.totalReturnDetails?.cocNet >= 0 ? '+' : ''}
             {formatPercentage(kpis.totalReturnDetails?.cocNet || 0)}
+            {cocYear && <span className="text-xs text-muted-foreground ml-1">({cocYear})</span>}
           </>
         );
       default:
@@ -467,14 +469,7 @@ export function InvestmentTable({
                 <div className={`flex items-center gap-1 ${
                   column.align === 'right' ? 'justify-end' : ''
                 }`}>
-                  {column.key === 'coc' ? (
-                    <div className="flex flex-col items-center">
-                      <span>{column.label}</span>
-                      <span className="text-xs text-muted-foreground">({new Date().getFullYear()})</span>
-                    </div>
-                  ) : (
-                    column.label
-                  )}
+                  {column.label}
                   <FilterIcon column={column} />
                   {column.sortable && getSortIcon(column.key)}
                 </div>
