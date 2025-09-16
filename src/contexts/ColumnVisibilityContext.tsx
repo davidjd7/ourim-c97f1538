@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
+import { colDbg } from '@/lib/columnDebug';
 export interface ColumnConfig {
   key: string;
   label: string;
@@ -53,17 +53,32 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
   const [isInitialized, setIsInitialized] = useState(false);
   const [storageKey, setStorageKey] = useState<string | null>(null);
 
-  // Load once from localStorage and merge with defaults
-  useEffect(() => {
-    const initializeColumns = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const key = user ? `${BASE_STORAGE_KEY}-${user.id}` : BASE_STORAGE_KEY;
-        setStorageKey(key);
+// Load once from localStorage and merge with defaults
+useEffect(() => {
+  const initializeColumns = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const primaryKey = user ? `${BASE_STORAGE_KEY}-${user.id}` : BASE_STORAGE_KEY;
+      const fallbackKey = BASE_STORAGE_KEY;
+      setStorageKey(primaryKey);
+      colDbg.log('init.start', { userId: user?.id ?? null, primaryKey, fallbackKey });
 
-        const stored = localStorage.getItem(key);
-        if (stored) {
-          const storedColumns: ColumnConfig[] = JSON.parse(stored);
+      let usedKey = primaryKey;
+      let storedRaw = localStorage.getItem(primaryKey);
+
+      // If logged-in but nothing under user key, try base key (migration)
+      if (!storedRaw && user) {
+        const baseRaw = localStorage.getItem(fallbackKey);
+        if (baseRaw) {
+          storedRaw = baseRaw;
+          usedKey = fallbackKey;
+          colDbg.log('init.migrate.fromBase', { from: fallbackKey, to: primaryKey });
+        }
+      }
+
+      if (storedRaw) {
+        try {
+          const storedColumns: ColumnConfig[] = JSON.parse(storedRaw);
           const mergedColumns = DEFAULT_COLUMNS.map((defaultCol) => {
             const storedCol = storedColumns.find((c) => c.key === defaultCol.key);
             return storedCol ? { ...defaultCol, visible: storedCol.visible, order: storedCol.order ?? defaultCol.order } : defaultCol;
@@ -71,50 +86,74 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
           // Sort by order
           mergedColumns.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
           setColumns(mergedColumns);
+          colDbg.log('init.loaded', { usedKey, count: mergedColumns.length, snapshot: colDbg.snap(mergedColumns) });
+
+          // If we migrated from base to user key, persist under primary key
+          if (usedKey === fallbackKey && user) {
+            try {
+              localStorage.setItem(primaryKey, JSON.stringify(mergedColumns));
+              colDbg.log('init.migrated.persisted', { to: primaryKey });
+            } catch (mErr) {
+              console.error('Error migrating columns to user key:', mErr);
+            }
+          }
+        } catch (parseErr) {
+          console.error('Error parsing stored columns:', parseErr);
+          colDbg.log('init.parseError', { usedKey, error: String(parseErr) });
         }
-      } catch (e) {
-        console.error('Error loading column visibility:', e);
-      } finally {
-        setIsInitialized(true);
+      } else {
+        colDbg.log('init.noStored', { key: primaryKey });
       }
-    };
-
-    initializeColumns();
-  }, []);
-
-  // Centralized persistence - save to localStorage when columns change
-  useEffect(() => {
-    if (isInitialized && storageKey && columns.length > 0) {
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(columns));
-      } catch (error) {
-        console.error('Error saving columns to localStorage:', error);
-      }
+    } catch (e) {
+      console.error('Error loading column visibility:', e);
+      colDbg.log('init.error', { error: String(e) });
+    } finally {
+      setIsInitialized(true);
     }
-  }, [columns, isInitialized, storageKey]);
+  };
 
-  const updateColumnVisibility = useCallback((key: string, visible: boolean) => {
-    setColumns((current) => {
-      // Empêcher la modification des colonnes obligatoires
-      const column = current.find(col => col.key === key);
-      if (column?.required) {
-        return current; // Ne pas modifier les colonnes obligatoires
-      }
-      
-      return current.map((col) => (col.key === key ? { ...col, visible } : col));
-    });
-  }, []);
+  initializeColumns();
+}, []);
 
-  const reorderColumns = useCallback((oldIndex: number, newIndex: number) => {
-    setColumns((current) => {
-      const newColumns = [...current];
-      const [reorderedColumn] = newColumns.splice(oldIndex, 1);
-      newColumns.splice(newIndex, 0, reorderedColumn);
-      
-      // Update order values
-      return newColumns.map((col, index) => ({ ...col, order: index }));
-    });
-  }, []);
+// Centralized persistence - save to localStorage when columns change
+useEffect(() => {
+  if (isInitialized && storageKey && columns.length > 0) {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(columns));
+      colDbg.log('persist.save', { key: storageKey, snapshot: colDbg.snap(columns) });
+    } catch (error) {
+      console.error('Error saving columns to localStorage:', error);
+    }
+  }
+}, [columns, isInitialized, storageKey]);
+
+const updateColumnVisibility = useCallback((key: string, visible: boolean) => {
+  setColumns((current) => {
+    // Empêcher la modification des colonnes obligatoires
+    const column = current.find(col => col.key === key);
+    if (column?.required) {
+      colDbg.log('visibility.blocked.required', { key });
+      return current; // Ne pas modifier les colonnes obligatoires
+    }
+    const updated = current.map((col) => (col.key === key ? { ...col, visible } : col));
+    colDbg.log('visibility.update', { key, visible, before: colDbg.snap(current), after: colDbg.snap(updated) });
+    return updated;
+  });
+}, []);
+
+const reorderColumns = useCallback((oldIndex: number, newIndex: number) => {
+  setColumns((current) => {
+    const before = colDbg.snap(current);
+    const newColumns = [...current];
+    const [reorderedColumn] = newColumns.splice(oldIndex, 1);
+    newColumns.splice(newIndex, 0, reorderedColumn);
+    
+    // Update order values
+    const updatedColumns = newColumns.map((col, index) => ({ ...col, order: index }));
+    colDbg.log('order.reorder', { oldIndex, newIndex, moved: reorderedColumn?.key, before, after: colDbg.snap(updatedColumns) });
+    return updatedColumns;
+  });
+}, []);
 
   const value: ColumnVisibilityContextValue = useMemo(() => {
     // Create immutable sorted copies to avoid mutation during render
