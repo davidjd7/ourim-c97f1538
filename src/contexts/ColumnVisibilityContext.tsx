@@ -52,27 +52,28 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [isInitialized, setIsInitialized] = useState(false);
   const [storageKey, setStorageKey] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-// Load once from localStorage and merge with defaults
-useEffect(() => {
-  const initializeColumns = async () => {
+  // Centralized function to load columns for a specific user
+  const loadColumnsForUser = useCallback(async (userId: string | null) => {
+    setIsInitialized(false); // Block persistence during loading
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const primaryKey = user ? `${BASE_STORAGE_KEY}-${user.id}` : BASE_STORAGE_KEY;
+      const primaryKey = userId ? `${BASE_STORAGE_KEY}-${userId}` : BASE_STORAGE_KEY;
       const fallbackKey = BASE_STORAGE_KEY;
       setStorageKey(primaryKey);
-      colDbg.log('init.start', { userId: user?.id ?? null, primaryKey, fallbackKey });
+      colDbg.log('loadUser.start', { userId, primaryKey, fallbackKey });
 
       let usedKey = primaryKey;
       let storedRaw = localStorage.getItem(primaryKey);
 
       // If logged-in but nothing under user key, try base key (migration)
-      if (!storedRaw && user) {
+      if (!storedRaw && userId) {
         const baseRaw = localStorage.getItem(fallbackKey);
         if (baseRaw) {
           storedRaw = baseRaw;
           usedKey = fallbackKey;
-          colDbg.log('init.migrate.fromBase', { from: fallbackKey, to: primaryKey });
+          colDbg.log('loadUser.migrate.fromBase', { from: fallbackKey, to: primaryKey });
         }
       }
 
@@ -86,34 +87,65 @@ useEffect(() => {
           // Sort by order
           mergedColumns.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
           setColumns(mergedColumns);
-          colDbg.log('init.loaded', { usedKey, count: mergedColumns.length, snapshot: colDbg.snap(mergedColumns) });
+          colDbg.log('loadUser.loaded', { usedKey, count: mergedColumns.length, snapshot: colDbg.snap(mergedColumns) });
 
           // If we migrated from base to user key, persist under primary key
-          if (usedKey === fallbackKey && user) {
+          if (usedKey === fallbackKey && userId) {
             try {
               localStorage.setItem(primaryKey, JSON.stringify(mergedColumns));
-              colDbg.log('init.migrated.persisted', { to: primaryKey });
+              colDbg.log('loadUser.migrated.persisted', { to: primaryKey });
             } catch (mErr) {
               console.error('Error migrating columns to user key:', mErr);
             }
           }
         } catch (parseErr) {
           console.error('Error parsing stored columns:', parseErr);
-          colDbg.log('init.parseError', { usedKey, error: String(parseErr) });
+          colDbg.log('loadUser.parseError', { usedKey, error: String(parseErr) });
         }
       } else {
-        colDbg.log('init.noStored', { key: primaryKey });
+        // No stored data, use defaults
+        setColumns(DEFAULT_COLUMNS);
+        colDbg.log('loadUser.noStored.useDefaults', { key: primaryKey });
       }
     } catch (e) {
       console.error('Error loading column visibility:', e);
-      colDbg.log('init.error', { error: String(e) });
+      colDbg.log('loadUser.error', { error: String(e) });
     } finally {
       setIsInitialized(true);
     }
-  };
+  }, []);
 
-  initializeColumns();
-}, []);
+  // Initial load and auth state listener
+  useEffect(() => {
+    let authSubscription: any = null;
+
+    const initializeAuth = async () => {
+      // Get initial user
+      const { data: { user } } = await supabase.auth.getUser();
+      const initialUserId = user?.id ?? null;
+      setCurrentUserId(initialUserId);
+      await loadColumnsForUser(initialUserId);
+
+      // Listen for auth changes
+      authSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
+        const newUserId = session?.user?.id ?? null;
+        colDbg.log('auth.change', { event, oldUserId: currentUserId, newUserId });
+        
+        if (newUserId !== currentUserId) {
+          setCurrentUserId(newUserId);
+          await loadColumnsForUser(newUserId);
+        }
+      });
+    };
+
+    initializeAuth();
+
+    return () => {
+      if (authSubscription?.subscription) {
+        authSubscription.subscription.unsubscribe();
+      }
+    };
+  }, [loadColumnsForUser, currentUserId]);
 
 // Centralized persistence - save to localStorage when columns change
 useEffect(() => {
