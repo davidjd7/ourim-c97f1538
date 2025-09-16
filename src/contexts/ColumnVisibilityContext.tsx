@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ColumnConfig {
   key: string;
@@ -33,7 +34,8 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
   { key: 'rendementNet', label: 'Rendement Net', visible: false, sortable: true, align: 'right', type: 'percentage', order: 17 },
 ];
 
-const STORAGE_KEY = 'investment-table-columns';
+// Clé de base, sera suffixée avec l'ID utilisateur
+const BASE_STORAGE_KEY = 'investment-table-columns';
 
 interface ColumnVisibilityContextValue {
   columns: ColumnConfig[];
@@ -49,26 +51,35 @@ const ColumnVisibilityContext = createContext<ColumnVisibilityContextValue | und
 export function ColumnVisibilityProvider({ children }: { children: ReactNode }) {
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [storageKey, setStorageKey] = useState<string | null>(null);
 
   // Load once from localStorage and merge with defaults
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const storedColumns: ColumnConfig[] = JSON.parse(stored);
-        const mergedColumns = DEFAULT_COLUMNS.map((defaultCol) => {
-          const storedCol = storedColumns.find((c) => c.key === defaultCol.key);
-          return storedCol ? { ...defaultCol, visible: storedCol.visible, order: storedCol.order ?? defaultCol.order } : defaultCol;
-        });
-        // Sort by order
-        mergedColumns.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        setColumns(mergedColumns);
+    const initializeColumns = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const key = user ? `${BASE_STORAGE_KEY}-${user.id}` : BASE_STORAGE_KEY;
+        setStorageKey(key);
+
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const storedColumns: ColumnConfig[] = JSON.parse(stored);
+          const mergedColumns = DEFAULT_COLUMNS.map((defaultCol) => {
+            const storedCol = storedColumns.find((c) => c.key === defaultCol.key);
+            return storedCol ? { ...defaultCol, visible: storedCol.visible, order: storedCol.order ?? defaultCol.order } : defaultCol;
+          });
+          // Sort by order
+          mergedColumns.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+          setColumns(mergedColumns);
+        }
+      } catch (e) {
+        console.error('Error loading column visibility:', e);
+      } finally {
+        setIsInitialized(true);
       }
-    } catch (e) {
-      console.error('Error loading column visibility:', e);
-    } finally {
-      setIsInitialized(true);
-    }
+    };
+
+    initializeColumns();
   }, []);
 
   const updateColumnVisibility = useCallback((key: string, visible: boolean) => {
@@ -80,12 +91,16 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
       }
       
       const updated = current.map((col) => (col.key === key ? { ...col, visible } : col));
-      if (isInitialized) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      if (isInitialized && storageKey) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(updated));
+        } catch (error) {
+          console.error('Error saving column visibility:', error);
+        }
       }
       return updated;
     });
-  }, [isInitialized]);
+  }, [isInitialized, storageKey]);
 
   const reorderColumns = useCallback((oldIndex: number, newIndex: number) => {
     setColumns((current) => {
@@ -96,12 +111,16 @@ export function ColumnVisibilityProvider({ children }: { children: ReactNode }) 
       // Update order values
       const updatedColumns = newColumns.map((col, index) => ({ ...col, order: index }));
       
-      if (isInitialized) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedColumns));
+      if (isInitialized && storageKey) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(updatedColumns));
+        } catch (error) {
+          console.error('Error saving column order:', error);
+        }
       }
       return updatedColumns;
     });
-  }, [isInitialized]);
+  }, [isInitialized, storageKey]);
 
   const value: ColumnVisibilityContextValue = useMemo(() => ({
     columns: columns.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),

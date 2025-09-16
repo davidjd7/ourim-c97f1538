@@ -51,6 +51,21 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     try {
+      // Nettoyer les préférences utilisateur du localStorage
+      if (user) {
+        const keysToRemove = [
+          `investment-table-columns-${user.id}`,
+          `investment-table-filters-${user.id}`
+        ];
+        keysToRemove.forEach(key => {
+          try {
+            localStorage.removeItem(key);
+          } catch (error) {
+            console.error('Error removing localStorage key:', key, error);
+          }
+        });
+      }
+
       await supabase.auth.signOut({ scope: 'global' });
       setUser(null);
       setSession(null);
@@ -58,7 +73,7 @@ export function useAuth() {
     } catch (error) {
       console.error('Error signing out:', error);
     }
-  }, []);
+  }, [user]);
 
   return {
     user,
