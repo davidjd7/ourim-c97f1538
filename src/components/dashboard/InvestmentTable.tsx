@@ -467,7 +467,14 @@ export function InvestmentTable({
                 <div className={`flex items-center gap-1 ${
                   column.align === 'right' ? 'justify-end' : ''
                 }`}>
-                  {column.label}
+                  {column.key === 'coc' ? (
+                    <div className="flex flex-col items-center">
+                      <span>{column.label}</span>
+                      <span className="text-xs text-muted-foreground">({new Date().getFullYear()})</span>
+                    </div>
+                  ) : (
+                    column.label
+                  )}
                   <FilterIcon column={column} />
                   {column.sortable && getSortIcon(column.key)}
                 </div>
