@@ -59,3 +59,12 @@ export interface InvestmentRawData {
 export interface BatchKPIData {
   [investmentId: string]: InvestmentKPIs;
 }
+
+// Additional interfaces for consolidated KPI view
+export interface ConsolidatedRow {
+  date: string;
+  cashFlow: number;
+  valeur: number;
+  crd: number;
+  fp: number;
+}

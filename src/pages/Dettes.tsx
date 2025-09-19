@@ -6,11 +6,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CreditCard, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDebtsList } from '@/hooks/useDebtsList';
-import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
+import { useBatchPerformanceKPIs } from '@/hooks/useBatchPerformanceKPIs';
 
 function DebtRowWithLTV({ debt }: { debt: any }) {
-  const { kpis, loading } = usePerformanceKPIs(debt.asset_id);
+  const { batchKPIs, loading } = useBatchPerformanceKPIs([debt.asset_id]);
   const navigate = useNavigate();
+
+  const kpis = batchKPIs[debt.asset_id];
 
   const formatCurrency = (amount: number | null) => {
     if (!amount) return '0 €';

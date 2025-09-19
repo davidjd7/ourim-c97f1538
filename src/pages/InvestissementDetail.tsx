@@ -23,7 +23,7 @@ import { DocumentsTab } from '@/components/investments/tabs/DocumentsTab';
 import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
 
 import { useInvestments } from '@/contexts/ImmobilierContext';
-import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
+import { useBatchPerformanceKPIs } from '@/hooks/useBatchPerformanceKPIs';
 import { useCompanies } from '@/contexts/CompanyContext';
 
 export default function InvestissementDetail() {
@@ -44,9 +44,29 @@ export default function InvestissementDetail() {
   const investment = isNewInvestment ? null : getInvestment(id || '');
   
   // Load performance KPIs for invested status
-  const { kpis, loading: kpisLoading } = usePerformanceKPIs(
-    isNewInvestment ? '' : (id || '')
+  const { batchKPIs, loading: kpisLoading } = useBatchPerformanceKPIs(
+    isNewInvestment ? [] : [id || '']
   );
+  
+  const kpis = isNewInvestment ? {
+    fondPropre: 0,
+    fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
+    rendementNet: 0,
+    rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
+    totalReturn: 0,
+    totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
+    xirr: 0,
+    xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0, latestCf: 0, latestCfYear: 0 }
+  } : batchKPIs[id || ''] || {
+    fondPropre: 0,
+    fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: 0 },
+    rendementNet: 0,
+    rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
+    totalReturn: 0,
+    totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
+    xirr: 0,
+    xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0, latestCf: 0, latestCfYear: 0 }
+  };
 
   const [tempEditData, setTempEditData] = useState({
     name: '',

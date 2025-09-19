@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { usePerformanceKPIs } from './usePerformanceKPIs';
+import { useBatchPerformanceKPIs } from './useBatchPerformanceKPIs';
 
 export interface DebtItem {
   id: string;

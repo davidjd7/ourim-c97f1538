@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import type { BatchKPIData, InvestmentRawData, CashflowRow, ValorisationRow, DebtFlowRow, ImmobilisationRow } from '@/types/kpi';
 import { calculateKPIs } from '@/lib/kpiCalculations';
+import { logError } from '@/lib/errorHandler';
 
 interface UseBatchPerformanceKPIsResult {
   batchKPIs: BatchKPIData;
@@ -128,7 +129,7 @@ export function useBatchPerformanceKPIs(investmentIds: string[]): UseBatchPerfor
 
       setBatchKPIs(kpiResults);
     } catch (error) {
-      console.error('Error loading batch KPIs:', error);
+      logError(error, { component: 'useBatchPerformanceKPIs', function: 'loadBatchKPIs' });
       setBatchKPIs({});
     } finally {
       setLoading(false);

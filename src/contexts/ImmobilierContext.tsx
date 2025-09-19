@@ -58,8 +58,8 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
       name: dbRow.name,
       type: dbRow.type,
       dateInvestment: dbRow.investment_date,
-      lastCashflow: 0, // TODO: Calculate dynamically from immobilier_cashflows
-      lastVariation: { value: 0, percentage: 0 }, // TODO: Calculate from immobilier_valorisations
+      lastCashflow: 0,
+      lastVariation: { value: 0, percentage: 0 },
       companyId: dbRow.company_id,
       description: dbRow.description,
       investmentAmount: dbRow.investment_amount,
