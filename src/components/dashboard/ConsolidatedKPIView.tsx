@@ -221,6 +221,12 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
       // Calculate Total Return using the same formula as the table for the most recent row
       const totalReturn = latestData?.fp > 0 ? ((latestData.cfni + deltaValeur) / latestData.fp) * 100 : 0;
       
+      // Calculate COC net for the latest data (same as table row calculation)
+      const latestCocNet = latestData?.fp > 0 ? (latestData.cfni / latestData.fp) * 100 : 0;
+      
+      // Calculate gain for the latest data (same as Gain 2 in table: deltaValeur + CFNI)
+      const latestGain = deltaValeur + (latestData?.cfni || 0);
+      
       // Calculate simple XIRR approximation
       const years = consolidatedArray.length > 0 ? Math.max(1, consolidatedArray.length / 12) : 1;
       const xirr = totalInvestmentAmount > 0 ? ((gain / totalInvestmentAmount) / years) * 100 : 0;
@@ -241,8 +247,8 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
         },
         totalReturn: totalReturn,
         totalReturnDetails: {
-          cocNet: cocNet,
-          gain: gain,
+          cocNet: latestCocNet,
+          gain: latestGain,
           deltaValeur: deltaValeur
         },
         xirr: xirr,
