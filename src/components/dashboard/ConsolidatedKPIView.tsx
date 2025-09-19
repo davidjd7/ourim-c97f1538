@@ -768,8 +768,28 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                          }, 0))}
                        </TableCell>
                       <TableCell className="text-xs text-center">-</TableCell>
-                      <TableCell className={`text-xs text-center ${consolidatedData.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatPercentage(consolidatedData.totalReturn)}
+                      <TableCell className={`text-xs text-center ${(() => {
+                        // Calculer la moyenne des Total Return en excluant les valeurs à 0
+                        const totalReturns = consolidatedData.chartData.map((row, index) => {
+                          const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
+                          const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
+                          return row.fondPropre > 0 ? ((row.cfni + variationValeur) / row.fondPropre) * 100 : 0;
+                        }).filter(value => value !== 0);
+                        
+                        const moyenne = totalReturns.length > 0 ? totalReturns.reduce((sum, val) => sum + val, 0) / totalReturns.length : 0;
+                        return moyenne >= 0 ? 'text-green-600' : 'text-red-600';
+                      })()}`}>
+                        {(() => {
+                          // Calculer la moyenne des Total Return en excluant les valeurs à 0
+                          const totalReturns = consolidatedData.chartData.map((row, index) => {
+                            const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
+                            const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
+                            return row.fondPropre > 0 ? ((row.cfni + variationValeur) / row.fondPropre) * 100 : 0;
+                          }).filter(value => value !== 0);
+                          
+                          const moyenne = totalReturns.length > 0 ? totalReturns.reduce((sum, val) => sum + val, 0) / totalReturns.length : 0;
+                          return formatPercentage(moyenne);
+                        })()}
                       </TableCell>
                        <TableCell className="text-xs text-center">-</TableCell>
                     </TableRow>
