@@ -19,8 +19,8 @@ interface SearchProviderProps {
 }
 
 export function SearchProvider({ children }: SearchProviderProps) {
-  const { investments } = useInvestments();
-  const searchData = useInvestmentSearch(investments);
+  const { filteredInvestments: companyFilteredInvestments } = useInvestments();
+  const searchData = useInvestmentSearch(companyFilteredInvestments);
 
   return (
     <SearchContext.Provider value={searchData}>
