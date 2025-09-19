@@ -466,6 +466,11 @@ export default function InvestissementDetail() {
                    <p className={`text-2xl font-bold ${kpis.xirr >= 0 ? 'text-success' : 'text-destructive'}`}>
                      {formatPercentage(kpis.xirr)}
                    </p>
+                   {kpis.xirrDetails.latestCf !== 0 && kpis.xirrDetails.latestCfYear !== 0 && (
+                     <p className="text-sm text-muted-foreground mt-1">
+                       CF ({kpis.xirrDetails.latestCfYear}) : {formatCurrency(kpis.xirrDetails.latestCf)}
+                     </p>
+                   )}
                  </div>
                  <div className="text-xs text-muted-foreground space-y-1">
                    <div>
