@@ -481,7 +481,7 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                     </TableHead>
                     <TableHead className="text-xs text-center min-w-[90px]">
                       <Tooltip>
-                        <TooltipTrigger className="cursor-help">Rend. net</TooltipTrigger>
+                        <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
                         <TooltipContent>
                           <p>NOI / valeur</p>
                         </TooltipContent>
@@ -511,6 +511,7 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                         </TooltipContent>
                       </Tooltip>
                     </TableHead>
+                    <TableHead className="text-xs text-center min-w-[70px]">Δ Valeur</TableHead>
                     <TableHead className="text-xs text-center min-w-[70px]">
                       <Tooltip>
                         <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
@@ -527,6 +528,7 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                         </TooltipContent>
                       </Tooltip>
                     </TableHead>
+                    <TableHead className="text-xs text-center min-w-[80px]">Total Return</TableHead>
                     <TableHead className="text-xs text-center min-w-[80px]">XIRR glissant</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -539,6 +541,9 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                     const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
                     const gain1 = variationFP + row.cashFlow; // Delta FP + CF
                     const gain2 = variationValeur + row.cfni; // Delta valeur + CFNI
+                    
+                    // Total Return pour cette ligne (approximation)
+                    const totalReturnRow = row.fondPropre > 0 ? ((row.cfni + variationValeur) / row.fondPropre) * 100 : 0;
                     
                     // XIRR glissant
                     const xirrGlissant = index > 0 ? calculateConsolidatedXIRR(consolidatedData.chartData.slice(0, index + 1)) : 0;
@@ -567,11 +572,17 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                         <TableCell className="financial-value text-xs text-center">
                           {formatCurrency(row.cashFlow)}
                         </TableCell>
+                        <TableCell className={`financial-value text-xs text-center ${variationValeur >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(variationValeur)}
+                        </TableCell>
                         <TableCell className={`financial-value text-xs text-center ${gain1 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {formatCurrency(gain1)}
                         </TableCell>
                         <TableCell className={`financial-value text-xs text-center ${gain2 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {formatCurrency(gain2)}
+                        </TableCell>
+                        <TableCell className={`text-xs text-center ${totalReturnRow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatPercentage(totalReturnRow)}
                         </TableCell>
                         <TableCell className={`text-xs text-center ${xirrGlissant >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {formatPercentage(xirrGlissant)}
@@ -579,6 +590,43 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                       </TableRow>
                     );
                   })}
+                  
+                  {/* Ligne Total */}
+                  {consolidatedData.chartData.length > 0 && (
+                    <TableRow className="border-t-2 border-primary/20 bg-muted/20 font-semibold">
+                      <TableCell className="font-bold text-xs text-center">Total</TableCell>
+                      <TableCell className="text-xs text-center">-</TableCell>
+                      <TableCell className="text-xs text-center">-</TableCell>
+                      <TableCell className="financial-value text-xs text-center">
+                        {formatCurrency(consolidatedData.chartData.reduce((sum, row) => sum + row.noi, 0))}
+                      </TableCell>
+                      <TableCell className={`text-xs text-center ${consolidatedData.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatPercentage(consolidatedData.rendementNet)}
+                      </TableCell>
+                      <TableCell className="financial-value text-xs text-center">
+                        {formatCurrency(consolidatedData.chartData.reduce((sum, row) => sum + row.cfni, 0))}
+                      </TableCell>
+                      <TableCell className={`text-xs text-center ${consolidatedData.totalReturnDetails.cocNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatPercentage(consolidatedData.totalReturnDetails.cocNet)}
+                      </TableCell>
+                      <TableCell className="financial-value text-xs text-center">
+                        {formatCurrency(consolidatedData.chartData.reduce((sum, row) => sum + row.cashFlow, 0))}
+                      </TableCell>
+                      <TableCell className={`financial-value text-xs text-center ${consolidatedData.totalReturnDetails.deltaValeur >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatCurrency(consolidatedData.totalReturnDetails.deltaValeur)}
+                      </TableCell>
+                      <TableCell className={`financial-value text-xs text-center ${consolidatedData.totalReturnDetails.gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatCurrency(consolidatedData.totalReturnDetails.gain)}
+                      </TableCell>
+                      <TableCell className="text-xs text-center">-</TableCell>
+                      <TableCell className={`text-xs text-center ${consolidatedData.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatPercentage(consolidatedData.totalReturn)}
+                      </TableCell>
+                      <TableCell className={`text-xs text-center ${consolidatedData.xirr >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatPercentage(consolidatedData.xirr)}
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TooltipProvider>
