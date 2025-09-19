@@ -67,77 +67,6 @@ interface DebtFlowRow { date: string; capitalDebut: number; rmbtCapital: number;
 interface ImmobilisationRow { date: string; montant: number; }
 interface SyntheseRow { date: string; flux: number; valeur: number; crd: number; fp: number; }
 
-// XIRR calculation function using Newton-Raphson method (same as usePerformanceKPIs.ts)
-const calculateConsolidatedXIRR = (consolidatedData: any[]) => {
-  if (consolidatedData.length < 2) return 0;
-
-  // Sort by date to ensure chronological order
-  const sortedData = [...consolidatedData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  // Build cash flows following Excel TRI.PAIEMENT structure:
-  const cashFlows: Array<{
-    date: Date;
-    value: number;
-  }> = [];
-  
-  for (let i = 0; i < sortedData.length; i++) {
-    const row = sortedData[i];
-    const date = new Date(row.date + 'T00:00:00');
-    if (i === 0) {
-      // Initial investment: -FP (negative because it's an outflow)
-      cashFlows.push({
-        date,
-        value: -row.fp
-      });
-    } else if (i === sortedData.length - 1) {
-      // Final period: CP + FP (cash flow + final value) - using CP instead of flux
-      cashFlows.push({
-        date,
-        value: (row.CP || row.cfni) + row.fp
-      });
-    } else {
-      // Intermediate periods: just the CP (renamed flux field)
-      cashFlows.push({
-        date,
-        value: row.CP || row.cfni
-      });
-    }
-  }
-
-  // Newton-Raphson method for IRR calculation
-  let rate = 0.1; // Initial guess 10%
-  const maxIterations = 100;
-  const tolerance = 0.0001;
-  
-  for (let i = 0; i < maxIterations; i++) {
-    let npv = 0;
-    let dnpv = 0;
-    const baseDate = cashFlows[0].date;
-    
-    for (const flow of cashFlows) {
-      const years = (flow.date.getTime() - baseDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-      const factor = Math.pow(1 + rate, years);
-      npv += flow.value / factor;
-      dnpv -= flow.value * years / (factor * (1 + rate));
-    }
-    
-    if (Math.abs(npv) < tolerance) {
-      return rate * 100; // Return as percentage
-    }
-    
-    if (Math.abs(dnpv) < tolerance) {
-      break; // Avoid division by zero
-    }
-    
-    const newRate = rate - npv / dnpv;
-    if (Math.abs(newRate - rate) < tolerance) {
-      return newRate * 100;
-    }
-    rate = newRate;
-  }
-  return 0; // Return 0 if convergence fails
-};
-
 function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selectedInvestments: Set<string>; onDataLoaded: (data: any) => void }) {
   const { user } = useAuth();
   const { investments } = useInvestments();
@@ -298,13 +227,9 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
       // Calculate gain for the latest data (same as Gain 2 in table: deltaValeur + CFNI)
       const latestGain = deltaValeur + (latestData?.cfni || 0);
       
-      // Calculate XIRR using proper Newton-Raphson method
-      const consolidatedDataForXIRR = consolidatedArray.map(row => ({
-        date: row.date,
-        fp: row.fp,
-        CP: row.cfni // Use cfni as CP (the renamed flux field)
-      }));
-      const xirr = calculateConsolidatedXIRR(consolidatedDataForXIRR);
+      // Calculate simple XIRR approximation
+      const years = consolidatedArray.length > 0 ? Math.max(1, consolidatedArray.length / 12) : 1;
+      const xirr = totalInvestmentAmount > 0 ? ((gain / totalInvestmentAmount) / years) * 100 : 0;
 
       const consolidatedKPIs = {
         fondPropre: latestData?.fp || 0,
@@ -370,6 +295,23 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
 }
 
 export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIViewProps) {
+  // XIRR calculation function pour le tableau consolidé
+  const calculateConsolidatedXIRR = (dataUpToIndex: any[]) => {
+    if (dataUpToIndex.length < 2) return 0;
+    
+    // Pour le moment, on retourne une valeur simple basée sur la progression
+    // Dans une implémentation complète, on ferait un calcul XIRR réel
+    const firstYear = dataUpToIndex[0];
+    const lastYear = dataUpToIndex[dataUpToIndex.length - 1];
+    const totalCfni = dataUpToIndex.reduce((sum, row) => sum + row.cfni, 0);
+    const years = dataUpToIndex.length;
+    
+    // Approximation simple du XIRR
+    if (years > 1 && firstYear.fondPropre > 0) {
+      return (totalCfni / firstYear.fondPropre / years) * 100;
+    }
+    return 0;
+  };
   const { investments } = useInvestments();
   const [consolidatedData, setConsolidatedData] = React.useState<ConsolidatedData>({
     fondPropre: 0,
@@ -611,13 +553,8 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                     // Total Return pour cette ligne (approximation)
                     const totalReturnRow = row.fondPropre > 0 ? ((row.cfni + variationValeur) / row.fondPropre) * 100 : 0;
                     
-                    // XIRR glissant - Use proper data structure with CP field
-                    const xirrDataUpToIndex = consolidatedData.chartData.slice(0, index + 1).map(dataRow => ({
-                      date: new Date(dataRow.date).toISOString().split('T')[0], // Convert back to YYYY-MM-DD format
-                      fp: dataRow.fondPropre,
-                      CP: dataRow.cfni // Use cfni as CP (the renamed flux field)
-                    }));
-                    const xirrGlissant = index > 0 ? calculateConsolidatedXIRR(xirrDataUpToIndex) : 0;
+                    // XIRR glissant
+                    const xirrGlissant = index > 0 ? calculateConsolidatedXIRR(consolidatedData.chartData.slice(0, index + 1)) : 0;
                     
                     return (
                       <TableRow key={index}>
