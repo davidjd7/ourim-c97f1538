@@ -78,6 +78,9 @@ function InvestmentKPIRow({
         totalReturnYear: kpis.totalReturnDetails?.year ?? 0,
         // COC net value
         cocNet: Number(kpis.totalReturnDetails?.cocNet ?? 0),
+        // Latest CF and its year - TODO: Add to type definition
+        // latestCf: Number(kpis.xirrDetails?.latestCf ?? 0),
+        // latestCfYear: kpis.xirrDetails?.latestCfYear ?? 0,
       };
       onKpisLoaded?.(investment.id, data);
     }
@@ -229,6 +232,19 @@ function InvestmentKPIRow({
             {cocYear && <span className="text-xs text-muted-foreground">({cocYear})</span>}
           </div>
         );
+      case 'cf':
+        // Using syntheseData flux as a temporary solution until type is updated
+        const cfValue = kpis.xirrDetails?.gain1 || 0; // Temporary placeholder
+        const cfYear = kpis.xirrDetails?.gain1Year || 0; // Temporary placeholder
+        return (
+          <div className="flex flex-col items-end">
+            <span>
+              {cfValue >= 0 ? '+' : ''}
+              {formatCurrency(cfValue)}
+            </span>
+            {cfYear && <span className="text-xs text-muted-foreground">({cfYear})</span>}
+          </div>
+        );
       default:
         return '-';
     }
@@ -277,6 +293,9 @@ function InvestmentKPIRow({
           break;
         case 'coc':
           value = kpis.totalReturnDetails?.cocNet || 0;
+          break;
+        case 'cf':
+          value = kpis.xirrDetails?.gain1 || 0; // Temporary placeholder
           break;
         default:
           value = 0;

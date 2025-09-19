@@ -463,6 +463,8 @@ export function usePerformanceKPIs(investmentId: string) {
       
       // Calcul du Gain 1 (variation FP + CF)
       let gain1 = 0;
+      let cf = latestSynthese?.flux || 0; // Default to synthese flux
+      
       if (syntheseData.length >= 2) {
         const latestSynthese = syntheseData[syntheseData.length - 1];
         const secondLatestSynthese = syntheseData[syntheseData.length - 2];
@@ -479,7 +481,7 @@ export function usePerformanceKPIs(investmentId: string) {
         const rmbtInteretCalculated = latestDebtFlowCalculated?.rmbtInteret || 0;
         const rmbtCapitalCalculated = latestDebtFlowCalculated?.rmbtCapital || 0;
         const cfniCalculated = noiAjusteCalculated - rmbtInteretCalculated;
-        const cf = cfniCalculated - rmbtCapitalCalculated;
+        cf = cfniCalculated - rmbtCapitalCalculated;
         
         gain1 = variationFP + cf;
       }
@@ -494,7 +496,10 @@ export function usePerformanceKPIs(investmentId: string) {
         gain1,
         lastCfniYear: currentYear,
         lastVarValeurYear: sortedValorisations.length >= 2 ? new Date(sortedValorisations[sortedValorisations.length - 1].date).getFullYear() : 0,
-        gain1Year: syntheseData.length >= 2 ? new Date(latestSynthese.date).getFullYear() : 0
+        gain1Year: syntheseData.length >= 2 ? new Date(latestSynthese.date).getFullYear() : 0,
+        // Add latest CF and its year
+        latestCf: syntheseData.length >= 2 ? cf : (latestSynthese?.flux || 0),
+        latestCfYear: latestSynthese ? new Date(latestSynthese.date).getFullYear() : 0
       };
 
       setKpis({
