@@ -233,12 +233,11 @@ function InvestmentKPIRow({
           </div>
         );
       case 'cf':
-        // Using syntheseData flux as a temporary solution until type is updated
-        const cfValue = kpis.xirrDetails?.gain1 || 0; // Temporary placeholder
-        const cfYear = kpis.xirrDetails?.gain1Year || 0; // Temporary placeholder
+        const cfValue = kpis.xirrDetails?.latestCf || 0;
+        const cfYear = kpis.xirrDetails?.latestCfYear || 0;
         return (
           <div className="flex flex-col items-end">
-            <span>
+            <span className={cfValue >= 0 ? "text-green-600" : "text-red-600"}>
               {cfValue >= 0 ? '+' : ''}
               {formatCurrency(cfValue)}
             </span>
@@ -295,7 +294,7 @@ function InvestmentKPIRow({
           value = kpis.totalReturnDetails?.cocNet || 0;
           break;
         case 'cf':
-          value = kpis.xirrDetails?.gain1 || 0; // Temporary placeholder
+          value = kpis.xirrDetails?.latestCf || 0;
           break;
         default:
           value = 0;

@@ -54,7 +54,7 @@ export function usePerformanceKPIs(investmentId: string) {
     totalReturn: 0,
     totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
     xirr: 0,
-    xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
+    xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0, latestCf: 0, latestCfYear: 0 }
   });
 
   // Helper functions (exact same as PerformanceTab)
@@ -273,7 +273,7 @@ export function usePerformanceKPIs(investmentId: string) {
         totalReturn: 0,
         totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
         xirr: 0,
-        xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
+        xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0, latestCf: 0, latestCfYear: 0 }
       });
         return;
       }
@@ -523,7 +523,7 @@ export function usePerformanceKPIs(investmentId: string) {
         totalReturn: 0,
         totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
         xirr: 0,
-        xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0 }
+        xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0, latestCf: 0, latestCfYear: 0 }
       });
     } finally {
       setLoading(false);
