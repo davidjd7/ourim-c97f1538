@@ -754,9 +754,19 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                       <TableCell className={`financial-value text-xs text-center ${consolidatedData.totalReturnDetails.deltaValeur >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {formatCurrency(consolidatedData.totalReturnDetails.deltaValeur)}
                       </TableCell>
-                      <TableCell className={`financial-value text-xs text-center ${consolidatedData.totalReturnDetails.gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(consolidatedData.totalReturnDetails.gain)}
-                      </TableCell>
+                       <TableCell className={`financial-value text-xs text-center ${consolidatedData.chartData.reduce((sum, row, index) => {
+                         const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
+                         const variationFP = previousRow ? row.fondPropre - previousRow.fondPropre : 0;
+                         const gain1 = variationFP + row.cashFlow;
+                         return sum + gain1;
+                       }, 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                         {formatCurrency(consolidatedData.chartData.reduce((sum, row, index) => {
+                           const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
+                           const variationFP = previousRow ? row.fondPropre - previousRow.fondPropre : 0;
+                           const gain1 = variationFP + row.cashFlow;
+                           return sum + gain1;
+                         }, 0))}
+                       </TableCell>
                       <TableCell className="text-xs text-center">-</TableCell>
                       <TableCell className={`text-xs text-center ${consolidatedData.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {formatPercentage(consolidatedData.totalReturn)}
