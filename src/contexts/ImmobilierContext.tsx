@@ -46,7 +46,7 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
   // Filter investments based on selected companies
   const filteredInvestments = React.useMemo(() => {
     if (selectedCompanyIds.length === 0) {
-      return investments;
+      return [];
     }
     return investments.filter(inv => inv.companyId && selectedCompanyIds.includes(inv.companyId));
   }, [investments, selectedCompanyIds]);
