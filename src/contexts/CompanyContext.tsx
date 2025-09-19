@@ -86,6 +86,14 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
+  // Auto-select all companies when they are loaded
+  useEffect(() => {
+    if (companies.length > 0 && selectedCompanyIds.length === 0) {
+      const allCompanyIds = companies.map(company => company.id);
+      setSelectedCompanyIds(allCompanyIds);
+    }
+  }, [companies, selectedCompanyIds.length]);
+
   const addCompany = async (name: string): Promise<Company> => {
     if (!user) throw new Error('User not authenticated');
 
