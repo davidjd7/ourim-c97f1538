@@ -771,9 +771,7 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                       <TableCell className={`text-xs text-center ${consolidatedData.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {formatPercentage(consolidatedData.totalReturn)}
                       </TableCell>
-                      <TableCell className={`text-xs text-center ${consolidatedData.xirr >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatPercentage(consolidatedData.xirr)}
-                      </TableCell>
+                       <TableCell className="text-xs text-center">-</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
