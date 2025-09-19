@@ -217,7 +217,9 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
       const totalCfni = consolidatedArray.reduce((sum, row) => sum + row.cfni, 0);
       const cocNet = totalInvestmentAmount > 0 ? ((latestData?.cfni || 0) / totalInvestmentAmount) * 100 : 0;
       const gain = totalCfni + deltaValeur;
-      const totalReturn = totalInvestmentAmount > 0 ? (gain / totalInvestmentAmount) * 100 : 0;
+      
+      // Calculate Total Return using the same formula as the table for the most recent row
+      const totalReturn = latestData?.fp > 0 ? ((latestData.cfni + deltaValeur) / latestData.fp) * 100 : 0;
       
       // Calculate simple XIRR approximation
       const years = consolidatedArray.length > 0 ? Math.max(1, consolidatedArray.length / 12) : 1;
