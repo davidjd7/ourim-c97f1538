@@ -212,8 +212,8 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
         .filter(inv => selectedInvestments.has(inv.id))
         .reduce((sum, inv) => sum + (Number(inv.investmentAmount) || 0), 0);
 
-      const firstData = consolidatedArray[0];
-      const deltaValeur = consolidatedArray.length > 1 ? (latestData?.valeur || 0) - (firstData?.valeur || 0) : 0;
+      const previousData = consolidatedArray.length > 1 ? consolidatedArray[consolidatedArray.length - 2] : null;
+      const deltaValeur = previousData ? (latestData?.valeur || 0) - (previousData?.valeur || 0) : 0;
       const totalCfni = consolidatedArray.reduce((sum, row) => sum + row.cfni, 0);
       const cocNet = totalInvestmentAmount > 0 ? ((latestData?.cfni || 0) / totalInvestmentAmount) * 100 : 0;
       const gain = totalCfni + deltaValeur;
