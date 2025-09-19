@@ -436,7 +436,7 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
                 <div>COC net: {consolidatedData.totalReturnDetails.cocNet.toFixed(1)}%</div>
-                <div>CFNI: {formatCurrency(consolidatedData.xirrDetails.totalCfni)}</div>
+                <div>CFNI: {formatCurrency(consolidatedData.chartData[consolidatedData.chartData.length - 1]?.cfni || 0)}</div>
                 <div>Δ Valeur: {formatCurrency(consolidatedData.totalReturnDetails.deltaValeur)}</div>
               </div>
             </div>
