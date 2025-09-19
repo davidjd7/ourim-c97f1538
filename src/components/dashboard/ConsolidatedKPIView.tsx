@@ -49,14 +49,15 @@ interface ConsolidatedData {
     latestCfYear: number;
   };
   chartData: Array<{
-    date: string;
+    date: string; // ISO date format for calculations
+    dateLabel: string; // Formatted date for display
     valeur: number;
     fondPropre: number;
     noi: number;
     rendementNet: number;
     cfni: number;
     cocNet: number;
-    cashFlow: number;
+    cashFlow: number; // This is the CP field for XIRR calculation
   }>;
 }
 
@@ -65,7 +66,7 @@ interface CashflowRow { date: string; rex: number; retraitAmort: number; retrait
 interface ValorisationRow { date: string; valeur: number; }
 interface DebtFlowRow { date: string; capitalDebut: number; rmbtCapital: number; rmbtInteret: number; }
 interface ImmobilisationRow { date: string; montant: number; }
-interface SyntheseRow { date: string; flux: number; valeur: number; crd: number; fp: number; }
+interface ConsolidatedRow { date: string; cashFlow: number; valeur: number; crd: number; fp: number; }
 
 function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selectedInvestments: Set<string>; onDataLoaded: (data: any) => void }) {
   const { user } = useAuth();
@@ -227,9 +228,87 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
       // Calculate gain for the latest data (same as Gain 2 in table: deltaValeur + CFNI)
       const latestGain = deltaValeur + (latestData?.cfni || 0);
       
-      // Calculate simple XIRR approximation
-      const years = consolidatedArray.length > 0 ? Math.max(1, consolidatedArray.length / 12) : 1;
-      const xirr = totalInvestmentAmount > 0 ? ((gain / totalInvestmentAmount) / years) * 100 : 0;
+      // Calculate XIRR using proper Newton-Raphson method (adapted from usePerformanceKPIs)
+      const calculateXIRRFromRows = (rows: ConsolidatedRow[]) => {
+        if (rows.length < 2) return 0;
+
+        // Sort by date to ensure chronological order
+        const sortedRows = [...rows].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        // Build cash flows following Excel TRI.PAIEMENT structure:
+        const cashFlows: Array<{
+          date: Date;
+          value: number;
+        }> = [];
+        
+        for (let i = 0; i < sortedRows.length; i++) {
+          const row = sortedRows[i];
+          const date = new Date(row.date + 'T00:00:00');
+          if (i === 0) {
+            // Initial investment: -FP (negative because it's an outflow)
+            cashFlows.push({
+              date,
+              value: -row.fp
+            });
+          } else if (i === sortedRows.length - 1) {
+            // Final period: cashFlow + FP (cash flow + final value)
+            cashFlows.push({
+              date,
+              value: row.cashFlow + row.fp
+            });
+          } else {
+            // Intermediate periods: just the cashFlow (CP)
+            cashFlows.push({
+              date,
+              value: row.cashFlow
+            });
+          }
+        }
+
+        // Newton-Raphson method for IRR calculation
+        let rate = 0.1; // Initial guess 10%
+        const maxIterations = 100;
+        const tolerance = 0.0001;
+        
+        for (let i = 0; i < maxIterations; i++) {
+          let npv = 0;
+          let dnpv = 0;
+          const baseDate = cashFlows[0].date;
+          
+          for (const flow of cashFlows) {
+            const years = (flow.date.getTime() - baseDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+            const factor = Math.pow(1 + rate, years);
+            npv += flow.value / factor;
+            dnpv -= flow.value * years / (factor * (1 + rate));
+          }
+          
+          if (Math.abs(npv) < tolerance) {
+            return rate * 100; // Return as percentage
+          }
+          
+          if (Math.abs(dnpv) < tolerance) {
+            break; // Avoid division by zero
+          }
+          
+          const newRate = rate - npv / dnpv;
+          if (Math.abs(newRate - rate) < tolerance) {
+            return newRate * 100;
+          }
+          rate = newRate;
+        }
+        return 0; // Return 0 if convergence fails
+      };
+
+      // Convert consolidated data to proper format for XIRR calculation
+      const xirrData: ConsolidatedRow[] = consolidatedArray.map(row => ({
+        date: row.date,
+        cashFlow: row.cashFlow, // This is CP
+        valeur: row.valeur,
+        crd: row.crd,
+        fp: row.fp
+      }));
+
+      const xirr = calculateXIRRFromRows(xirrData);
 
       const consolidatedKPIs = {
         fondPropre: latestData?.fp || 0,
@@ -267,14 +346,15 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
           const cocNet = row.fp > 0 ? (row.cfni / row.fp) * 100 : 0;
           
           return {
-            date: new Date(row.date).toLocaleDateString('fr-FR'),
+            date: row.date, // Keep ISO format for calculations
+            dateLabel: new Date(row.date).toLocaleDateString('fr-FR'), // Formatted for display
             valeur: row.valeur,
             fondPropre: row.fp,
             noi: row.noi,
             rendementNet,
             cfni: row.cfni,
             cocNet,
-            cashFlow: row.cashFlow
+            cashFlow: row.cashFlow // This is CP for XIRR calculation
           };
         })
       };
@@ -295,22 +375,73 @@ function ConsolidatedDataLoader({ selectedInvestments, onDataLoaded }: { selecte
 }
 
 export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIViewProps) {
-  // XIRR calculation function pour le tableau consolidé
-  const calculateConsolidatedXIRR = (dataUpToIndex: any[]) => {
+  // XIRR calculation function adapted from usePerformanceKPIs
+  const calculateRollingXIRR = (dataUpToIndex: any[]) => {
     if (dataUpToIndex.length < 2) return 0;
     
-    // Pour le moment, on retourne une valeur simple basée sur la progression
-    // Dans une implémentation complète, on ferait un calcul XIRR réel
-    const firstYear = dataUpToIndex[0];
-    const lastYear = dataUpToIndex[dataUpToIndex.length - 1];
-    const totalCfni = dataUpToIndex.reduce((sum, row) => sum + row.cfni, 0);
-    const years = dataUpToIndex.length;
+    // Convert to proper format for XIRR calculation
+    const xirrRows: ConsolidatedRow[] = dataUpToIndex.map(row => ({
+      date: row.date, // Already in ISO format
+      cashFlow: row.cashFlow, // This is CP
+      valeur: row.valeur,
+      crd: row.crd || 0,
+      fp: row.fondPropre
+    }));
+
+    // Newton-Raphson method for IRR calculation
+    const calculateXIRR = (rows: ConsolidatedRow[]) => {
+      if (rows.length < 2) return 0;
+
+      const sortedRows = [...rows].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      const cashFlows: Array<{ date: Date; value: number; }> = [];
+      
+      for (let i = 0; i < sortedRows.length; i++) {
+        const row = sortedRows[i];
+        const date = new Date(row.date + 'T00:00:00');
+        if (i === 0) {
+          cashFlows.push({ date, value: -row.fp });
+        } else if (i === sortedRows.length - 1) {
+          cashFlows.push({ date, value: row.cashFlow + row.fp });
+        } else {
+          cashFlows.push({ date, value: row.cashFlow });
+        }
+      }
+
+      let rate = 0.1;
+      const maxIterations = 100;
+      const tolerance = 0.0001;
+      
+      for (let i = 0; i < maxIterations; i++) {
+        let npv = 0;
+        let dnpv = 0;
+        const baseDate = cashFlows[0].date;
+        
+        for (const flow of cashFlows) {
+          const years = (flow.date.getTime() - baseDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+          const factor = Math.pow(1 + rate, years);
+          npv += flow.value / factor;
+          dnpv -= flow.value * years / (factor * (1 + rate));
+        }
+        
+        if (Math.abs(npv) < tolerance) {
+          return rate * 100;
+        }
+        
+        if (Math.abs(dnpv) < tolerance) {
+          break;
+        }
+        
+        const newRate = rate - npv / dnpv;
+        if (Math.abs(newRate - rate) < tolerance) {
+          return newRate * 100;
+        }
+        rate = newRate;
+      }
+      return 0;
+    };
     
-    // Approximation simple du XIRR
-    if (years > 1 && firstYear.fondPropre > 0) {
-      return (totalCfni / firstYear.fondPropre / years) * 100;
-    }
-    return 0;
+    return calculateXIRR(xirrRows);
   };
   const { investments } = useInvestments();
   const [consolidatedData, setConsolidatedData] = React.useState<ConsolidatedData>({
@@ -511,14 +642,14 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                         </TooltipContent>
                       </Tooltip>
                     </TableHead>
-                    <TableHead className="text-xs text-center min-w-[60px]">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Cashflow</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
+                     <TableHead className="text-xs text-center min-w-[60px]">
+                       <Tooltip>
+                         <TooltipTrigger className="cursor-help">CP</TooltipTrigger>
+                         <TooltipContent>
+                           <p>Cash Flow (CP)</p>
+                         </TooltipContent>
+                       </Tooltip>
+                     </TableHead>
                     <TableHead className="text-xs text-center min-w-[70px]">Δ Valeur</TableHead>
                     <TableHead className="text-xs text-center min-w-[70px]">
                       <Tooltip>
@@ -553,12 +684,12 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                     // Total Return pour cette ligne (approximation)
                     const totalReturnRow = row.fondPropre > 0 ? ((row.cfni + variationValeur) / row.fondPropre) * 100 : 0;
                     
-                    // XIRR glissant
-                    const xirrGlissant = index > 0 ? calculateConsolidatedXIRR(consolidatedData.chartData.slice(0, index + 1)) : 0;
+                     // XIRR glissant
+                     const xirrGlissant = index > 0 ? calculateRollingXIRR(consolidatedData.chartData.slice(0, index + 1)) : 0;
                     
                     return (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium text-xs text-center">{row.date}</TableCell>
+                       <TableRow key={index}>
+                         <TableCell className="font-medium text-xs text-center">{row.dateLabel}</TableCell>
                         <TableCell className="financial-value text-xs text-center">
                           {formatCurrency(row.valeur)}
                         </TableCell>
