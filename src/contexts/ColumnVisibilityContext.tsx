@@ -32,6 +32,7 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
   { key: 'noi', label: 'NOI', visible: false, sortable: true, align: 'right', type: 'currency', order: 15 },
   { key: 'loyer', label: 'Loyer', visible: false, sortable: true, align: 'right', type: 'currency', order: 16 },
   { key: 'rendementNet', label: 'Rendement Net', visible: false, sortable: true, align: 'right', type: 'percentage', order: 17 },
+  { key: 'cf', label: 'CF', visible: false, sortable: true, align: 'right', type: 'currency', order: 18 },
 ];
 
 // Clé de base, sera suffixée avec l'ID utilisateur
