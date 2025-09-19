@@ -425,24 +425,11 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                 <p className="text-sm text-muted-foreground mt-1">
                   Gain : {formatCurrency(consolidatedData.totalReturnDetails.gain)}
                 </p>
-                {consolidatedData.chartData.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Total Return ({consolidatedData.chartData[consolidatedData.chartData.length - 1].date}) : {
-                      (() => {
-                        const lastRow = consolidatedData.chartData[consolidatedData.chartData.length - 1];
-                        const previousRow = consolidatedData.chartData.length > 1 ? consolidatedData.chartData[consolidatedData.chartData.length - 2] : null;
-                        const variationValeur = previousRow ? lastRow.valeur - previousRow.valeur : 0;
-                        const totalReturnRow = lastRow.fondPropre > 0 ? ((lastRow.cfni + variationValeur) / lastRow.fondPropre) * 100 : 0;
-                        return formatPercentage(totalReturnRow);
-                      })()
-                    }
-                  </p>
-                )}
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
                 <div>COC net: {consolidatedData.totalReturnDetails.cocNet.toFixed(1)}%</div>
+                <div>CFNI: {formatCurrency(consolidatedData.xirrDetails.totalCfni)}</div>
                 <div>Δ Valeur: {formatCurrency(consolidatedData.totalReturnDetails.deltaValeur)}</div>
-                <div>Total: {formatCurrency(consolidatedData.totalReturnDetails.gain)}</div>
               </div>
             </div>
           </div>
