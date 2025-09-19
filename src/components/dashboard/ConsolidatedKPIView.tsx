@@ -405,7 +405,7 @@ export function ConsolidatedKPIView({ selectedInvestments }: ConsolidatedKPIView
                 </p>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
-                <div>NOI: {formatCurrency(consolidatedData.rendementNetDetails.noi)}</div>
+                <div>NOI: {formatCurrency(consolidatedData.rendementNetDetails.noi)} ({consolidatedData.rendementNetDetails.loyer > 0 ? ((consolidatedData.rendementNetDetails.noi / consolidatedData.rendementNetDetails.loyer) * 100).toFixed(1) : '0'}% du loyer)</div>
                 <div>Loyer: {formatCurrency(consolidatedData.rendementNetDetails.loyer)}</div>
                 <div>Yield Banque: {consolidatedData.rendementNetDetails.yieldBanque.toFixed(1)}%</div>
               </div>
