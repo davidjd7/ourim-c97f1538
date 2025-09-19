@@ -1,28 +1,30 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Building, TrendingUp } from 'lucide-react';
-import { usePerformanceKPIs } from '@/hooks/usePerformanceKPIs';
 import { InvestmentTags } from '@/components/investments/InvestmentTags';
+import type { InvestmentKPIs } from '@/types/kpi';
 
-// Extracted component for displaying KPI values for each investment
-export function InvestmentKPIRow({ 
-  investment, 
-  onKpisLoaded,
-  visibleColumns,
-  isSelected,
-  onSelect
-}: { 
+interface InvestmentKPIRowProps {
   investment: any; 
-  onKpisLoaded?: (id: string, data: any) => void;
+  kpis?: InvestmentKPIs;
   visibleColumns: Array<{ key: string; label: string; align?: 'left' | 'right'; type?: string }>;
   isSelected: boolean;
-  onSelect: (checked: boolean) => void;
-}) {
-  const { kpis, loading } = usePerformanceKPIs(investment.id);
+  onSelectionChange: (isSelected: boolean) => void;
+}
+
+// Optimized component using pre-calculated KPIs
+export function InvestmentKPIRow({ 
+  investment, 
+  kpis,
+  visibleColumns,
+  isSelected,
+  onSelectionChange
+}: InvestmentKPIRowProps) {
+  const loading = !kpis;
   
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -36,38 +38,6 @@ export function InvestmentKPIRow({
     return `${value.toFixed(1)}%`;
   };
 
-  useEffect(() => {
-    if (!loading && kpis) {
-      const data = {
-        fondPropre: Number(kpis.fondPropre ?? 0),
-        totalReturn: Number(kpis.totalReturn ?? 0),
-        totalCfni: Number(kpis.xirrDetails?.totalCfni ?? 0),
-        xirr: Number(kpis.xirr ?? 0),
-        // Nouvelles valeurs
-        totalVarValeur: Number(kpis.xirrDetails?.deltaValeur ?? 0),
-        lastVarValeur: Number(kpis.xirrDetails?.variationValeurDerniereAnnee ?? 0),
-        lastCfni: Number(kpis.xirrDetails?.cfniDerniereAnnee ?? 0),
-        ltv: Number(kpis.fondPropreDetails?.ltv ?? 0),
-        crd: Number(kpis.fondPropreDetails?.crd ?? 0),
-        noi: Number(kpis.rendementNetDetails?.noi ?? 0),
-        loyer: Number(kpis.rendementNetDetails?.loyer ?? 0),
-        rendementNet: Number(kpis.rendementNet ?? 0),
-        gain1: Number(kpis.xirrDetails?.gain1 ?? 0),
-        totalReturnCalculated: Number(kpis.xirrDetails?.gain1 ?? 0) / Number(kpis.fondPropre || 1) * 100,
-        // Year information for Last columns
-        lastVarValeurYear: kpis.xirrDetails?.lastVarValeurYear ?? 0,
-        lastCfniYear: kpis.xirrDetails?.lastCfniYear ?? 0,
-        gain1Year: kpis.xirrDetails?.gain1Year ?? 0,
-        // Year information for NOI, Rendement Net, Total Return
-        noiYear: kpis.rendementNetDetails?.year ?? 0,
-        rendementNetYear: kpis.rendementNetDetails?.year ?? 0,
-        totalReturnYear: kpis.totalReturnDetails?.year ?? 0,
-        // COC net value
-        cocNet: Number(kpis.totalReturnDetails?.cocNet ?? 0),
-      };
-      onKpisLoaded?.(investment.id, data);
-    }
-  }, [loading, kpis, investment.id, onKpisLoaded]);
   
   const navigate = useNavigate();
 
@@ -99,11 +69,11 @@ export function InvestmentKPIRow({
       case 'tags':
         return <InvestmentTags investmentId={investment.id} />;
       case 'fondPropre':
-        return formatCurrency(kpis.fondPropre);
+        return formatCurrency(kpis?.fondPropre || 0);
       case 'totalReturn':
-        const gain1 = kpis.xirrDetails?.gain1 || 0;
-        const fondPropre = kpis.fondPropre || 1; // Avoid division by zero
-        const totalReturnYear = kpis.totalReturnDetails?.year;
+        const gain1 = kpis?.xirrDetails?.gain1 || 0;
+        const fondPropre = kpis?.fondPropre || 1; // Avoid division by zero
+        const totalReturnYear = kpis?.totalReturnDetails?.year;
         return (
           <div className="flex flex-col items-end">
             <span>
@@ -116,108 +86,108 @@ export function InvestmentKPIRow({
       case 'totalCfni':
         return (
           <>
-            {kpis.xirrDetails?.totalCfni >= 0 ? '+' : ''}
-            {formatCurrency(kpis.xirrDetails?.totalCfni || 0)}
+            {(kpis?.xirrDetails?.totalCfni || 0) >= 0 ? '+' : ''}
+            {formatCurrency(kpis?.xirrDetails?.totalCfni || 0)}
           </>
         );
       case 'xirr':
         return (
           <>
-            {kpis.xirr >= 0 ? '+' : ''}
-            {formatPercentage(kpis.xirr)}
+            {(kpis?.xirr || 0) >= 0 ? '+' : ''}
+            {formatPercentage(kpis?.xirr || 0)}
           </>
         );
       case 'totalVarValeur':
         return (
           <>
-            {kpis.xirrDetails?.deltaValeur >= 0 ? '+' : ''}
-            {formatCurrency(kpis.xirrDetails?.deltaValeur || 0)}
+            {(kpis?.xirrDetails?.deltaValeur || 0) >= 0 ? '+' : ''}
+            {formatCurrency(kpis?.xirrDetails?.deltaValeur || 0)}
           </>
         );
       case 'lastVarValeur':
-        const lastVarValeurYear = kpis.xirrDetails?.lastVarValeurYear;
+        const lastVarValeurYear = kpis?.xirrDetails?.lastVarValeurYear;
         return (
           <div className="flex flex-col items-end">
             <span>
-              {kpis.xirrDetails?.variationValeurDerniereAnnee >= 0 ? '+' : ''}
-              {formatCurrency(kpis.xirrDetails?.variationValeurDerniereAnnee || 0)}
+              {(kpis?.xirrDetails?.variationValeurDerniereAnnee || 0) >= 0 ? '+' : ''}
+              {formatCurrency(kpis?.xirrDetails?.variationValeurDerniereAnnee || 0)}
             </span>
             {lastVarValeurYear && <span className="text-xs text-muted-foreground">({lastVarValeurYear})</span>}
           </div>
         );
       case 'lastCfni':
-        const lastCfniYear = kpis.xirrDetails?.lastCfniYear;
+        const lastCfniYear = kpis?.xirrDetails?.lastCfniYear;
         return (
           <div className="flex flex-col items-end">
             <span>
-              {kpis.xirrDetails?.cfniDerniereAnnee >= 0 ? '+' : ''}
-              {formatCurrency(kpis.xirrDetails?.cfniDerniereAnnee || 0)}
+              {(kpis?.xirrDetails?.cfniDerniereAnnee || 0) >= 0 ? '+' : ''}
+              {formatCurrency(kpis?.xirrDetails?.cfniDerniereAnnee || 0)}
             </span>
             {lastCfniYear && <span className="text-xs text-muted-foreground">({lastCfniYear})</span>}
           </div>
         );
       case 'ltv':
-        return formatPercentage(kpis.fondPropreDetails?.ltv || 0);
+        return formatPercentage(kpis?.fondPropreDetails?.ltv || 0);
       case 'crd':
-        const crdYear = kpis.fondPropreDetails?.year;
+        const crdYear = kpis?.fondPropreDetails?.year;
         return (
           <div className="flex flex-col items-end">
-            <span>{formatCurrency(kpis.fondPropreDetails?.crd || 0)}</span>
+            <span>{formatCurrency(kpis?.fondPropreDetails?.crd || 0)}</span>
             {crdYear && <span className="text-xs text-muted-foreground">({crdYear})</span>}
           </div>
         );
       case 'noi':
-        const noiYear = kpis.rendementNetDetails?.year;
+        const noiYear = kpis?.rendementNetDetails?.year;
         return (
           <div className="flex flex-col items-end">
-            <span>{formatCurrency(kpis.rendementNetDetails?.noi || 0)}</span>
+            <span>{formatCurrency(kpis?.rendementNetDetails?.noi || 0)}</span>
             {noiYear && <span className="text-xs text-muted-foreground">({noiYear})</span>}
           </div>
         );
       case 'loyer':
-        const loyerYear = kpis.rendementNetDetails?.year;
+        const loyerYear = kpis?.rendementNetDetails?.year;
         return (
           <div className="flex flex-col items-end">
-            <span>{formatCurrency(kpis.rendementNetDetails?.loyer || 0)}</span>
+            <span>{formatCurrency(kpis?.rendementNetDetails?.loyer || 0)}</span>
             {loyerYear && <span className="text-xs text-muted-foreground">({loyerYear})</span>}
           </div>
         );
       case 'rendementNet':
-        const rendementNetYear = kpis.rendementNetDetails?.year;
+        const rendementNetYear = kpis?.rendementNetDetails?.year;
         return (
           <div className="flex flex-col items-end">
             <span>
-              {kpis.rendementNet >= 0 ? '+' : ''}
-              {formatPercentage(kpis.rendementNet)}
+              {(kpis?.rendementNet || 0) >= 0 ? '+' : ''}
+              {formatPercentage(kpis?.rendementNet || 0)}
             </span>
             {rendementNetYear && <span className="text-xs text-muted-foreground">({rendementNetYear})</span>}
           </div>
         );
       case 'gain1':
-        const gain1Year = kpis.xirrDetails?.gain1Year;
+        const gain1Year = kpis?.xirrDetails?.gain1Year;
         return (
           <div className="flex flex-col items-end">
             <span>
-              {kpis.xirrDetails?.gain1 >= 0 ? '+' : ''}
-              {formatCurrency(kpis.xirrDetails?.gain1 || 0)}
+              {(kpis?.xirrDetails?.gain1 || 0) >= 0 ? '+' : ''}
+              {formatCurrency(kpis?.xirrDetails?.gain1 || 0)}
             </span>
             {gain1Year && <span className="text-xs text-muted-foreground">({gain1Year})</span>}
           </div>
         );
       case 'coc':
-        const cocYear = kpis.totalReturnDetails?.year;
+        const cocYear = kpis?.totalReturnDetails?.year;
         return (
           <div className="flex flex-col items-end">
             <span>
-              {kpis.totalReturnDetails?.cocNet >= 0 ? '+' : ''}
-              {formatPercentage(kpis.totalReturnDetails?.cocNet || 0)}
+              {(kpis?.totalReturnDetails?.cocNet || 0) >= 0 ? '+' : ''}
+              {formatPercentage(kpis?.totalReturnDetails?.cocNet || 0)}
             </span>
             {cocYear && <span className="text-xs text-muted-foreground">({cocYear})</span>}
           </div>
         );
       case 'cf':
-        const cfValue = kpis.xirrDetails?.latestCf || 0;
-        const cfYear = kpis.xirrDetails?.latestCfYear || 0;
+        const cfValue = kpis?.xirrDetails?.latestCf || 0;
+        const cfYear = kpis?.xirrDetails?.latestCfYear || 0;
         return (
           <div className="flex flex-col items-end">
             <span className={cfValue >= 0 ? "text-success" : "text-destructive"}>
@@ -248,36 +218,36 @@ export function InvestmentKPIRow({
       let value = 0;
       switch (columnKey) {
         case 'totalReturn':
-          const gain1Value = kpis.xirrDetails?.gain1 || 0;
-          const fondPropreValue = kpis.fondPropre || 1;
+          const gain1Value = kpis?.xirrDetails?.gain1 || 0;
+          const fondPropreValue = kpis?.fondPropre || 1;
           value = (gain1Value / fondPropreValue * 100);
           break;
         case 'totalCfni':
-          value = kpis.xirrDetails?.totalCfni || 0;
+          value = kpis?.xirrDetails?.totalCfni || 0;
           break;
         case 'xirr':
-          value = kpis.xirr || 0;
+          value = kpis?.xirr || 0;
           break;
         case 'totalVarValeur':
-          value = kpis.xirrDetails?.deltaValeur || 0;
+          value = kpis?.xirrDetails?.deltaValeur || 0;
           break;
         case 'lastVarValeur':
-          value = kpis.xirrDetails?.variationValeurDerniereAnnee || 0;
+          value = kpis?.xirrDetails?.variationValeurDerniereAnnee || 0;
           break;
         case 'lastCfni':
-          value = kpis.xirrDetails?.cfniDerniereAnnee || 0;
+          value = kpis?.xirrDetails?.cfniDerniereAnnee || 0;
           break;
         case 'rendementNet':
-          value = kpis.rendementNet || 0;
+          value = kpis?.rendementNet || 0;
           break;
         case 'gain1':
-          value = kpis.xirrDetails?.gain1 || 0;
+          value = kpis?.xirrDetails?.gain1 || 0;
           break;
         case 'coc':
-          value = kpis.totalReturnDetails?.cocNet || 0;
+          value = kpis?.totalReturnDetails?.cocNet || 0;
           break;
         case 'cf':
-          value = kpis.xirrDetails?.latestCf || 0;
+          value = kpis?.xirrDetails?.latestCf || 0;
           break;
         default:
           value = 0;
@@ -298,7 +268,7 @@ export function InvestmentKPIRow({
       <TableCell>
         <Checkbox 
           checked={isSelected}
-          onCheckedChange={onSelect}
+          onCheckedChange={onSelectionChange}
           aria-label={`Sélectionner ${investment.name}`}
         />
       </TableCell>
