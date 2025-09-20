@@ -275,3 +275,121 @@
     overflow: hidden;
   }
 }
+
+/* Print styles for InvestissementDetail page */
+@media print {
+  @page {
+    size: A4;
+    margin: 0.5in;
+  }
+  
+  /* Hide non-essential elements when printing */
+  .no-print,
+  nav,
+  header,
+  .sidebar,
+  button:not(.print-keep),
+  .toast,
+  .fixed,
+  .sticky {
+    display: none !important;
+  }
+  
+  /* Ensure content uses full available space */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+  }
+  
+  /* Optimize layout for print */
+  .space-y-6 {
+    gap: 8px !important;
+  }
+  
+  .space-y-4 {
+    gap: 6px !important;
+  }
+  
+  /* Compact KPI cards for print */
+  .grid.gap-4.md\\:grid-cols-4 {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+    margin: 8px 0 !important;
+  }
+  
+  /* Compact card styling */
+  .card-financial {
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    background: white !important;
+    padding: 6px !important;
+    margin: 0 !important;
+  }
+  
+  /* Smaller text for print */
+  .text-2xl {
+    font-size: 14pt !important;
+  }
+  
+  .text-xl {
+    font-size: 12pt !important;
+  }
+  
+  .text-lg {
+    font-size: 11pt !important;
+  }
+  
+  .text-sm {
+    font-size: 9pt !important;
+  }
+  
+  .text-xs {
+    font-size: 8pt !important;
+  }
+  
+  /* Compact tabs for print */
+  .tabs {
+    margin: 4px 0 !important;
+  }
+  
+  .tabs-list {
+    display: none !important; /* Hide tab navigation */
+  }
+  
+  /* Show only the general tab content when printing */
+  .tabs-content {
+    display: block !important;
+  }
+  
+  .tabs-content:not([data-state="active"]) {
+    display: none !important;
+  }
+  
+  /* Ensure tables fit on page */
+  table {
+    font-size: 9pt !important;
+    width: 100% !important;
+  }
+  
+  th, td {
+    padding: 2px 4px !important;
+  }
+  
+  /* Page breaks */
+  .break-page {
+    page-break-before: always;
+  }
+  
+  .no-break {
+    page-break-inside: avoid;
+  }
+  
+  /* Hide scroll areas */
+  .overflow-x-auto,
+  .overflow-y-auto {
+    overflow: visible !important;
+  }
+}

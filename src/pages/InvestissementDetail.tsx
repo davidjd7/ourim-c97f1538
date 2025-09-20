@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Edit, Save, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Edit, Save, X, Trash2, ChevronLeft, ChevronRight, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -184,6 +184,10 @@ export default function InvestissementDetail() {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleCancelEdit = () => {
     if (isNewInvestment) {
       // Go back to previous page
@@ -339,11 +343,11 @@ export default function InvestissementDetail() {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 no-print">
           {/* Navigation arrows - only show for existing investments */}
           {!isNewInvestment && !isEditMode && (
             <>
-              <Button 
+              <Button
                 variant="outline" 
                 size="icon"
                 onClick={navigateToPreviousInvestment}
@@ -380,18 +384,23 @@ export default function InvestissementDetail() {
             </>
            ) : (
              <>
-               <Button onClick={() => setIsEditMode(true)} variant="outline" size="sm">
-                 <Edit className="h-4 w-4 mr-2" />
-                 {isNewInvestment ? 'Créer' : 'Modifier'}
-               </Button>
-               {!isNewInvestment && (
-                 <AlertDialog>
-                   <AlertDialogTrigger asChild>
-                     <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                       <Trash2 className="h-4 w-4 mr-2" />
-                       Supprimer
-                     </Button>
-                   </AlertDialogTrigger>
+                <Button onClick={() => setIsEditMode(true)} variant="outline" size="sm">
+                  <Edit className="h-4 w-4 mr-2" />
+                  {isNewInvestment ? 'Créer' : 'Modifier'}
+                </Button>
+                {!isNewInvestment && (
+                  <>
+                    <Button onClick={handlePrint} variant="outline" size="sm">
+                      <Printer className="h-4 w-4 mr-2" />
+                      Imprimer
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Supprimer
+                        </Button>
+                      </AlertDialogTrigger>
                    <AlertDialogContent>
                      <AlertDialogHeader>
                        <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
@@ -406,9 +415,10 @@ export default function InvestissementDetail() {
                          Supprimer définitivement
                        </AlertDialogAction>
                      </AlertDialogFooter>
-                   </AlertDialogContent>
-                 </AlertDialog>
-               )}
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
              </>
            )}
         </div>
@@ -509,14 +519,14 @@ export default function InvestissementDetail() {
 
       {/* Tabs */}
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-4 no-print">
           <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="general" className="space-y-4">
+        <TabsContent value="general" className="space-y-4 no-break">
           {!isNewInvestment ? (
             <GeneralTab 
               investmentId={investment.id} 
@@ -543,15 +553,15 @@ export default function InvestissementDetail() {
           )}
         </TabsContent>
         
-        <TabsContent value="performance" className="space-y-4">
+        <TabsContent value="performance" className="space-y-4 no-print">
           <PerformanceTab investmentId={isNewInvestment ? '' : id!} />
         </TabsContent>
         
-        <TabsContent value="documents" className="space-y-4">
+        <TabsContent value="documents" className="space-y-4 no-print">
           <DocumentsTab investmentId={isNewInvestment ? '' : id!} />
         </TabsContent>
         
-        <TabsContent value="historique" className="space-y-4">
+        <TabsContent value="historique" className="space-y-4 no-print">
           <HistoriqueTab investmentId={isNewInvestment ? '' : id!} />
         </TabsContent>
       </Tabs>
