@@ -6,6 +6,7 @@ export interface CashflowRow {
   retraitAmort: number;
   retraitAutres: number;
   loyer: number;
+  note?: string;
 }
 
 export interface ValorisationRow {
@@ -44,9 +45,10 @@ export interface InvestmentKPIs {
   rendementNet: number;
   rendementNetDetails: { noi: number; loyer: number; noiSurLoyer: number; year: number; yieldBanque: number };
   totalReturn: number;
-  totalReturnDetails: { cfni: number; deltaValeur: number; cocNet: number; cfniPlusDeltaValeur: number; year: number };
+  totalReturnDetails: { cfni: number; deltaValeur: number; cocNet: number; cfniPlusDeltaValeur: number; year: number; gain: number };
   xirr: number;
   xirrDetails: { totalCfni: number; cfniDerniereAnnee: number; deltaValeur: number; variationValeurDerniereAnnee: number; total: number; years: number; gain1: number; lastCfniYear: number; lastVarValeurYear: number; gain1Year: number; latestCf: number; latestCfYear: number };
+  chartData: ConsolidatedRow[];
 }
 
 export interface InvestmentRawData {
@@ -62,9 +64,10 @@ export interface BatchKPIData {
 
 // Additional interfaces for consolidated KPI view
 export interface ConsolidatedRow {
-  date: string;
-  cashFlow: number;
+  annee: number;
+  fondPropre: number;
   valeur: number;
   crd: number;
-  fp: number;
+  noi: number;
+  cfni: number;
 }

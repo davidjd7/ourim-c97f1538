@@ -2,387 +2,119 @@ import React, { useMemo } from 'react';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { ConsolidatedRow } from '@/types/kpi';
 import { calculateXIRR } from '@/lib/kpiCalculations';
+import { useBatchPerformanceKPIs } from '@/hooks/useBatchPerformanceKPIs';
+import { logError } from '@/lib/errorHandler';
+
 interface ConsolidatedKPIViewProps {
   selectedInvestments: Set<string>;
 }
-interface ConsolidatedData {
-  fondPropre: number;
-  fondPropreDetails: {
-    valeur: number;
-    crd: number;
-    ltv: number;
-  };
-  rendementNet: number;
-  rendementNetDetails: {
-    noi: number;
-    loyer: number;
-    noiSurLoyer: number;
-    yieldBanque: number;
-  };
-  totalReturn: number;
-  totalReturnDetails: {
-    cocNet: number;
-    gain: number;
-    deltaValeur: number;
-  };
-  xirr: number;
-  xirrDetails: {
-    years: number;
-    totalCfni: number;
-    cfniDerniereAnnee: number;
-    deltaValeur: number;
-    variationValeurDerniereAnnee: number;
-    total: number;
-    latestCf: number;
-    latestCfYear: number;
-  };
-  chartData: Array<{
-    date: string; // ISO date format for calculations
-    dateLabel: string; // Formatted date for display
-    valeur: number;
-    fondPropre: number;
-    noi: number;
-    rendementNet: number;
-    cfni: number;
-    cocNet: number;
-    cashFlow: number; // This is the CP field for XIRR calculation
-  }>;
-}
 
-// Types utilisés pour le calcul annuel
-interface CashflowRow {
-  date: string;
-  rex: number;
-  retraitAmort: number;
-  retraitAutres: number;
-  loyer: number;
-}
-interface ValorisationRow {
-  date: string;
-  valeur: number;
-}
-interface DebtFlowRow {
-  date: string;
-  capitalDebut: number;
-  rmbtCapital: number;
-  rmbtInteret: number;
-}
-interface ImmobilisationRow {
-  date: string;
-  montant: number;
-}
-function ConsolidatedDataLoader({
-  selectedInvestments,
-  onDataLoaded
-}: {
-  selectedInvestments: Set<string>;
-  onDataLoaded: (data: any) => void;
-}) {
-  const {
-    user
-  } = useAuth();
-  const {
-    investments
-  } = useInvestments();
-  React.useEffect(() => {
-    if (!user || selectedInvestments.size === 0) return;
-    const loadConsolidatedData = async () => {
-      const investmentIds = Array.from(selectedInvestments);
-
-      // Charger toutes les données pour tous les investissements sélectionnés
-      const [cashflowsRes, valorisationsRes, debtCharacteristicsRes, immobilisationsRes] = await Promise.all([supabase.from('immobilier_cashflows').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id), supabase.from('immobilier_valorisations').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id), supabase.from('debt_characteristics').select('*').in('asset_id', investmentIds).eq('user_id', user.id), supabase.from('immobilier_immobilisations').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id)]);
-
-      // Load debt flows based on debt characteristics
-      let debtFlowsRes = {
-        data: []
-      };
-      if (debtCharacteristicsRes.data && debtCharacteristicsRes.data.length > 0) {
-        const debtCharacteristicsIds = debtCharacteristicsRes.data.map(dc => dc.id);
-        debtFlowsRes = await supabase.from('debt_flows').select('*').in('debt_characteristics_id', debtCharacteristicsIds).eq('user_id', user.id);
-      }
-
-      // Formatter les données
-      const allCashflows: (CashflowRow & {
-        investmentId: string;
-      })[] = (cashflowsRes.data || []).map(cf => ({
-        investmentId: cf.immobilier_id,
-        date: cf.date,
-        rex: cf.rex || 0,
-        retraitAmort: cf.retrait_amort || 0,
-        retraitAutres: cf.retrait_autres || 0,
-        loyer: cf.loyer || 0
-      }));
-      const allValorisations: (ValorisationRow & {
-        investmentId: string;
-      })[] = (valorisationsRes.data || []).map(v => ({
-        investmentId: v.immobilier_id,
-        date: v.date,
-        valeur: v.valeur || 0
-      }));
-      const allDebtFlows: (DebtFlowRow & {
-        investmentId: string;
-      })[] = (debtFlowsRes.data || []).map(d => ({
-        investmentId: d.immobilier_id,
-        date: d.date,
-        capitalDebut: d.capital_debut || 0,
-        rmbtCapital: d.rmbt_capital || 0,
-        rmbtInteret: d.rmbt_interet || 0
-      }));
-      const allImmobilisations: (ImmobilisationRow & {
-        investmentId: string;
-      })[] = (immobilisationsRes.data || []).map(m => ({
-        investmentId: m.immobilier_id,
-        date: m.date,
-        montant: m.montant || 0
-      }));
-
-      // Regrouper par date et consolider
-      const dateMap = new Map<string, {
-        date: string;
-        valeur: number;
-        fp: number;
-        noi: number;
-        cfni: number;
-        cashFlow: number;
-        crd: number;
-      }>();
-
-      // Récupérer toutes les dates uniques
-      const allDates = new Set<string>();
-      allCashflows.forEach(cf => allDates.add(cf.date));
-      allValorisations.forEach(v => allDates.add(v.date));
-      allDebtFlows.forEach(d => allDates.add(d.date));
-      allImmobilisations.forEach(i => allDates.add(i.date));
-
-      // Initialiser toutes les dates
-      allDates.forEach(date => {
-        dateMap.set(date, {
-          date,
-          valeur: 0,
-          fp: 0,
-          noi: 0,
-          cfni: 0,
-          cashFlow: 0,
-          crd: 0
-        });
-      });
-
-      // Consolider les données par date
-      allDates.forEach(date => {
-        const consolidated = dateMap.get(date)!;
-
-        // NOI consolidé pour cette date
-        let totalNOI = 0;
-        allCashflows.filter(cf => cf.date === date).forEach(cf => {
-          totalNOI += (cf.rex || 0) + (cf.retraitAmort || 0) + (cf.retraitAutres || 0);
-        });
-
-        // Immobilisations consolidées pour cette date
-        let totalImmobilisations = 0;
-        allImmobilisations.filter(i => i.date === date).forEach(i => {
-          totalImmobilisations += i.montant || 0;
-        });
-
-        // NOI ajusté
-        const noiAjuste = totalNOI - totalImmobilisations;
-
-        // Dette consolidée pour cette date
-        let totalInteret = 0;
-        let totalCapital = 0;
-        let totalCRD = 0;
-        allDebtFlows.filter(d => d.date === date).forEach(d => {
-          totalInteret += d.rmbtInteret || 0;
-          totalCapital += d.rmbtCapital || 0;
-          totalCRD += (d.capitalDebut || 0) - (d.rmbtCapital || 0);
-        });
-
-        // Valorisations consolidées pour cette date
-        let totalValeur = 0;
-        allValorisations.filter(v => v.date === date).forEach(v => {
-          totalValeur += v.valeur || 0;
-        });
-
-        // Calculs finaux
-        const cfni = noiAjuste - totalInteret;
-        const cashFlow = cfni - totalCapital;
-        const fp = totalValeur - totalCRD;
-        consolidated.valeur = totalValeur;
-        consolidated.fp = fp;
-        consolidated.noi = totalNOI;
-        consolidated.cfni = cfni;
-        consolidated.cashFlow = cashFlow;
-        consolidated.crd = totalCRD;
-      });
-
-      // Trier par date et convertir en tableau
-      const consolidatedArray = Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-      // Calculer les données KPI consolidées (dernières valeurs)
-      const latestData = consolidatedArray[consolidatedArray.length - 1];
-      const totalInvestmentAmount = investments.filter(inv => selectedInvestments.has(inv.id)).reduce((sum, inv) => sum + (Number(inv.investmentAmount) || 0), 0);
-      const previousData = consolidatedArray.length > 1 ? consolidatedArray[consolidatedArray.length - 2] : null;
-      const deltaValeur = previousData ? (latestData?.valeur || 0) - (previousData?.valeur || 0) : 0;
-      const totalCfni = consolidatedArray.reduce((sum, row) => sum + row.cfni, 0);
-      const cocNet = totalInvestmentAmount > 0 ? (latestData?.cfni || 0) / totalInvestmentAmount * 100 : 0;
-      const gain = totalCfni + deltaValeur;
-
-      // Calculate Total Return using the same formula as the table for the most recent row
-      const totalReturn = latestData?.fp > 0 ? (latestData.cfni + deltaValeur) / latestData.fp * 100 : 0;
-
-      // Calculate COC net for the latest data (same as table row calculation)
-      const latestCocNet = latestData?.fp > 0 ? latestData.cfni / latestData.fp * 100 : 0;
-
-      // Calculate gain for the latest data (same as Gain 2 in table: deltaValeur + CFNI)
-      const latestGain = deltaValeur + (latestData?.cfni || 0);
-
-      // Convert consolidated data to proper format for XIRR calculation
-      const xirrData: ConsolidatedRow[] = consolidatedArray.map(row => ({
-        date: row.date,
-        cashFlow: row.cashFlow,
-        valeur: row.valeur,
-        crd: row.crd,
-        fp: row.fp
-      }));
-      const xirr = calculateXIRR(xirrData);
-      const consolidatedKPIs = {
-        fondPropre: latestData?.fp || 0,
-        fondPropreDetails: {
-          valeur: latestData?.valeur || 0,
-          crd: latestData?.crd || 0,
-          ltv: latestData?.valeur > 0 ? latestData.crd / latestData.valeur * 100 : 0
-        },
-        rendementNet: latestData?.valeur > 0 ? latestData.noi / latestData.valeur * 100 : 0,
-        rendementNetDetails: {
-          noi: latestData?.noi || 0,
-          loyer: allCashflows.filter(cf => cf.date === latestData?.date).reduce((sum, cf) => sum + (cf.loyer || 0), 0),
-          noiSurLoyer: 0,
-          // À calculer après avoir le loyer total
-          yieldBanque: latestData?.crd > 0 ? (latestData?.noi || 0) / latestData.crd * 100 : 0
-        },
-        totalReturn: totalReturn,
-        totalReturnDetails: {
-          cocNet: latestCocNet,
-          gain: latestGain,
-          deltaValeur: deltaValeur
-        },
-        xirr: xirr,
-        xirrDetails: {
-          years: 3,
-          totalCfni: totalCfni,
-          cfniDerniereAnnee: latestData?.cfni || 0,
-          deltaValeur: deltaValeur,
-          variationValeurDerniereAnnee: 0,
-          total: gain,
-          latestCf: latestData?.cashFlow || 0,
-          latestCfYear: latestData ? new Date(latestData.date).getFullYear() : 0
-        },
-        chartData: consolidatedArray.map(row => {
-          const rendementNet = row.valeur > 0 ? row.noi / row.valeur * 100 : 0;
-          const cocNet = row.fp > 0 ? row.cfni / row.fp * 100 : 0;
-          return {
-            date: row.date,
-            // Keep ISO format for calculations
-            dateLabel: new Date(row.date).toLocaleDateString('fr-FR'),
-            // Formatted for display
-            valeur: row.valeur,
-            fondPropre: row.fp,
-            noi: row.noi,
-            rendementNet,
-            cfni: row.cfni,
-            cocNet,
-            cashFlow: row.cashFlow // This is CP for XIRR calculation
-          };
-        })
-      };
-
-      // Calculer noiSurLoyer
-      if (consolidatedKPIs.rendementNetDetails.loyer > 0) {
-        consolidatedKPIs.rendementNetDetails.noiSurLoyer = consolidatedKPIs.rendementNetDetails.noi / consolidatedKPIs.rendementNetDetails.loyer * 100;
-      }
-      onDataLoaded(consolidatedKPIs);
-    };
-    loadConsolidatedData();
-  }, [user, selectedInvestments, investments, onDataLoaded]);
-  return null;
-}
 export function ConsolidatedKPIView({
   selectedInvestments
 }: ConsolidatedKPIViewProps) {
-  // Rolling XIRR calculation using centralized function
-  const calculateRollingXIRR = (dataUpToIndex: any[]) => {
-    if (dataUpToIndex.length < 2) return 0;
+  const { investments } = useInvestments();
+  
+  // Use the optimized batch hook instead of custom data loading
+  const investmentIds = Array.from(selectedInvestments);
+  const { batchKPIs, loading } = useBatchPerformanceKPIs(investmentIds);
+  
+  // Calculate consolidated data from individual investment KPIs
+  const consolidatedData = useMemo(() => {
+    console.log('ConsolidatedKPIView - batchKPIs:', batchKPIs);
+    console.log('ConsolidatedKPIView - loading:', loading);
+    console.log('ConsolidatedKPIView - selectedInvestments:', Array.from(selectedInvestments));
+    
+    // Default empty data structure
+    const defaultData = {
+      fondPropre: 0,
+      fondPropreDetails: { valeur: 0, crd: 0, ltv: 0 },
+      rendementNet: 0,
+      rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, yieldBanque: 0 },
+      totalReturn: 0,
+      totalReturnDetails: { cocNet: 0, gain: 0, deltaValeur: 0 },
+      xirr: 0,
+      xirrDetails: {
+        years: 3, totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0,
+        variationValeurDerniereAnnee: 0, total: 0, latestCf: 0, latestCfYear: 0
+      },
+      chartData: []
+    };
+    
+    if (loading || !batchKPIs || Object.keys(batchKPIs).length === 0) {
+      return defaultData;
+    }
+    
+    // Aggregate KPIs from individual investments
+    const selectedKPIs = Object.entries(batchKPIs)
+      .filter(([investmentId]) => selectedInvestments.has(investmentId))
+      .map(([_, kpi]) => kpi)
+      .filter(kpi => kpi && kpi.chartData); // Ensure KPI and chartData exist
+    
+    console.log('ConsolidatedKPIView - selectedKPIs:', selectedKPIs);
+    
+    if (selectedKPIs.length === 0) {
+      return defaultData;
+    }
 
-    // Convert to proper format for XIRR calculation
-    const xirrRows: ConsolidatedRow[] = dataUpToIndex.map(row => ({
-      date: row.date,
-      cashFlow: row.cashFlow,
-      valeur: row.valeur,
-      crd: row.crd || 0,
-      fp: row.fondPropre
-    }));
+    return {
+      fondPropre: selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropre || 0), 0),
+      fondPropreDetails: {
+        valeur: selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.valeur || 0), 0),
+        crd: selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.crd || 0), 0),
+        ltv: selectedKPIs.length > 0 ? 
+          selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.ltv || 0), 0) / selectedKPIs.length : 0
+      },
+      rendementNet: selectedKPIs.length > 0 ? 
+        selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNet || 0), 0) / selectedKPIs.length : 0,
+      rendementNetDetails: {
+        noi: selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.noi || 0), 0),
+        loyer: selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.loyer || 0), 0),
+        noiSurLoyer: selectedKPIs.length > 0 ? 
+          selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.noiSurLoyer || 0), 0) / selectedKPIs.length : 0,
+        yieldBanque: selectedKPIs.length > 0 ? 
+          selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.yieldBanque || 0), 0) / selectedKPIs.length : 0
+      },
+      totalReturn: selectedKPIs.length > 0 ? 
+        selectedKPIs.reduce((sum, kpi) => sum + (kpi.totalReturn || 0), 0) / selectedKPIs.length : 0,
+      totalReturnDetails: {
+        cocNet: selectedKPIs.reduce((sum, kpi) => sum + (kpi.totalReturnDetails?.cocNet || 0), 0),
+        gain: selectedKPIs.reduce((sum, kpi) => sum + (kpi.totalReturnDetails?.gain || 0), 0),
+        deltaValeur: selectedKPIs.reduce((sum, kpi) => sum + (kpi.totalReturnDetails?.deltaValeur || 0), 0)
+      },
+      xirr: selectedKPIs.length > 0 ? 
+        selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirr || 0), 0) / selectedKPIs.length : 0,
+      xirrDetails: {
+        years: selectedKPIs.length > 0 ? Math.max(...selectedKPIs.map(kpi => kpi.xirrDetails?.years || 3)) : 3,
+        totalCfni: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.totalCfni || 0), 0),
+        cfniDerniereAnnee: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.cfniDerniereAnnee || 0), 0),
+        deltaValeur: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.deltaValeur || 0), 0),
+        variationValeurDerniereAnnee: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.variationValeurDerniereAnnee || 0), 0),
+        total: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.total || 0), 0),
+        latestCf: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.latestCf || 0), 0),
+        latestCfYear: selectedKPIs.length > 0 ? Math.max(...selectedKPIs.map(kpi => kpi.xirrDetails?.latestCfYear || 0)) : 0
+      },
+      chartData: selectedKPIs.length > 0 && selectedKPIs[0].chartData ? selectedKPIs[0].chartData : []
+    };
+  }, [batchKPIs, selectedInvestments, loading]);
 
-    return calculateXIRR(xirrRows);
-  };
-  const {
-    investments
-  } = useInvestments();
-  const [consolidatedData, setConsolidatedData] = React.useState<ConsolidatedData>({
-    fondPropre: 0,
-    fondPropreDetails: {
-      valeur: 0,
-      crd: 0,
-      ltv: 0
-    },
-    rendementNet: 0,
-    rendementNetDetails: {
-      noi: 0,
-      loyer: 0,
-      noiSurLoyer: 0,
-      yieldBanque: 0
-    },
-    totalReturn: 0,
-    totalReturnDetails: {
-      cocNet: 0,
-      gain: 0,
-      deltaValeur: 0
-    },
-    xirr: 0,
-    xirrDetails: {
-      years: 3,
-      totalCfni: 0,
-      cfniDerniereAnnee: 0,
-      deltaValeur: 0,
-      variationValeurDerniereAnnee: 0,
-      total: 0,
-      latestCf: 0,
-      latestCfYear: 0
-    },
-    chartData: []
-  });
-  const selectedInvestmentsList = useMemo(() => {
-    return investments.filter(inv => selectedInvestments.has(inv.id));
-  }, [investments, selectedInvestments]);
-  const handleConsolidatedDataLoaded = React.useCallback((data: ConsolidatedData) => {
-    setConsolidatedData(data);
-  }, []);
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+    }).format(value || 0);
   };
+
   const formatPercentage = (value: number) => {
-    const sign = value > 0 ? '+' : '';
-    return `${sign}${value.toFixed(1)}%`;
+    return `${(value || 0).toFixed(2)}%`;
   };
+
+  // Show message if no investments selected
   if (selectedInvestments.size === 0) {
-    return <div className="card-financial">
+    return (
+      <div className="card-financial">
         <div className="p-8 text-center">
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">
             Aucun investissement sélectionné
@@ -391,12 +123,24 @@ export function ConsolidatedKPIView({
             Veuillez sélectionner au moins un investissement dans la vue tableau pour voir les KPI consolidés.
           </p>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="space-y-6">
-      {/* Charger les données consolidées */}
-      <ConsolidatedDataLoader selectedInvestments={selectedInvestments} onDataLoaded={handleConsolidatedDataLoaded} />
-
+  
+  if (loading) {
+    return (
+      <div className="card-financial">
+        <div className="p-8 text-center">
+          <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+            Chargement des KPI consolidés...
+          </h3>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-6">
       {/* En-tête avec informations consolidées */}
       <div className="flex items-center justify-between">
         <div>
@@ -407,7 +151,7 @@ export function ConsolidatedKPIView({
         </div>
       </div>
 
-      {/* Performance KPI Cards - Exact same layout as individual investment */}
+      {/* Performance KPI Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         {/* Fond Propre */}
         <div className="card-financial">
@@ -434,14 +178,15 @@ export function ConsolidatedKPIView({
             <p className="text-sm text-muted-foreground font-bold mb-3">Rendement Net (2024)</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
-                <p className={`text-2xl font-bold ${consolidatedData.rendementNet >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <p className="text-2xl font-bold financial-value">
                   {formatPercentage(consolidatedData.rendementNet)}
                 </p>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
-                <div>NOI: {formatCurrency(consolidatedData.rendementNetDetails.noi)} ({consolidatedData.rendementNetDetails.loyer > 0 ? (consolidatedData.rendementNetDetails.noi / consolidatedData.rendementNetDetails.loyer * 100).toFixed(1) : '0'}% du loyer)</div>
+                <div>NOI: {formatCurrency(consolidatedData.rendementNetDetails.noi)}</div>
                 <div>Loyer: {formatCurrency(consolidatedData.rendementNetDetails.loyer)}</div>
-                <div>Yield Banque: {consolidatedData.rendementNetDetails.yieldBanque.toFixed(1)}%</div>
+                <div>NOI/Loyer: {formatPercentage(consolidatedData.rendementNetDetails.noiSurLoyer)}</div>
+                <div>Yield Banque: {formatPercentage(consolidatedData.rendementNetDetails.yieldBanque)}</div>
               </div>
             </div>
           </div>
@@ -453,16 +198,13 @@ export function ConsolidatedKPIView({
             <p className="text-sm text-muted-foreground font-bold mb-3">Total Return (2024)</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
-                <p className={`text-2xl font-bold ${consolidatedData.totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <p className="text-2xl font-bold financial-value">
                   {formatPercentage(consolidatedData.totalReturn)}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Gain : {formatCurrency(consolidatedData.totalReturnDetails.gain)}
                 </p>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
-                <div>COC net: {consolidatedData.totalReturnDetails.cocNet.toFixed(1)}%</div>
-                <div>CFNI: {formatCurrency(consolidatedData.chartData[consolidatedData.chartData.length - 1]?.cfni || 0)}</div>
+                <div>CoC Net: {formatPercentage(consolidatedData.totalReturnDetails.cocNet)}</div>
+                <div>Gain: {formatCurrency(consolidatedData.totalReturnDetails.gain)}</div>
                 <div>Δ Valeur: {formatCurrency(consolidatedData.totalReturnDetails.deltaValeur)}</div>
               </div>
             </div>
@@ -472,18 +214,16 @@ export function ConsolidatedKPIView({
         {/* XIRR */}
         <div className="card-financial">
           <div className="p-4">
-            <p className="text-sm text-muted-foreground font-bold mb-3">XIRR (3Y)</p>
+            <p className="text-sm text-muted-foreground font-bold mb-3">XIRR ({consolidatedData.xirrDetails.years} ans)</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
-                <p className={`text-2xl font-bold ${consolidatedData.xirr >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <p className="text-2xl font-bold financial-value">
                   {formatPercentage(consolidatedData.xirr)}
                 </p>
-                {consolidatedData.xirrDetails.latestCf !== 0 && consolidatedData.xirrDetails.latestCfYear !== 0 && <p className="text-sm text-muted-foreground mt-1">
-                    CF ({consolidatedData.xirrDetails.latestCfYear}) : {formatCurrency(consolidatedData.xirrDetails.latestCf)}
-                  </p>}
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
                 <div>Total CFNI: {formatCurrency(consolidatedData.xirrDetails.totalCfni)}</div>
+                <div>CFNI {consolidatedData.xirrDetails.latestCfYear}: {formatCurrency(consolidatedData.xirrDetails.latestCf)}</div>
                 <div>Δ Valeur: {formatCurrency(consolidatedData.xirrDetails.deltaValeur)}</div>
                 <div>Total: {formatCurrency(consolidatedData.xirrDetails.total)}</div>
               </div>
@@ -491,200 +231,73 @@ export function ConsolidatedKPIView({
           </div>
         </div>
       </div>
-        
-      <div className="p-6 space-y-6">
-        {/* Tableau synthèse */}
-        <div className="w-full">
-          <div className="overflow-x-auto">
-            <TooltipProvider>
-              <Table className="min-w-full text-xs">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs text-center min-w-[80px]">Date</TableHead>
-                    <TableHead className="text-xs text-center min-w-[80px]">Valeur</TableHead>
-                    <TableHead className="text-xs text-center min-w-[70px]">FP</TableHead>
-                    <TableHead className="text-xs text-center min-w-[90px]">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">NOI</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Net Operating Income</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-xs text-center min-w-[90px]">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Rendement net</TooltipTrigger>
-                        <TooltipContent>
-                          <p>NOI / valeur</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-xs text-center min-w-[70px]">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
-                        <TooltipContent>
-                          <p>NOI ajusté après intérêt</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-xs text-center min-w-[80px]">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">COC net</TooltipTrigger>
-                        <TooltipContent>
-                          <p>CFNI / FP</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                     <TableHead className="text-xs text-center min-w-[60px]">
-                       <Tooltip>
-                         <TooltipTrigger className="cursor-help">CF</TooltipTrigger>
-                         <TooltipContent>
-                           <p>Cash Flow (CP)</p>
-                         </TooltipContent>
-                       </Tooltip>
-                     </TableHead>
-                    <TableHead className="text-xs text-center min-w-[70px]">Δ Valeur</TableHead>
-                    <TableHead className="text-xs text-center min-w-[70px]">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delta FP + CF</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-xs text-center min-w-[70px]">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Gain 2</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delta valeur + CFNI</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-xs text-center min-w-[80px]">Total Return</TableHead>
-                    <TableHead className="text-xs text-center min-w-[80px]">XIRR glissant</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {consolidatedData.chartData.map((row, index) => {
-                  const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
 
-                  // Calculs des gains
-                  const variationFP = previousRow ? row.fondPropre - previousRow.fondPropre : 0;
-                  const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
-                  const gain1 = variationFP + row.cashFlow; // Delta FP + CF
-                  const gain2 = variationValeur + row.cfni; // Delta valeur + CFNI
-
-                  // Total Return pour cette ligne (approximation)
-                  const totalReturnRow = row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0;
-
-                  // XIRR glissant
-                  const xirrGlissant = index > 0 ? calculateRollingXIRR(consolidatedData.chartData.slice(0, index + 1)) : 0;
-                  return <TableRow key={index}>
-                         <TableCell className="font-medium text-xs text-center">{row.dateLabel}</TableCell>
-                        <TableCell className="financial-value text-xs text-center">
-                          {formatCurrency(row.valeur)}
-                        </TableCell>
-                        <TableCell className="financial-value text-xs text-center">
-                          {formatCurrency(row.fondPropre)}
-                        </TableCell>
-                        <TableCell className="financial-value text-xs text-center">
-                          {formatCurrency(row.noi)}
-                        </TableCell>
-                        <TableCell className={`text-xs text-center ${row.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatPercentage(row.rendementNet)}
-                        </TableCell>
-                        <TableCell className="financial-value text-xs text-center">
-                          {formatCurrency(row.cfni)}
-                        </TableCell>
-                        <TableCell className={`text-xs text-center ${row.cocNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatPercentage(row.cocNet)}
-                        </TableCell>
-                        <TableCell className="financial-value text-xs text-center">
-                          {formatCurrency(row.cashFlow)}
-                        </TableCell>
-                        <TableCell className={`financial-value text-xs text-center ${variationValeur >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency(variationValeur)}
-                        </TableCell>
-                        <TableCell className={`financial-value text-xs text-center ${gain1 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency(gain1)}
-                        </TableCell>
-                        <TableCell className={`financial-value text-xs text-center ${gain2 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency(gain2)}
-                        </TableCell>
-                        <TableCell className={`text-xs text-center ${totalReturnRow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatPercentage(totalReturnRow)}
-                        </TableCell>
-                        <TableCell className={`text-xs text-center ${xirrGlissant >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatPercentage(xirrGlissant)}
-                        </TableCell>
-                      </TableRow>;
-                })}
-                  
-                  {/* Ligne Total */}
-                  {consolidatedData.chartData.length > 0 && <TableRow className="border-t-2 border-primary/20 bg-muted/20 font-semibold">
-                      <TableCell className="font-bold text-xs text-center">Total</TableCell>
-                      <TableCell className="text-xs text-center">-</TableCell>
-                      <TableCell className="text-xs text-center">-</TableCell>
-                      <TableCell className="financial-value text-xs text-center">
-                        {formatCurrency(consolidatedData.chartData.reduce((sum, row) => sum + row.noi, 0))}
-                      </TableCell>
-                      <TableCell className={`text-xs text-center ${consolidatedData.rendementNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatPercentage(consolidatedData.rendementNet)}
-                      </TableCell>
-                      <TableCell className="financial-value text-xs text-center">
-                        {formatCurrency(consolidatedData.chartData.reduce((sum, row) => sum + row.cfni, 0))}
-                      </TableCell>
-                      <TableCell className={`text-xs text-center ${consolidatedData.totalReturnDetails.cocNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatPercentage(consolidatedData.totalReturnDetails.cocNet)}
-                      </TableCell>
-                      <TableCell className="financial-value text-xs text-center">
-                        {formatCurrency(consolidatedData.chartData.reduce((sum, row) => sum + row.cashFlow, 0))}
-                      </TableCell>
-                      <TableCell className={`financial-value text-xs text-center ${consolidatedData.totalReturnDetails.deltaValeur >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(consolidatedData.totalReturnDetails.deltaValeur)}
-                      </TableCell>
-                       <TableCell className={`financial-value text-xs text-center ${consolidatedData.chartData.reduce((sum, row, index) => {
-                    const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
-                    const variationFP = previousRow ? row.fondPropre - previousRow.fondPropre : 0;
-                    const gain1 = variationFP + row.cashFlow;
-                    return sum + gain1;
-                  }, 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                         {formatCurrency(consolidatedData.chartData.reduce((sum, row, index) => {
-                      const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
-                      const variationFP = previousRow ? row.fondPropre - previousRow.fondPropre : 0;
-                      const gain1 = variationFP + row.cashFlow;
-                      return sum + gain1;
-                    }, 0))}
-                       </TableCell>
-                      <TableCell className="text-xs text-center">-</TableCell>
-                      <TableCell className={`text-xs text-center ${(() => {
-                    // Calculer la moyenne des Total Return en excluant les valeurs à 0
-                    const totalReturns = consolidatedData.chartData.map((row, index) => {
-                      const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
-                      const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
-                      return row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0;
-                    }).filter(value => value !== 0);
-                    const moyenne = totalReturns.length > 0 ? totalReturns.reduce((sum, val) => sum + val, 0) / totalReturns.length : 0;
-                    return moyenne >= 0 ? 'text-green-600' : 'text-red-600';
-                  })()}`}>
-                        {(() => {
-                      // Calculer la moyenne des Total Return en excluant les valeurs à 0
-                      const totalReturns = consolidatedData.chartData.map((row, index) => {
+      {/* Tableau détaillé */}
+      <div className="card-financial">
+        <TooltipProvider>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="text-xs font-semibold text-center w-20">Année</TableHead>
+                <TableHead className="text-xs font-semibold text-center">Fond Propre</TableHead>
+                <TableHead className="text-xs font-semibold text-center">Valeur</TableHead>
+                <TableHead className="text-xs font-semibold text-center">CRD</TableHead>
+                <TableHead className="text-xs font-semibold text-center">NOI</TableHead>
+                <TableHead className="text-xs font-semibold text-center">CFNI</TableHead>
+                <TableHead className="text-xs font-semibold text-center">Rendement Net</TableHead>
+                <TableHead className="text-xs font-semibold text-center">CoC</TableHead>
+                <TableHead className="text-xs font-semibold text-center">Total Return</TableHead>
+                <TableHead className="text-xs font-semibold text-center">Cumul</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {consolidatedData.chartData && consolidatedData.chartData.length > 0 ? (
+                consolidatedData.chartData.map((row: ConsolidatedRow, index) => (
+                  <TableRow key={row.annee} className="text-xs">
+                    <TableCell className="text-xs text-center font-medium">{row.annee}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.fondPropre)}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.valeur)}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.crd)}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.noi)}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.cfni)}</TableCell>
+                    <TableCell className="text-xs text-center">
+                      <span className={`${row.fondPropre > 0 && row.noi / row.fondPropre >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatPercentage(row.fondPropre > 0 ? (row.noi / row.fondPropre) * 100 : 0)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-center">
+                      <span className={`${row.fondPropre > 0 && row.cfni / row.fondPropre >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatPercentage(row.fondPropre > 0 ? (row.cfni / row.fondPropre) * 100 : 0)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-center">
+                      <span className={`${(() => {
                         const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
                         const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
-                        return row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0;
-                      }).filter(value => value !== 0);
-                      const moyenne = totalReturns.length > 0 ? totalReturns.reduce((sum, val) => sum + val, 0) / totalReturns.length : 0;
-                      return formatPercentage(moyenne);
-                    })()}
-                      </TableCell>
-                       <TableCell className="text-xs text-center">-</TableCell>
-                    </TableRow>}
-                </TableBody>
-              </Table>
-            </TooltipProvider>
-          </div>
-        </div>
+                        const totalReturn = row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0;
+                        return totalReturn >= 0 ? 'text-green-600' : 'text-red-600';
+                      })()}`}>
+                        {(() => {
+                          const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
+                          const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
+                          return formatPercentage(row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0);
+                        })()}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-center">-</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-muted-foreground">
+                    Aucune donnée disponible
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TooltipProvider>
       </div>
-    </div>;
+    </div>
+  );
 }

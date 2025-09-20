@@ -88,7 +88,7 @@ export const getSyntheseData = (
 };
 
 // XIRR calculation function - Following Excel TRI.PAIEMENT structure
-export const calculateXIRR = (syntheseData: SyntheseRow[] | ConsolidatedRow[]): number => {
+export const calculateXIRR = (syntheseData: SyntheseRow[]): number => {
   if (syntheseData.length < 2) return 0;
 
   try {
@@ -107,16 +107,16 @@ export const calculateXIRR = (syntheseData: SyntheseRow[] | ConsolidatedRow[]): 
       
       if (i === 0) {
         // Initial investment: -FP (negative because it's an outflow)
-        const fp = 'fp' in row ? row.fp : (row as SyntheseRow).valeur - (row as SyntheseRow).crd;
+        const fp = row.valeur - row.crd;
         cashFlows.push({ date, value: -fp });
       } else if (i === sortedData.length - 1) {
         // Final period: cashFlow + FP (cash flow + final value)
-        const fp = 'fp' in row ? row.fp : (row as SyntheseRow).valeur - (row as SyntheseRow).crd;
-        const cashFlow = 'cashFlow' in row ? row.cashFlow : (row as SyntheseRow).flux;
+        const fp = row.valeur - row.crd;
+        const cashFlow = row.flux;
         cashFlows.push({ date, value: cashFlow + fp });
       } else {
         // Intermediate periods: just the cashFlow/flux
-        const cashFlow = 'cashFlow' in row ? row.cashFlow : (row as SyntheseRow).flux;
+        const cashFlow = row.flux;
         cashFlows.push({ date, value: cashFlow });
       }
     }
@@ -228,7 +228,8 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
       deltaValeur,
       cocNet,
       cfniPlusDeltaValeur,
-      year: latestYear
+      year: latestYear,
+      gain: cfniPlusDeltaValeur
     };
 
     // Calculate XIRR
@@ -262,6 +263,29 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
       latestCfYear: latestYear
     };
 
+    // Create chart data from synthese data
+    const chartData: ConsolidatedRow[] = syntheseData.map((row, index) => ({
+      annee: new Date(row.date).getFullYear(),
+      fondPropre: row.fp,
+      valeur: row.valeur,
+      crd: row.crd,
+      noi: (() => {
+        const rowCashflows = cashflows.filter(cf => cf.date === row.date);
+        return rowCashflows.reduce((sum, cf) => sum + calculateNOI(cf), 0);
+      })(),
+      cfni: (() => {
+        const rowCashflows = cashflows.filter(cf => cf.date === row.date);
+        const rowImmobilisations = immobilisations.filter(immo => immo.date === row.date);
+        const rowDebtFlows = debtFlows.filter(df => df.date === row.date);
+        
+        const rowNOI = rowCashflows.reduce((sum, cf) => sum + calculateNOI(cf), 0);
+        const rowImmoAmount = rowImmobilisations.reduce((sum, immo) => sum + (immo.montant || 0), 0);
+        const rowInteret = rowDebtFlows.reduce((sum, df) => sum + (df.rmbtInteret || 0), 0);
+        
+        return rowNOI - rowImmoAmount - rowInteret;
+      })()
+    }));
+
     return {
       fondPropre,
       fondPropreDetails,
@@ -270,7 +294,8 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
       totalReturn,
       totalReturnDetails,
       xirr,
-      xirrDetails
+      xirrDetails,
+      chartData
     };
   } catch (error) {
     logError(error, { function: 'calculateKPIs' });
@@ -285,7 +310,7 @@ const getDefaultKPIs = (): InvestmentKPIs => ({
   rendementNet: 0,
   rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: new Date().getFullYear(), yieldBanque: 0 },
   totalReturn: 0,
-  totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: new Date().getFullYear() },
+  totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: new Date().getFullYear(), gain: 0 },
   xirr: 0,
   xirrDetails: { 
     totalCfni: 0, 
@@ -293,12 +318,13 @@ const getDefaultKPIs = (): InvestmentKPIs => ({
     deltaValeur: 0, 
     variationValeurDerniereAnnee: 0, 
     total: 0, 
-    years: 0, 
+    years: 3, 
     gain1: 0, 
     lastCfniYear: new Date().getFullYear(), 
     lastVarValeurYear: new Date().getFullYear(), 
     gain1Year: new Date().getFullYear(), 
     latestCf: 0, 
     latestCfYear: new Date().getFullYear() 
-  }
+  },
+  chartData: []
 });
