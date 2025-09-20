@@ -23,78 +23,92 @@ export function ConsolidatedKPIView({
   
   // Calculate consolidated data from individual investment KPIs
   const consolidatedData = useMemo(() => {
-    if (loading || Object.keys(batchKPIs).length === 0) {
-      return {
-        fondPropre: 0,
-        fondPropreDetails: { valeur: 0, crd: 0, ltv: 0 },
-        rendementNet: 0,
-        rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, yieldBanque: 0 },
-        totalReturn: 0,
-        totalReturnDetails: { cocNet: 0, gain: 0, deltaValeur: 0 },
-        xirr: 0,
-        xirrDetails: {
-          years: 3, totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0,
-          variationValeurDerniereAnnee: 0, total: 0, latestCf: 0, latestCfYear: 0
-        },
-        chartData: []
-      };
+    console.log('ConsolidatedKPIView - batchKPIs:', batchKPIs);
+    console.log('ConsolidatedKPIView - loading:', loading);
+    console.log('ConsolidatedKPIView - selectedInvestments:', Array.from(selectedInvestments));
+    
+    // Default empty data structure
+    const defaultData = {
+      fondPropre: 0,
+      fondPropreDetails: { valeur: 0, crd: 0, ltv: 0 },
+      rendementNet: 0,
+      rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, yieldBanque: 0 },
+      totalReturn: 0,
+      totalReturnDetails: { cocNet: 0, gain: 0, deltaValeur: 0 },
+      xirr: 0,
+      xirrDetails: {
+        years: 3, totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0,
+        variationValeurDerniereAnnee: 0, total: 0, latestCf: 0, latestCfYear: 0
+      },
+      chartData: []
+    };
+    
+    if (loading || !batchKPIs || Object.keys(batchKPIs).length === 0) {
+      return defaultData;
     }
     
     // Aggregate KPIs from individual investments
-    const selectedKPIs = Object.values(batchKPIs).filter((_, index) => 
-      selectedInvestments.has(investmentIds[index])
-    );
+    const selectedKPIs = Object.entries(batchKPIs)
+      .filter(([investmentId]) => selectedInvestments.has(investmentId))
+      .map(([_, kpi]) => kpi)
+      .filter(kpi => kpi && kpi.chartData); // Ensure KPI and chartData exist
     
+    console.log('ConsolidatedKPIView - selectedKPIs:', selectedKPIs);
+    
+    if (selectedKPIs.length === 0) {
+      return defaultData;
+    }
+
     return {
-      fondPropre: selectedKPIs.reduce((sum, kpi) => sum + kpi.fondPropre, 0),
+      fondPropre: selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropre || 0), 0),
       fondPropreDetails: {
-        valeur: selectedKPIs.reduce((sum, kpi) => sum + kpi.fondPropreDetails.valeur, 0),
-        crd: selectedKPIs.reduce((sum, kpi) => sum + kpi.fondPropreDetails.crd, 0),
+        valeur: selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.valeur || 0), 0),
+        crd: selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.crd || 0), 0),
         ltv: selectedKPIs.length > 0 ? 
-          selectedKPIs.reduce((sum, kpi) => sum + kpi.fondPropreDetails.ltv, 0) / selectedKPIs.length : 0
+          selectedKPIs.reduce((sum, kpi) => sum + (kpi.fondPropreDetails?.ltv || 0), 0) / selectedKPIs.length : 0
       },
       rendementNet: selectedKPIs.length > 0 ? 
-        selectedKPIs.reduce((sum, kpi) => sum + kpi.rendementNet, 0) / selectedKPIs.length : 0,
+        selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNet || 0), 0) / selectedKPIs.length : 0,
       rendementNetDetails: {
-        noi: selectedKPIs.reduce((sum, kpi) => sum + kpi.rendementNetDetails.noi, 0),
-        loyer: selectedKPIs.reduce((sum, kpi) => sum + kpi.rendementNetDetails.loyer, 0),
+        noi: selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.noi || 0), 0),
+        loyer: selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.loyer || 0), 0),
         noiSurLoyer: selectedKPIs.length > 0 ? 
-          selectedKPIs.reduce((sum, kpi) => sum + kpi.rendementNetDetails.noiSurLoyer, 0) / selectedKPIs.length : 0,
+          selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.noiSurLoyer || 0), 0) / selectedKPIs.length : 0,
         yieldBanque: selectedKPIs.length > 0 ? 
-          selectedKPIs.reduce((sum, kpi) => sum + kpi.rendementNetDetails.yieldBanque, 0) / selectedKPIs.length : 0
+          selectedKPIs.reduce((sum, kpi) => sum + (kpi.rendementNetDetails?.yieldBanque || 0), 0) / selectedKPIs.length : 0
       },
       totalReturn: selectedKPIs.length > 0 ? 
-        selectedKPIs.reduce((sum, kpi) => sum + kpi.totalReturn, 0) / selectedKPIs.length : 0,
+        selectedKPIs.reduce((sum, kpi) => sum + (kpi.totalReturn || 0), 0) / selectedKPIs.length : 0,
       totalReturnDetails: {
-        cocNet: selectedKPIs.reduce((sum, kpi) => sum + kpi.totalReturnDetails.cocNet, 0),
-        gain: selectedKPIs.reduce((sum, kpi) => sum + kpi.totalReturnDetails.gain, 0),
-        deltaValeur: selectedKPIs.reduce((sum, kpi) => sum + kpi.totalReturnDetails.deltaValeur, 0)
+        cocNet: selectedKPIs.reduce((sum, kpi) => sum + (kpi.totalReturnDetails?.cocNet || 0), 0),
+        gain: selectedKPIs.reduce((sum, kpi) => sum + (kpi.totalReturnDetails?.gain || 0), 0),
+        deltaValeur: selectedKPIs.reduce((sum, kpi) => sum + (kpi.totalReturnDetails?.deltaValeur || 0), 0)
       },
       xirr: selectedKPIs.length > 0 ? 
-        selectedKPIs.reduce((sum, kpi) => sum + kpi.xirr, 0) / selectedKPIs.length : 0,
+        selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirr || 0), 0) / selectedKPIs.length : 0,
       xirrDetails: {
-        years: selectedKPIs.length > 0 ? Math.max(...selectedKPIs.map(kpi => kpi.xirrDetails.years)) : 3,
-        totalCfni: selectedKPIs.reduce((sum, kpi) => sum + kpi.xirrDetails.totalCfni, 0),
-        cfniDerniereAnnee: selectedKPIs.reduce((sum, kpi) => sum + kpi.xirrDetails.cfniDerniereAnnee, 0),
-        deltaValeur: selectedKPIs.reduce((sum, kpi) => sum + kpi.xirrDetails.deltaValeur, 0),
-        variationValeurDerniereAnnee: selectedKPIs.reduce((sum, kpi) => sum + kpi.xirrDetails.variationValeurDerniereAnnee, 0),
-        total: selectedKPIs.reduce((sum, kpi) => sum + kpi.xirrDetails.total, 0),
-        latestCf: selectedKPIs.reduce((sum, kpi) => sum + kpi.xirrDetails.latestCf, 0),
-        latestCfYear: selectedKPIs.length > 0 ? Math.max(...selectedKPIs.map(kpi => kpi.xirrDetails.latestCfYear)) : 0
+        years: selectedKPIs.length > 0 ? Math.max(...selectedKPIs.map(kpi => kpi.xirrDetails?.years || 3)) : 3,
+        totalCfni: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.totalCfni || 0), 0),
+        cfniDerniereAnnee: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.cfniDerniereAnnee || 0), 0),
+        deltaValeur: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.deltaValeur || 0), 0),
+        variationValeurDerniereAnnee: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.variationValeurDerniereAnnee || 0), 0),
+        total: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.total || 0), 0),
+        latestCf: selectedKPIs.reduce((sum, kpi) => sum + (kpi.xirrDetails?.latestCf || 0), 0),
+        latestCfYear: selectedKPIs.length > 0 ? Math.max(...selectedKPIs.map(kpi => kpi.xirrDetails?.latestCfYear || 0)) : 0
       },
-      chartData: selectedKPIs.length > 0 ? selectedKPIs[0].chartData : []
+      chartData: selectedKPIs.length > 0 && selectedKPIs[0].chartData ? selectedKPIs[0].chartData : []
     };
-  }, [batchKPIs, selectedInvestments, investmentIds, loading]);
+  }, [batchKPIs, selectedInvestments, loading]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'EUR',
-    }).format(value);
+    }).format(value || 0);
   };
 
   const formatPercentage = (value: number) => {
-    return `${(value).toFixed(2)}%`;
+    return `${(value || 0).toFixed(2)}%`;
   };
 
   // Show message if no investments selected
@@ -237,105 +251,47 @@ export function ConsolidatedKPIView({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {consolidatedData.chartData.map((row: ConsolidatedRow, index) => (
-                <TableRow key={row.annee} className="text-xs">
-                  <TableCell className="text-xs text-center font-medium">{row.annee}</TableCell>
-                  <TableCell className="text-xs text-center">{formatCurrency(row.fondPropre)}</TableCell>
-                  <TableCell className="text-xs text-center">{formatCurrency(row.valeur)}</TableCell>
-                  <TableCell className="text-xs text-center">{formatCurrency(row.crd)}</TableCell>
-                  <TableCell className="text-xs text-center">{formatCurrency(row.noi)}</TableCell>
-                  <TableCell className="text-xs text-center">{formatCurrency(row.cfni)}</TableCell>
-                  <TableCell className="text-xs text-center">
-                    <span className={`${row.fondPropre > 0 && row.noi / row.fondPropre >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatPercentage(row.fondPropre > 0 ? (row.noi / row.fondPropre) * 100 : 0)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-xs text-center">
-                    <span className={`${row.fondPropre > 0 && row.cfni / row.fondPropre >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatPercentage(row.fondPropre > 0 ? (row.cfni / row.fondPropre) * 100 : 0)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-xs text-center">
-                    <span className={`${(() => {
-                      const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
-                      const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
-                      const totalReturn = row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0;
-                      return totalReturn >= 0 ? 'text-green-600' : 'text-red-600';
-                    })()}`}>
-                      {(() => {
+              {consolidatedData.chartData && consolidatedData.chartData.length > 0 ? (
+                consolidatedData.chartData.map((row: ConsolidatedRow, index) => (
+                  <TableRow key={row.annee} className="text-xs">
+                    <TableCell className="text-xs text-center font-medium">{row.annee}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.fondPropre)}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.valeur)}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.crd)}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.noi)}</TableCell>
+                    <TableCell className="text-xs text-center">{formatCurrency(row.cfni)}</TableCell>
+                    <TableCell className="text-xs text-center">
+                      <span className={`${row.fondPropre > 0 && row.noi / row.fondPropre >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatPercentage(row.fondPropre > 0 ? (row.noi / row.fondPropre) * 100 : 0)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-center">
+                      <span className={`${row.fondPropre > 0 && row.cfni / row.fondPropre >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatPercentage(row.fondPropre > 0 ? (row.cfni / row.fondPropre) * 100 : 0)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-center">
+                      <span className={`${(() => {
                         const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
                         const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
-                        return formatPercentage(row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0);
-                      })()}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-xs text-center">-</TableCell>
-                </TableRow>
-              ))}
-              {consolidatedData.chartData.length > 0 && (
-                <TableRow className="font-semibold bg-muted/30">
-                  <TableCell className="text-xs text-center font-bold">Moyenne</TableCell>
-                  <TableCell className="text-xs text-center">-</TableCell>
-                  <TableCell className="text-xs text-center">-</TableCell>
-                  <TableCell className="text-xs text-center">-</TableCell>
-                  <TableCell className="text-xs text-center">-</TableCell>
-                  <TableCell className="text-xs text-center">-</TableCell>
-                  <TableCell className="text-xs text-center">
-                    <span className={`${(() => {
-                      const rendements = consolidatedData.chartData.map(row => 
-                        row.fondPropre > 0 ? (row.noi / row.fondPropre) * 100 : 0
-                      ).filter(value => value !== 0);
-                      const moyenne = rendements.length > 0 ? rendements.reduce((sum, val) => sum + val, 0) / rendements.length : 0;
-                      return moyenne >= 0 ? 'text-green-600' : 'text-red-600';
-                    })()}`}>
-                      {(() => {
-                        const rendements = consolidatedData.chartData.map(row => 
-                          row.fondPropre > 0 ? (row.noi / row.fondPropre) * 100 : 0
-                        ).filter(value => value !== 0);
-                        const moyenne = rendements.length > 0 ? rendements.reduce((sum, val) => sum + val, 0) / rendements.length : 0;
-                        return formatPercentage(moyenne);
-                      })()}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-xs text-center">
-                    <span className={`${(() => {
-                      const cocs = consolidatedData.chartData.map(row => 
-                        row.fondPropre > 0 ? (row.cfni / row.fondPropre) * 100 : 0
-                      ).filter(value => value !== 0);
-                      const moyenne = cocs.length > 0 ? cocs.reduce((sum, val) => sum + val, 0) / cocs.length : 0;
-                      return moyenne >= 0 ? 'text-green-600' : 'text-red-600';
-                    })()}`}>
-                      {(() => {
-                        const cocs = consolidatedData.chartData.map(row => 
-                          row.fondPropre > 0 ? (row.cfni / row.fondPropre) * 100 : 0
-                        ).filter(value => value !== 0);
-                        const moyenne = cocs.length > 0 ? cocs.reduce((sum, val) => sum + val, 0) / cocs.length : 0;
-                        return formatPercentage(moyenne);
-                      })()}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-xs text-center">
-                    <span className={`${(() => {
-                      const totalReturns = consolidatedData.chartData.map((row, index) => {
-                        const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
-                        const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
-                        return row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0;
-                      }).filter(value => value !== 0);
-                      const moyenne = totalReturns.length > 0 ? totalReturns.reduce((sum, val) => sum + val, 0) / totalReturns.length : 0;
-                      return moyenne >= 0 ? 'text-green-600' : 'text-red-600';
-                    })()}`}>
-                      {(() => {
-                        const totalReturns = consolidatedData.chartData.map((row, index) => {
+                        const totalReturn = row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0;
+                        return totalReturn >= 0 ? 'text-green-600' : 'text-red-600';
+                      })()}`}>
+                        {(() => {
                           const previousRow = index > 0 ? consolidatedData.chartData[index - 1] : null;
                           const variationValeur = previousRow ? row.valeur - previousRow.valeur : 0;
-                          return row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0;
-                        }).filter(value => value !== 0);
-                        const moyenne = totalReturns.length > 0 ? totalReturns.reduce((sum, val) => sum + val, 0) / totalReturns.length : 0;
-                        return formatPercentage(moyenne);
-                      })()}
-                    </span>
+                          return formatPercentage(row.fondPropre > 0 ? (row.cfni + variationValeur) / row.fondPropre * 100 : 0);
+                        })()}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-center">-</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-muted-foreground">
+                    Aucune donnée disponible
                   </TableCell>
-                  <TableCell className="text-xs text-center">-</TableCell>
                 </TableRow>
               )}
             </TableBody>

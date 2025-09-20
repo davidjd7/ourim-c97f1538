@@ -88,7 +88,7 @@ export const getSyntheseData = (
 };
 
 // XIRR calculation function - Following Excel TRI.PAIEMENT structure
-export const calculateXIRR = (syntheseData: SyntheseRow[] | ConsolidatedRow[]): number => {
+export const calculateXIRR = (syntheseData: SyntheseRow[]): number => {
   if (syntheseData.length < 2) return 0;
 
   try {
@@ -107,16 +107,16 @@ export const calculateXIRR = (syntheseData: SyntheseRow[] | ConsolidatedRow[]): 
       
       if (i === 0) {
         // Initial investment: -FP (negative because it's an outflow)
-        const fp = 'fp' in row ? row.fp : (row as SyntheseRow).valeur - (row as SyntheseRow).crd;
+        const fp = row.valeur - row.crd;
         cashFlows.push({ date, value: -fp });
       } else if (i === sortedData.length - 1) {
         // Final period: cashFlow + FP (cash flow + final value)
-        const fp = 'fp' in row ? row.fp : (row as SyntheseRow).valeur - (row as SyntheseRow).crd;
-        const cashFlow = 'cashFlow' in row ? row.cashFlow : (row as SyntheseRow).flux;
+        const fp = row.valeur - row.crd;
+        const cashFlow = row.flux;
         cashFlows.push({ date, value: cashFlow + fp });
       } else {
         // Intermediate periods: just the cashFlow/flux
-        const cashFlow = 'cashFlow' in row ? row.cashFlow : (row as SyntheseRow).flux;
+        const cashFlow = row.flux;
         cashFlows.push({ date, value: cashFlow });
       }
     }
