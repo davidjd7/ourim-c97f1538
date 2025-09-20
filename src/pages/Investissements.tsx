@@ -26,10 +26,21 @@ export default function Investissements() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Investissements</h1>
-            <p className="text-lg text-muted-foreground">
-              Gestion de vos actifs investis
-            </p>
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold text-foreground">Investissements</h1>
+              {viewMode === 'kpi' && (
+                <h2 className="text-2xl font-bold text-foreground">Vue KPI Consolidée</h2>
+              )}
+            </div>
+            {viewMode === 'kpi' && selectedInvestments.size > 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {selectedInvestments.size} investissement{selectedInvestments.size > 1 ? 's' : ''} sélectionné{selectedInvestments.size > 1 ? 's' : ''}
+              </p>
+            ) : (
+              <p className="text-lg text-muted-foreground">
+                Gestion de vos actifs investis
+              </p>
+            )}
           </div>
           
           <div className="flex items-center gap-4">
