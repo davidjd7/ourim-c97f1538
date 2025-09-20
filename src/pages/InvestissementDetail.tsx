@@ -553,6 +553,13 @@ export default function InvestissementDetail() {
           )}
         </TabsContent>
         
+        {/* Performance tab content - visible only in print mode when on general tab */}
+        {!isNewInvestment && (
+          <div className="print-only-performance hidden">
+            <PerformanceTab investmentId={id!} />
+          </div>
+        )}
+        
         <TabsContent value="performance" className="space-y-4 no-print">
           <PerformanceTab investmentId={isNewInvestment ? '' : id!} />
         </TabsContent>
