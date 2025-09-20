@@ -261,12 +261,10 @@ export function ConsolidatedKPIView({
     <div className="space-y-6">
       {/* En-tête avec informations consolidées */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Vue KPI Consolidée</h2>
-          <p className="text-sm text-muted-foreground">
-            {selectedInvestments.size} investissement{selectedInvestments.size > 1 ? 's' : ''} sélectionné{selectedInvestments.size > 1 ? 's' : ''}
-          </p>
-        </div>
+        <h2 className="text-2xl font-bold text-foreground">Vue KPI Consolidée</h2>
+        <p className="text-sm text-muted-foreground">
+          {selectedInvestments.size} investissement{selectedInvestments.size > 1 ? 's' : ''} sélectionné{selectedInvestments.size > 1 ? 's' : ''}
+        </p>
       </div>
 
       {/* Performance KPI Cards */}
