@@ -8,6 +8,7 @@ import { logError } from '@/lib/errorHandler';
 
 interface UseBatchPerformanceKPIsResult {
   batchKPIs: BatchKPIData;
+  rawByInvestment: Record<string, InvestmentRawData>;
   loading: boolean;
   refreshBatchKPIs: () => Promise<void>;
 }
@@ -17,10 +18,12 @@ export function useBatchPerformanceKPIs(investmentIds: string[]): UseBatchPerfor
   const { lastDataChangeTimestamp } = useInvestments();
   const [loading, setLoading] = useState(true);
   const [batchKPIs, setBatchKPIs] = useState<BatchKPIData>({});
+  const [rawByInvestment, setRawByInvestment] = useState<Record<string, InvestmentRawData>>({});
 
   const loadBatchKPIs = async () => {
     if (!user || investmentIds.length === 0) {
       setBatchKPIs({});
+      setRawByInvestment({});
       setLoading(false);
       return;
     }
@@ -122,15 +125,19 @@ export function useBatchPerformanceKPIs(investmentIds: string[]): UseBatchPerfor
 
       // Calculate KPIs for each investment
       const kpiResults: BatchKPIData = {};
+      const rawResults: Record<string, InvestmentRawData> = {};
       
       investmentDataMap.forEach((rawData, investmentId) => {
         kpiResults[investmentId] = calculateKPIs(rawData);
+        rawResults[investmentId] = rawData;
       });
 
       setBatchKPIs(kpiResults);
+      setRawByInvestment(rawResults);
     } catch (error) {
       logError(error, { component: 'useBatchPerformanceKPIs', function: 'loadBatchKPIs' });
       setBatchKPIs({});
+      setRawByInvestment({});
     } finally {
       setLoading(false);
     }
@@ -142,6 +149,7 @@ export function useBatchPerformanceKPIs(investmentIds: string[]): UseBatchPerfor
 
   return {
     batchKPIs,
+    rawByInvestment,
     loading,
     refreshBatchKPIs: loadBatchKPIs
   };
