@@ -182,15 +182,15 @@ export function Header() {
                           >
                             {investment.type === 'IMMO' ? 'Immobilier' : 'Private Equity'}
                           </Badge>
-                          {investment.investmentAmount && (
-                            <span className="text-xs text-muted-foreground">
-                              {new Intl.NumberFormat('fr-FR', {
-                                style: 'currency',
-                                currency: 'EUR',
-                                minimumFractionDigits: 0,
-                              }).format(investment.investmentAmount)}
-                            </span>
-                          )}
+                           {investment.latestValue && (
+                             <span className="text-xs text-muted-foreground">
+                               {new Intl.NumberFormat('fr-FR', {
+                                 style: 'currency',
+                                 currency: 'EUR',
+                                 minimumFractionDigits: 0,
+                               }).format(investment.latestValue)}
+                             </span>
+                           )}
                         </div>
                       </div>
                     </div>

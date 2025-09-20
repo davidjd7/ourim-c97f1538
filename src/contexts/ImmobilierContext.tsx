@@ -16,6 +16,7 @@ export interface Immobilier {
   companyId?: string;
   description?: string;
   investmentAmount?: number;
+  latestValue?: number; // Latest valorisation value
 }
 
 interface ImmobilierContextType {
@@ -52,7 +53,7 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
   }, [investments, selectedCompanyIds]);
 
   // Convert database row to Immobilier interface
-  const convertDbToInvestment = (dbRow: any): Immobilier => {
+  const convertDbToInvestment = (dbRow: any, latestValorisation?: number): Immobilier => {
     return {
       id: dbRow.id,
       name: dbRow.name,
@@ -63,6 +64,7 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
       companyId: dbRow.company_id,
       description: dbRow.description,
       investmentAmount: dbRow.investment_amount,
+      latestValue: latestValorisation || 0,
     };
   };
 
@@ -106,7 +108,27 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
 
         if (data && data.length > 0) {
-          const convertedInvestments = data.map(convertDbToInvestment);
+          // Get latest valorisations for each investment
+          const investmentIds = data.map(inv => inv.id);
+          const { data: valorisationsData } = await supabase
+            .from('immobilier_valorisations')
+            .select('immobilier_id, valeur, date')
+            .in('immobilier_id', investmentIds)
+            .order('date', { ascending: false });
+
+          // Create a map of latest valorisations by investment_id
+          const latestValorisationMap = new Map<string, number>();
+          if (valorisationsData) {
+            valorisationsData.forEach(valo => {
+              if (!latestValorisationMap.has(valo.immobilier_id)) {
+                latestValorisationMap.set(valo.immobilier_id, valo.valeur || 0);
+              }
+            });
+          }
+
+          const convertedInvestments = data.map(dbRow => 
+            convertDbToInvestment(dbRow, latestValorisationMap.get(dbRow.id))
+          );
           setInvestments(convertedInvestments);
         } else {
           setInvestments([]);
