@@ -49,33 +49,36 @@ export function InvestmentTable({
   const investmentIds = baseInvestments.map(inv => inv.id);
   const { batchKPIs, loading: kpisLoading } = useBatchPerformanceKPIs(investmentIds);
   
-  // Convert batch KPIs to legacy format for filtering
-  const kpiMap: Record<string, any> = {};
-  Object.entries(batchKPIs).forEach(([id, kpis]) => {
-    kpiMap[id] = {
-      fondPropre: kpis.fondPropre,
-      totalReturn: kpis.totalReturn,
-      totalCfni: kpis.xirrDetails.totalCfni,
-      xirr: kpis.xirr,
-      totalVarValeur: kpis.xirrDetails.deltaValeur,
-      lastVarValeur: kpis.xirrDetails.variationValeurDerniereAnnee,
-      lastCfni: kpis.xirrDetails.cfniDerniereAnnee,
-      ltv: kpis.fondPropreDetails.ltv,
-      crd: kpis.fondPropreDetails.crd,
-      noi: kpis.rendementNetDetails.noi,
-      loyer: kpis.rendementNetDetails.loyer,
-      rendementNet: kpis.rendementNet,
-      gain1: kpis.xirrDetails.gain1,
-      totalReturnCalculated: (kpis.xirrDetails.gain1 / (kpis.fondPropre || 1)) * 100,
-      lastVarValeurYear: kpis.xirrDetails.lastVarValeurYear,
-      lastCfniYear: kpis.xirrDetails.lastCfniYear,
-      gain1Year: kpis.xirrDetails.gain1Year,
-      noiYear: kpis.rendementNetDetails.year,
-      rendementNetYear: kpis.rendementNetDetails.year,
-      totalReturnYear: kpis.totalReturnDetails.year,
-      cocNet: kpis.totalReturnDetails.cocNet,
-    };
-  });
+  // Convert batch KPIs to legacy format for filtering with memoization
+  const kpiMap: Record<string, any> = useMemo(() => {
+    const map: Record<string, any> = {};
+    Object.entries(batchKPIs).forEach(([id, kpis]) => {
+      map[id] = {
+        fondPropre: kpis.fondPropre,
+        totalReturn: kpis.totalReturn,
+        totalCfni: kpis.xirrDetails.totalCfni,
+        xirr: kpis.xirr,
+        totalVarValeur: kpis.xirrDetails.deltaValeur,
+        lastVarValeur: kpis.xirrDetails.variationValeurDerniereAnnee,
+        lastCfni: kpis.xirrDetails.cfniDerniereAnnee,
+        ltv: kpis.fondPropreDetails.ltv,
+        crd: kpis.fondPropreDetails.crd,
+        noi: kpis.rendementNetDetails.noi,
+        loyer: kpis.rendementNetDetails.loyer,
+        rendementNet: kpis.rendementNet,
+        gain1: kpis.xirrDetails.gain1,
+        totalReturnCalculated: (kpis.xirrDetails.gain1 / (kpis.fondPropre || 1)) * 100,
+        lastVarValeurYear: kpis.xirrDetails.lastVarValeurYear,
+        lastCfniYear: kpis.xirrDetails.lastCfniYear,
+        gain1Year: kpis.xirrDetails.gain1Year,
+        noiYear: kpis.rendementNetDetails.year,
+        rendementNetYear: kpis.rendementNetDetails.year,
+        totalReturnYear: kpis.totalReturnDetails.year,
+        cocNet: kpis.totalReturnDetails.cocNet,
+      };
+    });
+    return map;
+  }, [batchKPIs]);
   
   // Apply column filters to investments using the custom hook
   const columnFilteredInvestments = useFilteredInvestments(baseInvestments, kpiMap, investmentTags);

@@ -1318,8 +1318,8 @@ export function PerformanceTab({
                              const gain1 = variationFP + cf; // Variation de FP + CF
                              const gain2 = variationValeur + cfni; // Variation de valeur + CFNI
                              
-                              // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
-                              const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
+                           // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
+                           const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
                               
                               // Calcul Total Return = Gain 1 / FP
                               const totalReturn = row.fp > 0 ? (gain1 / row.fp) * 100 : 0;
