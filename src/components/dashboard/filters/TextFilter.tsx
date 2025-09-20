@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useColumnFilters } from '@/contexts/ColumnFiltersContext';
@@ -17,6 +17,25 @@ export function TextFilter({ column, onFilterApplied, onClose }: TextFilterProps
   useEffect(() => {
     setValue(getFilterValue(column.key).text || '');
   }, [column.key, getFilterValue]);
+
+  // Debounced apply function
+  const debouncedApply = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout;
+      return (newValue: string) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          if (newValue.trim()) {
+            setColumnFilter(column.key, { text: newValue.trim() });
+          } else {
+            clearColumnFilter(column.key);
+          }
+          onFilterApplied();
+        }, 300);
+      };
+    })(),
+    [column.key, setColumnFilter, clearColumnFilter, onFilterApplied]
+  );
 
   const handleApply = () => {
     if (value.trim()) {
@@ -46,7 +65,11 @@ export function TextFilter({ column, onFilterApplied, onClose }: TextFilterProps
       <Input
         placeholder={`Rechercher dans ${column.label.toLowerCase()}...`}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          const newValue = e.target.value;
+          setValue(newValue);
+          debouncedApply(newValue);
+        }}
         onKeyDown={handleKeyDown}
         autoFocus
       />

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useColumnFilters } from '@/contexts/ColumnFiltersContext';
 import { useTags } from '@/hooks/useTags';
 
@@ -24,12 +24,23 @@ export function useFilteredInvestments(
   const { filters } = useColumnFilters();
   const { tags: allTags } = useTags();
 
-  return useMemo(() => {
-    return investments.filter(investment => {
-      // Apply each column filter
-      for (const [columnKey, filter] of Object.entries(filters)) {
-        if (!filter.active) continue;
+  // Memoize active filters to avoid recalculating
+  const activeFilters = useMemo(() => 
+    Object.entries(filters).filter(([, filter]) => filter.active),
+    [filters]
+  );
 
+  // Memoize date parsing to avoid recreating dates
+  const parseDate = useCallback((dateString: string) => new Date(dateString), []);
+
+  return useMemo(() => {
+    if (activeFilters.length === 0) {
+      return investments; // No filters active, return all
+    }
+
+    return investments.filter(investment => {
+      // Apply each active filter
+      for (const [columnKey, filter] of activeFilters) {
         const { value } = filter;
 
         switch (columnKey) {
@@ -49,7 +60,7 @@ export function useFilteredInvestments(
 
           case 'dateInvestment':
             if (value.dateRange && investment.dateInvestment) {
-              const investmentDate = new Date(investment.dateInvestment);
+              const investmentDate = parseDate(investment.dateInvestment);
               if (value.dateRange.from && investmentDate < value.dateRange.from) {
                 return false;
               }
@@ -90,5 +101,5 @@ export function useFilteredInvestments(
 
       return true;
     });
-  }, [investments, filters, kpiData, tags, allTags]);
+  }, [investments, activeFilters, kpiData, tags, parseDate]);
 }

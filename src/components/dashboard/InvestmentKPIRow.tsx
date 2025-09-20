@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Building, TrendingUp } from 'lucide-react';
-import { InvestmentTags } from '@/components/investments/InvestmentTags';
+import { LazyInvestmentTags } from '@/components/investments/LazyInvestmentTags';
 import type { InvestmentKPIs } from '@/types/kpi';
 
 interface InvestmentKPIRowProps {
@@ -17,31 +17,31 @@ interface InvestmentKPIRowProps {
 }
 
 // Optimized component using pre-calculated KPIs
-export function InvestmentKPIRow({ 
+export const InvestmentKPIRow = React.memo(({ 
   investment, 
   kpis,
   visibleColumns,
   isSelected,
   onSelectionChange
-}: InvestmentKPIRowProps) {
+}: InvestmentKPIRowProps) => {
   const loading = !kpis;
-  
-  const formatCurrency = (amount: number) => {
+  const navigate = useNavigate();
+
+  // Memoized formatters
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'EUR',
       minimumFractionDigits: 0,
     }).format(amount);
-  };
+  }, []);
 
-  const formatPercentage = (value: number) => {
+  const formatPercentage = useCallback((value: number) => {
     return `${value.toFixed(1)}%`;
-  };
+  }, []);
 
-  
-  const navigate = useNavigate();
-
-  const getCellValue = (columnKey: string) => {
+  // Memoized cell value calculation
+  const getCellValue = useMemo(() => (columnKey: string) => {
     if (loading) return '...';
 
     switch (columnKey) {
@@ -67,7 +67,7 @@ export function InvestmentKPIRow({
           new Date(investment.dateInvestment).toLocaleDateString('fr-FR') : 
           '-';
       case 'tags':
-        return <InvestmentTags investmentId={investment.id} />;
+        return <LazyInvestmentTags investmentId={investment.id} />;
       case 'fondPropre':
         return formatCurrency(kpis?.fondPropre || 0);
       case 'totalReturn':
@@ -200,9 +200,10 @@ export function InvestmentKPIRow({
       default:
         return '-';
     }
-  };
+  }, [loading, investment, kpis, formatCurrency, formatPercentage]);
 
-  const getCellClass = (columnKey: string, columnType?: string, columnAlign?: string) => {
+  // Memoized cell class calculation
+  const getCellClass = useMemo(() => (columnKey: string, columnType?: string, columnAlign?: string) => {
     let baseClass = '';
     
     if (columnAlign === 'right') {
@@ -261,7 +262,7 @@ export function InvestmentKPIRow({
     }
 
     return baseClass;
-  };
+  }, [loading, kpis]);
 
   return (
     <TableRow>
@@ -291,4 +292,4 @@ export function InvestmentKPIRow({
       </TableCell>
     </TableRow>
   );
-}
+});
