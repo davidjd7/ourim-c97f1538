@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,10 +19,42 @@ import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCar
 import { supabase } from '@/integrations/supabase/client';
 import { YearPicker } from '@/components/ui/year-picker';
 import { FIELD_CONFIG, type DebtCharacteristics as FieldConfigDebtCharacteristics } from './debt/fieldConfig';
-import { logError } from '@/lib/errorHandler';
-import type { CashflowRow, ImmobilisationRow, ValorisationRow, DebtFlowRow, SyntheseRow } from '@/types/kpi';
-import { getSyntheseData, calculateXIRR, calculateNOI, calculateCapitalFin, calculateFlux } from '@/lib/kpiCalculations';
+interface CashflowRow {
+  id?: string;
+  date: string;
+  loyer: number;
+  rex: number;
+  retraitAmort: number;
+  retraitAutres: number;
+  note: string;
+}
+interface ImmobilisationRow {
+  id?: string;
+  date: string;
+  montant: number;
+  note: string;
+}
+interface ValorisationRow {
+  id?: string;
+  date: string;
+  valeur: number;
+  note: string;
+}
 type DebtCharacteristics = FieldConfigDebtCharacteristics;
+interface DebtFlowRow {
+  id?: string;
+  date: string;
+  capitalDebut: number;
+  rmbtCapital: number;
+  rmbtInteret: number;
+}
+interface SyntheseRow {
+  date: string;
+  flux: number;
+  valeur: number;
+  crd: number;
+  fp: number;
+}
 interface PerformanceTabProps {
   investmentId: string;
   isEditMode?: boolean;
@@ -101,9 +133,9 @@ export function PerformanceTab({
         note: cf.note || ''
       })) || [];
       setCashflows(formattedCashflows);
-      } catch (error) {
-        logError(error, { component: 'PerformanceTab', function: 'loadCashflows', investmentId });
-      }
+    } catch (error) {
+      console.error('Error loading cashflows:', error);
+    }
   };
   const loadImmobilisations = async () => {
     try {
@@ -122,7 +154,7 @@ export function PerformanceTab({
       })) || [];
       setImmobilisations(formattedImmos);
     } catch (error) {
-      logError(error, { component: 'PerformanceTab', function: 'loadImmobilisations', investmentId });
+      console.error('Error loading immobilisations:', error);
     }
   };
   const loadValorisations = async () => {
@@ -142,7 +174,7 @@ export function PerformanceTab({
       })) || [];
       setValorisations(formattedValos);
     } catch (error) {
-      logError(error, { component: 'PerformanceTab', function: 'loadValorisations', investmentId });
+      console.error('Error loading valorisations:', error);
     }
   };
   const loadDebtCharacteristics = async () => {
@@ -188,7 +220,7 @@ export function PerformanceTab({
         }
       }
     } catch (error) {
-      logError(error, { component: 'PerformanceTab', function: 'loadDebtCharacteristics', investmentId });
+      console.error('Error loading debt characteristics:', error);
     }
   };
   const loadDebtFlows = async () => {
@@ -223,7 +255,7 @@ export function PerformanceTab({
       
       setDebtFlows(formattedFlows);
     } catch (error) {
-      logError(error, { component: 'PerformanceTab', function: 'loadDebtFlows', investmentId });
+      console.error('Error loading debt flows:', error);
     }
   };
 
@@ -306,13 +338,81 @@ export function PerformanceTab({
       </div>
     );
   };
-  // Memoize synthesis data calculation for performance
-  const syntheseData = useMemo(() => {
-    return getSyntheseData(cashflows, immobilisations, debtFlows, valorisations);
-  }, [cashflows, immobilisations, debtFlows, valorisations]);
+  const calculateEBITDA = (cashflow: CashflowRow) => {
+    return cashflow.rex + cashflow.retraitAmort + cashflow.retraitAutres;
+  };
+  const calculateCapitalFin = (flow: DebtFlowRow) => {
+    return flow.capitalDebut - flow.rmbtCapital;
+  };
+  const calculateFlux = (flow: DebtFlowRow) => {
+    return flow.rmbtCapital + flow.rmbtInteret;
+  };
+
+  // Calculate synthesis data by grouping all data by date
+  const getSyntheseData = (): SyntheseRow[] => {
+    const dateMap = new Map<string, SyntheseRow>();
+
+    // Initialize all dates
+    const allDates = new Set<string>();
+    cashflows.forEach(cf => allDates.add(cf.date));
+    immobilisations.forEach(immo => allDates.add(immo.date));
+    debtFlows.forEach(df => allDates.add(df.date));
+    valorisations.forEach(valo => allDates.add(valo.date));
+
+    // Initialize all dates in map
+    allDates.forEach(date => {
+      dateMap.set(date, {
+        date,
+        flux: 0,
+        valeur: 0,
+        crd: 0,
+        fp: 0
+      });
+    });
+
+    // Add EBITDA from cashflows
+    cashflows.forEach(cf => {
+      const existing = dateMap.get(cf.date);
+      if (existing) {
+        existing.flux += calculateEBITDA(cf);
+      }
+    });
+
+    // Add immobilisation amounts (subtract)
+    immobilisations.forEach(immo => {
+      const existing = dateMap.get(immo.date);
+      if (existing) {
+        existing.flux -= immo.montant;
+      }
+    });
+
+    // Add debt flows and CRD (subtract debt flows)
+    debtFlows.forEach(df => {
+      const existing = dateMap.get(df.date);
+      if (existing) {
+        existing.flux -= calculateFlux(df);
+        existing.crd = calculateCapitalFin(df);
+      }
+    });
+
+    // Add valorisations
+    valorisations.forEach(valo => {
+      const existing = dateMap.get(valo.date);
+      if (existing) {
+        existing.valeur = valo.valeur;
+      }
+    });
+
+    // Calculate FP = Valeur - CRD
+    dateMap.forEach(row => {
+      row.fp = row.valeur - row.crd;
+    });
+    return Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
 
   // Get chart data grouped by year
   const getChartData = () => {
+    const syntheseData = getSyntheseData();
     const yearMap = new Map<number, { year: number; cfni: number; valeur: number; varValeur: number; gain: number; fp: number }>();
 
     // First pass: Group data by year and calculate totals
@@ -325,7 +425,7 @@ export function PerformanceTab({
       
       // Calculate CFNI for this row
       const cashflowDate = cashflows.find(cf => cf.date === row.date);
-      const ebitda = cashflowDate ? calculateNOI(cashflowDate) : 0;
+      const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
       const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
       const immobilisationAmount = immobilisationDate?.montant || 0;
       const noiAjuste = ebitda - immobilisationAmount;
@@ -356,7 +456,7 @@ export function PerformanceTab({
         const yearDataFromSynthese = syntheseData.filter(row => new Date(row.date).getFullYear() === yearData.year);
         yearDataFromSynthese.forEach(row => {
           const cashflowDate = cashflows.find(cf => cf.date === row.date);
-          const ebitda = cashflowDate ? calculateNOI(cashflowDate) : 0;
+          const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
           const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
           const immobilisationAmount = immobilisationDate?.montant || 0;
           const noiAjuste = ebitda - immobilisationAmount;
@@ -379,7 +479,7 @@ export function PerformanceTab({
         const yearDataFromSynthese = syntheseData.filter(row => new Date(row.date).getFullYear() === yearData.year);
         yearDataFromSynthese.forEach(row => {
           const cashflowDate = cashflows.find(cf => cf.date === row.date);
-          const ebitda = cashflowDate ? calculateNOI(cashflowDate) : 0;
+          const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
           const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
           const immobilisationAmount = immobilisationDate?.montant || 0;
           const noiAjuste = ebitda - immobilisationAmount;
@@ -1051,6 +1151,7 @@ export function PerformanceTab({
   };
 
   // Calculate KPI values from Synthèse data
+  const syntheseData = getSyntheseData();
   const latestSynthese = syntheseData[syntheseData.length - 1];
   const oldestSynthese = syntheseData[0];
 
@@ -1072,10 +1173,10 @@ export function PerformanceTab({
   // Cap Rate = flux / Valeur à la date la plus récente  
   const capRate = latestSynthese?.valeur && latestSynthese.valeur !== 0 ? latestSynthese.flux / latestSynthese.valeur * 100 : 0;
 
-  // ICR = NOI le plus récent / Rmbt Intérêt le plus récent
-  const latestNOI = latestCashflow ? calculateNOI(latestCashflow) : 0;
+  // ICR = EBITDA le plus récent / Rmbt Intérêt le plus récent
+  const latestEBITDA = latestCashflow ? calculateEBITDA(latestCashflow) : 0;
   const latestRmbtInteret = latestDebtFlow?.rmbtInteret || 0;
-  const icr = latestRmbtInteret > 0 ? latestNOI / latestRmbtInteret : 0;
+  const icr = latestRmbtInteret > 0 ? latestEBITDA / latestRmbtInteret : 0;
 
   // Total Gain Valeur = Valeur la plus récente - Valeur la plus ancienne
   const totalGainValeur = (latestSynthese?.valeur || 0) - (oldestSynthese?.valeur || 0);
@@ -1187,11 +1288,12 @@ export function PerformanceTab({
                          </TableRow>
                       </TableHeader>
                       <TableBody>
-                          {syntheseData.map((row, index) => {
+                          {getSyntheseData().map((row, index) => {
+                             const syntheseData = getSyntheseData();
                              
-                             // Calculs pour NOI ajusté (NOI - immobilisation)
+                             // Calculs pour NOI ajusté (EBITDA - immobilisation)
                              const cashflowDate = cashflows.find(cf => cf.date === row.date);
-                             const ebitda = cashflowDate ? calculateNOI(cashflowDate) : 0;
+                             const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
                              
                              const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
                              const immobilisationAmount = immobilisationDate?.montant || 0;
@@ -1451,11 +1553,12 @@ export function PerformanceTab({
                           </TableRow>
                        </TableHeader>
                   <TableBody>
-                      {syntheseData.map((row, index) => {
+                      {getSyntheseData().map((row, index) => {
+                         const syntheseData = getSyntheseData();
                          
-                         // Calculs pour NOI ajusté (NOI - immobilisation)
+                         // Calculs pour NOI ajusté (EBITDA - immobilisation)
                          const cashflowDate = cashflows.find(cf => cf.date === row.date);
-                         const ebitda = cashflowDate ? calculateNOI(cashflowDate) : 0;
+                         const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
                          
                          const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
                          const immobilisationAmount = immobilisationDate?.montant || 0;
@@ -1528,13 +1631,14 @@ export function PerformanceTab({
                             </TableCell>
                          </TableRow>
                        })}
-                       {syntheseData.length === 0 && <TableRow>
+                       {getSyntheseData().length === 0 && <TableRow>
                             <TableCell colSpan={13} className="text-center py-8 text-muted-foreground text-xs">
                               Aucune donnée disponible pour la synthèse
                             </TableCell>
                          </TableRow>}
                        {/* Ligne Total */}
-                       {syntheseData.length > 0 && (() => {
+                       {getSyntheseData().length > 0 && (() => {
+                         const syntheseData = getSyntheseData();
                          
                           // Calculer les totaux pour NOI ajusté, CFNI, CF, Gain1 et Gain2
                            // Et les moyennes pour Rendement net, COC net et Total Return
@@ -1553,9 +1657,9 @@ export function PerformanceTab({
                            let countTotalReturn = 0;
                          
                           syntheseData.forEach((row, index) => {
-                            // Calculs pour NOI ajusté (NOI - immobilisation)
+                            // Calculs pour NOI ajusté (EBITDA - immobilisation)
                             const cashflowDate = cashflows.find(cf => cf.date === row.date);
-                            const ebitda = cashflowDate ? calculateNOI(cashflowDate) : 0;
+                            const ebitda = cashflowDate ? calculateEBITDA(cashflowDate) : 0;
                             
                             const immobilisationDate = immobilisations.find(immo => immo.date === row.date);
                             const immobilisationAmount = immobilisationDate?.montant || 0;
@@ -1828,13 +1932,13 @@ export function PerformanceTab({
                     }
                   })} /> : formatCurrency(cashflow.retraitAutres)}
                      </TableCell>
-                     <TableCell className={`financial-value font-medium ${calculateNOI(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? 'text-success' : 'text-destructive'}`}>
-                       {calculateNOI(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? '+' : ''}
-                       {formatCurrency(calculateNOI(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow))}
+                     <TableCell className={`financial-value font-medium ${calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                       {calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) >= 0 ? '+' : ''}
+                       {formatCurrency(calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow))}
                      </TableCell>
                       <TableCell className="financial-value font-medium">
                         {cashflow.loyer && cashflow.loyer > 0 
-                          ? `${((calculateNOI(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) / cashflow.loyer) * 100).toFixed(1)}%` 
+                          ? `${((calculateEBITDA(editingCashflow && editingCashflow.index === index ? editingCashflow.row : cashflow) / cashflow.loyer) * 100).toFixed(1)}%` 
                           : 'N/A'}
                        </TableCell>
                      <TableCell>
