@@ -6,6 +6,7 @@ export interface CashflowRow {
   retraitAmort: number;
   retraitAutres: number;
   loyer: number;
+  note?: string;
 }
 
 export interface ValorisationRow {
