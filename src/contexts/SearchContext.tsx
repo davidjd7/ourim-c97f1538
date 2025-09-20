@@ -19,14 +19,55 @@ interface SearchProviderProps {
 }
 
 export function SearchProvider({ children }: SearchProviderProps) {
-  const { filteredInvestments: companyFilteredInvestments } = useInvestments();
-  const searchData = useInvestmentSearch(companyFilteredInvestments);
+  try {
+    const investmentsContext = useInvestments();
+    
+    // Wait for the investments context to be ready
+    if (!investmentsContext || investmentsContext.loading) {
+      // Provide a loading state context
+      const loadingData = {
+        searchQuery: '',
+        debouncedQuery: '',
+        searchResults: [],
+        showResults: false,
+        filteredInvestments: [],
+        setSearchQuery: () => {},
+        setShowResults: () => {}
+      };
+      
+      return (
+        <SearchContext.Provider value={loadingData}>
+          {children}
+        </SearchContext.Provider>
+      );
+    }
 
-  return (
-    <SearchContext.Provider value={searchData}>
-      {children}
-    </SearchContext.Provider>
-  );
+    const searchData = useInvestmentSearch(investmentsContext.filteredInvestments);
+
+    return (
+      <SearchContext.Provider value={searchData}>
+        {children}
+      </SearchContext.Provider>
+    );
+  } catch (error) {
+    console.error('Error in SearchProvider:', error);
+    // Provide a fallback context value
+    const fallbackData = {
+      searchQuery: '',
+      debouncedQuery: '',
+      searchResults: [],
+      showResults: false,
+      filteredInvestments: [],
+      setSearchQuery: () => {},
+      setShowResults: () => {}
+    };
+    
+    return (
+      <SearchContext.Provider value={fallbackData}>
+        {children}
+      </SearchContext.Provider>
+    );
+  }
 }
 
 export function useSearch() {
