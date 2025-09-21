@@ -4,10 +4,14 @@ import { ConsolidatedKPIView } from '@/components/dashboard/ConsolidatedKPIView'
 import { Button } from '@/components/ui/button';
 import { BarChart3, Table } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
+
 type ViewMode = 'table' | 'kpi';
+
+const EMPTY_SET = new Set<string>();
+
 export default function Investissements() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
-  const [selectedInvestments, setSelectedInvestments] = useState<Set<string>>(new Set());
+  const [selectedInvestments, setSelectedInvestments] = useState<Set<string>>(EMPTY_SET);
   const {
     filteredInvestments
   } = useSearch();
@@ -23,7 +27,6 @@ export default function Investissements() {
         <div>
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold text-foreground">Investissements</h1>
-            {viewMode === 'kpi'}
           </div>
         </div>
         

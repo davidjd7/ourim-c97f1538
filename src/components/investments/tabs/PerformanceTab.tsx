@@ -19,6 +19,7 @@ import { TrendingUp, TrendingDown, Calendar, Plus, Trash2, Edit, Save, CreditCar
 import { supabase } from '@/integrations/supabase/client';
 import { YearPicker } from '@/components/ui/year-picker';
 import { FIELD_CONFIG, type DebtCharacteristics as FieldConfigDebtCharacteristics } from './debt/fieldConfig';
+import { logError } from '@/lib/errorHandler';
 interface CashflowRow {
   id?: string;
   date: string;
@@ -134,7 +135,7 @@ export function PerformanceTab({
       })) || [];
       setCashflows(formattedCashflows);
     } catch (error) {
-      console.error('Error loading cashflows:', error);
+      logError(error, { component: 'PerformanceTab', function: 'loadCashflows', investmentId });
     }
   };
   const loadImmobilisations = async () => {
@@ -154,7 +155,7 @@ export function PerformanceTab({
       })) || [];
       setImmobilisations(formattedImmos);
     } catch (error) {
-      console.error('Error loading immobilisations:', error);
+      logError(error, { component: 'PerformanceTab', function: 'loadImmobilisations', investmentId });
     }
   };
   const loadValorisations = async () => {
@@ -174,7 +175,7 @@ export function PerformanceTab({
       })) || [];
       setValorisations(formattedValos);
     } catch (error) {
-      console.error('Error loading valorisations:', error);
+      logError(error, { component: 'PerformanceTab', function: 'loadValorisations', investmentId });
     }
   };
   const loadDebtCharacteristics = async () => {
@@ -220,7 +221,7 @@ export function PerformanceTab({
         }
       }
     } catch (error) {
-      console.error('Error loading debt characteristics:', error);
+      logError(error, { component: 'PerformanceTab', function: 'loadDebtCharacteristics', investmentId });
     }
   };
   const loadDebtFlows = async () => {
@@ -255,7 +256,7 @@ export function PerformanceTab({
       
       setDebtFlows(formattedFlows);
     } catch (error) {
-      console.error('Error loading debt flows:', error);
+      logError(error, { component: 'PerformanceTab', function: 'loadDebtFlows', investmentId });
     }
   };
 

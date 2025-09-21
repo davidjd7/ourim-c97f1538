@@ -394,7 +394,9 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
   };
 
   const notifyInvestmentDataChanged = (investmentId: string) => {
-    console.log('Investment data changed for:', investmentId);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Investment data changed for:', investmentId);
+    }
     setLastDataChangeTimestamp(Date.now());
   };
 

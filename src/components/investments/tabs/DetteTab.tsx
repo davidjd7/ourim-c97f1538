@@ -11,6 +11,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logError } from '@/lib/errorHandler';
 
 // Configuration centralisée des champs
 interface FieldConfig {
@@ -263,7 +264,7 @@ export function DetteTab({ investmentId }: DetteTabProps) {
         setDebtFlows([]);
       }
     } catch (error) {
-      console.error('Error loading debt data:', error);
+      logError(error, { component: 'DetteTab', function: 'loadDebtData', investmentId });
       toast.error('Erreur lors du chargement des dettes');
     } finally {
       setLoading(false);
@@ -459,7 +460,7 @@ export function DetteTab({ investmentId }: DetteTabProps) {
         toast.success('Dette ajoutée avec succès');
       }
     } catch (error) {
-      console.error('Error adding debt:', error);
+      logError(error, { component: 'DetteTab', function: 'handleAddDebt', investmentId });
       toast.error('Erreur lors de l\'ajout de la dette');
     }
   };
