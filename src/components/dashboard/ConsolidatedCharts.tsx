@@ -51,7 +51,6 @@ const chartConfig: ChartConfig = {
   ltv: { label: "LTV (%)", color: "hsl(var(--primary))" },
   xirr: { label: "TRI (%)", color: "hsl(var(--success))" },
   rendementNet: { label: "Rendement Net (%)", color: "hsl(var(--primary))" },
-  rendementNet3Y: { label: "Moyenne 3Y (%)", color: "hsl(var(--success))" },
   valeur: { label: "Valeur", color: "hsl(var(--primary))" },
   gain: { label: "Gain", color: "hsl(var(--success))" },
   consolidated: { label: "Consolidé", color: "hsl(var(--primary))" },
@@ -88,70 +87,6 @@ export function ConsolidatedCharts({
     });
   };
 
-  // Utility function to calculate historical yields
-  const calculateHistoricalYields = (investmentData: InvestmentRawData) => {
-    const synthesis = getSyntheseData(
-      investmentData.cashflows,
-      investmentData.immobilisations,
-      investmentData.debtFlows,
-      investmentData.valorisations
-    );
-    
-    const currentYear = new Date().getFullYear();
-    const currentYearData = synthesis.filter(row => 
-      new Date(row.date).getFullYear() === currentYear
-    );
-    
-    const last3Years = synthesis.filter(row => {
-      const year = new Date(row.date).getFullYear();
-      return year >= currentYear - 2 && year <= currentYear;
-    });
-    
-    // Calculate current year rendement
-    const currentYearNOI = currentYearData.reduce((sum, row) => sum + calculateNOI({ 
-      date: row.date, 
-      rex: 0, 
-      retraitAmort: 0, 
-      retraitAutres: 0, 
-      loyer: 0 
-    }), 0);
-    const currentYearValeur = currentYearData.length > 0 ? currentYearData[currentYearData.length - 1].valeur : 0;
-    const currentRendement = currentYearValeur > 0 ? (currentYearNOI / currentYearValeur) * 100 : 0;
-    
-    // Calculate 3-year average rendement
-    const totalNOI3Y = last3Years.reduce((sum, row) => sum + calculateNOI({ 
-      date: row.date, 
-      rex: 0, 
-      retraitAmort: 0, 
-      retraitAutres: 0, 
-      loyer: 0 
-    }), 0);
-    const avgValeur3Y = last3Years.length > 0 ? 
-      last3Years.reduce((sum, row) => sum + row.valeur, 0) / last3Years.length : 0;
-    const avgRendement3Y = avgValeur3Y > 0 ? (totalNOI3Y / avgValeur3Y) * 100 : 0;
-    
-    return {
-      currentYear: currentRendement,
-      average3Y: avgRendement3Y / 3 // Average per year
-    };
-  };
-
-  // Calculate yearly XIRR for heatmap
-  const calculateYearlyXIRR = (investmentData: InvestmentRawData, targetYear: number) => {
-    const synthesis = getSyntheseData(
-      investmentData.cashflows,
-      investmentData.immobilisations,
-      investmentData.debtFlows,
-      investmentData.valorisations
-    );
-    
-    const yearData = synthesis.filter(row => 
-      new Date(row.date).getFullYear() <= targetYear
-    );
-    
-    return yearData.length >= 2 ? calculateXIRR(yearData) : 0;
-  };
-
   // 1. Scatter Plot Data (LTV vs TRI)
   const scatterData = useMemo(() => {
     return Array.from(selectedInvestments).map(investmentId => {
@@ -164,7 +99,7 @@ export function ConsolidatedCharts({
         xirr: kpis.xirr,
         valeur: kpis.fondPropreDetails.valeur,
         name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
-        r: Math.max(5, Math.min(25, Math.sqrt(kpis.fondPropreDetails.valeur / 50000))) // Scale radius based on valeur
+        size: Math.max(20, Math.min(200, kpis.fondPropreDetails.valeur / 5000)) // Scale size based on valeur
       };
     }).filter(Boolean);
   }, [selectedInvestments, batchKPIs, investments]);
@@ -226,7 +161,9 @@ export function ConsolidatedCharts({
       });
     });
 
-    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+    const sortedData = Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+    // Omit the first year as requested
+    return sortedData.slice(1);
   }, [syntheticTableData, rawByInvestment, evolutionType, investments]);
 
   // 3. Histogram Data (Rendement Net 2024)
@@ -292,8 +229,6 @@ export function ConsolidatedCharts({
     };
   }, [selectedInvestments, batchKPIs]);
 
-  // 6. Heatmap Data (Removed as requested)
-
   // Colors for charts
   const COLORS = [
     'hsl(var(--primary))',
@@ -325,9 +260,79 @@ export function ConsolidatedCharts({
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Graphiques Consolidés</h2>
       
-      {/* First Row: Scatter + Time Evolution */}
+      {/* First Row: Time Evolution only (full width) */}
+      <div className="grid gap-4">
+        {/* Time Evolution Curve */}
+        <Card className="card-financial">
+          <CardHeader>
+            <CardTitle>Évolution Temporelle</CardTitle>
+            <CardDescription>
+              Evolution par année avec courbe consolidée sur axe droit
+            </CardDescription>
+            <div className="flex space-x-6 mt-4">
+              <RadioGroup 
+                value={evolutionType} 
+                onValueChange={(value) => setEvolutionType(value as 'gains' | 'valeur' | 'cfni')}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="gains" id="gains" />
+                  <Label htmlFor="gains" className="text-sm">Gains</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="valeur" id="valeur" />
+                  <Label htmlFor="valeur" className="text-sm">Valeur</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cfni" id="cfni" />
+                  <Label htmlFor="cfni" className="text-sm">CFNI</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={timeEvolutionData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="year" />
+                  <YAxis yAxisId="left" tickFormatter={(value) => formatCurrency(value)} />
+                  <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => formatCurrency(value)} />
+                  <Tooltip 
+                    formatter={(value, name) => [formatCurrency(value as number), name === 'consolidated' ? 'Consolidé' : investments.find(inv => inv.id === name)?.name || name]}
+                    labelFormatter={(label) => `Année ${label}`}
+                  />
+                  <Legend />
+                  {Array.from(selectedInvestments).map((investmentId, index) => (
+                    <Line
+                      key={investmentId}
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey={investmentId}
+                      stroke={COLORS[index % COLORS.length]}
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      name={investments.find(inv => inv.id === investmentId)?.name || `Inv. ${investmentId.slice(0, 8)}`}
+                    />
+                  ))}
+                  <Line 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="consolidated" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={3}
+                    name="Consolidé"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Second Row: LTV vs TRI + Value Distribution */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* 1. Scatter Plot (LTV vs TRI) */}
+        {/* Scatter Plot (LTV vs TRI) */}
         <Card className="card-financial">
           <CardHeader>
             <CardTitle>LTV vs TRI</CardTitle>
@@ -374,84 +379,66 @@ export function ConsolidatedCharts({
                     data={scatterData}
                     fill="hsl(var(--primary))"
                     fillOpacity={0.6}
-                  />
+                  >
+                    {scatterData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} r={Math.sqrt(entry.size)} />
+                    ))}
+                  </Scatter>
                 </ScatterChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>
 
-        {/* 2. Time Evolution Curve */}
+        {/* Donut Chart (Value Distribution) */}
         <Card className="card-financial">
           <CardHeader>
-            <CardTitle>Évolution Temporelle</CardTitle>
+            <CardTitle>Répartition des Valeurs</CardTitle>
             <CardDescription>
-              Evolution par année avec courbe consolidée sur axe droit
+              Distribution par investissement
             </CardDescription>
-            <div className="flex space-x-6 mt-4">
-              <RadioGroup 
-                value={evolutionType} 
-                onValueChange={(value) => setEvolutionType(value as 'gains' | 'valeur' | 'cfni')}
-                className="flex space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="gains" id="gains" />
-                  <Label htmlFor="gains" className="text-sm">Gains</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="valeur" id="valeur" />
-                  <Label htmlFor="valeur" className="text-sm">Valeur</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cfni" id="cfni" />
-                  <Label htmlFor="cfni" className="text-sm">CFNI</Label>
-                </div>
-              </RadioGroup>
-            </div>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={timeEvolutionData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis yAxisId="left" tickFormatter={(value) => formatCurrency(value)} />
-                  <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => formatCurrency(value)} />
-                  <Tooltip 
-                    formatter={(value, name) => [formatCurrency(value as number), name === 'consolidated' ? 'Consolidé' : investments.find(inv => inv.id === name)?.name || name]}
-                    labelFormatter={(label) => `Année ${label}`}
+                <PieChart>
+                  <Pie
+                    data={donutData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={120}
+                    dataKey="value"
+                    nameKey="name"
+                  >
+                    {donutData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length > 0) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                            <p className="font-semibold">{data.name}</p>
+                            <p className="text-sm">Valeur: {formatCurrency(data.value)}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
-                  <Legend />
-                  {Array.from(selectedInvestments).map((investmentId, index) => (
-                    <Line
-                      key={investmentId}
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey={investmentId}
-                      stroke={COLORS[index % COLORS.length]}
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      name={investments.find(inv => inv.id === investmentId)?.name || `Inv. ${investmentId.slice(0, 8)}`}
-                    />
-                  ))}
-                  <Line 
-                    yAxisId="right"
-                    type="monotone" 
-                    dataKey="consolidated" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={3}
-                    name="Consolidé"
-                  />
-                </LineChart>
+                </PieChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Second Row: Histogram + Donut */}
+      {/* Third Row: Net Rendement + Distribution */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* 3. Histogram 2024 Only */}
+        {/* Histogram Net Rendement 2024 */}
         <Card className="card-financial">
           <CardHeader>
             <CardTitle>Rendement Net 2024</CardTitle>
@@ -476,7 +463,8 @@ export function ConsolidatedCharts({
                   />
                   <Bar 
                     dataKey="rendement2024" 
-                    fill="hsl(var(--primary))" 
+                    fill="hsl(var(--primary))"
+                    fillOpacity={0.8}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -484,141 +472,81 @@ export function ConsolidatedCharts({
           </CardContent>
         </Card>
 
-        {/* 4. Donut Chart (Value Distribution) */}
+        {/* Boxplot Distribution */}
         <Card className="card-financial">
           <CardHeader>
-            <CardTitle>Répartition des Valeurs</CardTitle>
+            <CardTitle>Distribution des Rendements</CardTitle>
             <CardDescription>
-              Distribution de la valeur totale par actif
+              Analyse statistique - Rendement Net et TRI
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={donutData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {donutData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length > 0) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
-                            <p className="font-semibold">{data.name}</p>
-                            <p className="text-sm">Valeur: {formatCurrency(data.value)}</p>
-                          </div>
-                        );
-                      }
-                      return null;
+            <div className="space-y-6">
+              {/* Rendement Net Distribution */}
+              <div>
+                <h4 className="text-sm font-medium mb-2">Rendement Net (%)</h4>
+                <div className="relative">
+                  <div 
+                    className="h-6 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded"
+                    style={{
+                      background: `linear-gradient(to right, 
+                        hsl(0 70% 70%) 0%, 
+                        hsl(45 70% 70%) 50%, 
+                        hsl(120 70% 70%) 100%)`
                     }}
                   />
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
+                  {boxplotData.rendement && (
+                    <>
+                      <div 
+                        className="absolute top-0 h-6 w-1 bg-black"
+                        style={{
+                          left: `${((boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min)) * 100}%`
+                        }}
+                      />
+                      <div className="flex justify-between text-xs mt-1">
+                        <span>{boxplotData.rendement.min.toFixed(1)}%</span>
+                        <span>{boxplotData.rendement.max.toFixed(1)}%</span>
+                      </div>
+                      <div className="text-center text-xs mt-1">
+                        Médiane: {boxplotData.rendement.median.toFixed(1)}%
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
 
-      {/* Third Row: Boxplot Only */}
-      <div className="grid gap-4 md:grid-cols-1">
-        {/* 5. Boxplot */}
-        <Card className="card-financial">
-          <CardHeader>
-            <CardTitle>Distribution des Rendements et TRI</CardTitle>
-            <CardDescription>
-              Analyse statistique comparative
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] flex items-center justify-center">
-              {boxplotData.rendement && boxplotData.xirr ? (
-                <div className="w-full space-y-8">
-                  {/* Rendement Net */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-4 text-center">Rendement Net (%)</h4>
-                    <div className="grid grid-cols-5 gap-4 text-xs mb-2">
-                      <div>
-                        <div className="font-semibold">Min</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData.rendement.min)}</div>
-                      </div>
-                      <div>
-                        <div className="font-semibold">Q1</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData.rendement.q1)}</div>
-                      </div>
-                      <div>
-                        <div className="font-semibold">Médiane</div>
-                        <div className="text-success font-semibold">{formatPercentage(boxplotData.rendement.median)}</div>
-                      </div>
-                      <div>
-                        <div className="font-semibold">Q3</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData.rendement.q3)}</div>
-                      </div>
-                      <div>
-                        <div className="font-semibold">Max</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData.rendement.max)}</div>
-                      </div>
-                    </div>
-                    <div className="w-full h-6 bg-gradient-to-r from-destructive via-warning to-success rounded-lg relative">
+              {/* TRI Distribution */}
+              <div>
+                <h4 className="text-sm font-medium mb-2">TRI (%)</h4>
+                <div className="relative">
+                  <div 
+                    className="h-6 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded"
+                    style={{
+                      background: `linear-gradient(to right, 
+                        hsl(0 70% 70%) 0%, 
+                        hsl(45 70% 70%) 50%, 
+                        hsl(120 70% 70%) 100%)`
+                    }}
+                  />
+                  {boxplotData.xirr && (
+                    <>
                       <div 
-                        className="absolute w-1 h-full bg-foreground rounded"
-                        style={{ 
-                          left: `${((boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min)) * 100}%` 
+                        className="absolute top-0 h-6 w-1 bg-black"
+                        style={{
+                          left: `${((boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min)) * 100}%`
                         }}
                       />
-                    </div>
-                  </div>
-                  
-                  {/* TRI */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-4 text-center">TRI (%)</h4>
-                    <div className="grid grid-cols-5 gap-4 text-xs mb-2">
-                      <div>
-                        <div className="font-semibold">Min</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData.xirr.min)}</div>
+                      <div className="flex justify-between text-xs mt-1">
+                        <span>{boxplotData.xirr.min.toFixed(1)}%</span>
+                        <span>{boxplotData.xirr.max.toFixed(1)}%</span>
                       </div>
-                      <div>
-                        <div className="font-semibold">Q1</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData.xirr.q1)}</div>
+                      <div className="text-center text-xs mt-1">
+                        Médiane: {boxplotData.xirr.median.toFixed(1)}%
                       </div>
-                      <div>
-                        <div className="font-semibold">Médiane</div>
-                        <div className="text-success font-semibold">{formatPercentage(boxplotData.xirr.median)}</div>
-                      </div>
-                      <div>
-                        <div className="font-semibold">Q3</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData.xirr.q3)}</div>
-                      </div>
-                      <div>
-                        <div className="font-semibold">Max</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData.xirr.max)}</div>
-                      </div>
-                    </div>
-                    <div className="w-full h-6 bg-gradient-to-r from-destructive via-warning to-success rounded-lg relative">
-                      <div 
-                        className="absolute w-1 h-full bg-foreground rounded"
-                        style={{ 
-                          left: `${((boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min)) * 100}%` 
-                        }}
-                      />
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center text-muted-foreground">
-                  Pas assez de données pour l'analyse statistique
-                </div>
-              )}
+              </div>
             </div>
           </CardContent>
         </Card>
