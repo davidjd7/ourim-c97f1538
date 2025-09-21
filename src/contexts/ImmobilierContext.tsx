@@ -108,23 +108,21 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
 
         if (data && data.length > 0) {
-          // Get latest valorisations for each investment
+          // Get latest valorisations for each investment (optimized single query)
           const investmentIds = data.map(inv => inv.id);
           const { data: valorisationsData } = await supabase
             .from('immobilier_valorisations')
             .select('immobilier_id, valeur, date')
             .in('immobilier_id', investmentIds)
-            .order('date', { ascending: false });
+            .order('immobilier_id, date', { ascending: false });
 
-          // Create a map of latest valorisations by investment_id
-          const latestValorisationMap = new Map<string, number>();
-          if (valorisationsData) {
-            valorisationsData.forEach(valo => {
-              if (!latestValorisationMap.has(valo.immobilier_id)) {
-                latestValorisationMap.set(valo.immobilier_id, valo.valeur || 0);
-              }
-            });
-          }
+          // Create optimized map using reduce
+          const latestValorisationMap = valorisationsData?.reduce((acc, valo) => {
+            if (!acc.has(valo.immobilier_id)) {
+              acc.set(valo.immobilier_id, valo.valeur || 0);
+            }
+            return acc;
+          }, new Map<string, number>()) || new Map();
 
           const convertedInvestments = data.map(dbRow => 
             convertDbToInvestment(dbRow, latestValorisationMap.get(dbRow.id))

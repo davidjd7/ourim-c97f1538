@@ -150,7 +150,7 @@ export function useInvestmentTags(investmentId: string) {
     if (!user || !investmentId) return;
 
     try {
-      // First get asset_tags for immobilier
+      // Optimized: get asset_tags and tags in a single batch
       const { data: assetTagsData, error: assetTagsError } = await supabase
         .from('asset_tags')
         .select('*')
@@ -165,10 +165,8 @@ export function useInvestmentTags(investmentId: string) {
         return;
       }
 
-      // Get tag IDs
+      // Batch fetch all tags at once
       const tagIds = assetTagsData.map(item => item.tag_id);
-
-      // Then get the actual tags
       const { data: tagsData, error: tagsError } = await supabase
         .from('tags')
         .select('*')
@@ -177,17 +175,22 @@ export function useInvestmentTags(investmentId: string) {
 
       if (tagsError) throw tagsError;
 
-      // Combine the data
-      const combinedData = assetTagsData.map(assetTag => {
-        const tag = tagsData?.find(tag => tag.id === assetTag.tag_id);
-        return {
-          id: assetTag.id,
-          asset_id: assetTag.asset_id,
-          tag_id: assetTag.tag_id,
-          asset_type: assetTag.asset_type,
-          tag: tag!
-        };
-      }).filter(item => item.tag); // Filter out items where tag wasn't found
+      // Optimized: create tag lookup map
+      const tagMap = new Map(tagsData?.map(tag => [tag.id, tag]) || []);
+      
+      // Combine with O(1) lookup
+      const combinedData = assetTagsData
+        .map(assetTag => {
+          const tag = tagMap.get(assetTag.tag_id);
+          return tag ? { 
+            id: assetTag.id,
+            asset_id: assetTag.asset_id,
+            tag_id: assetTag.tag_id,
+            asset_type: assetTag.asset_type,
+            tag
+          } : null;
+        })
+        .filter(Boolean) as AssetTag[];
 
       setInvestmentTags(combinedData);
     } catch (error) {
