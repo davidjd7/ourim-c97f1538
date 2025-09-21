@@ -14,8 +14,7 @@ export default function Parametres() {
   
   // État pour les paramètres
   const [settings, setSettings] = useState({
-    currency: 'EUR',
-    notaryFees: 8.00
+    currency: 'EUR'
   });
 
   const handleSettingChange = (key: string, value: string | number) => {
@@ -75,7 +74,7 @@ export default function Parametres() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="currency">Devise de Reporting</Label>
                   <Input 
@@ -83,22 +82,6 @@ export default function Parametres() {
                     value={settings.currency} 
                     disabled 
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notary-fees">Honoraires Notaire (%)</Label>
-                  <Input 
-                    id="notary-fees" 
-                    type="number" 
-                    step="0.01" 
-                    min="0" 
-                    max="100"
-                    value={settings.notaryFees}
-                    onChange={(e) => handleSettingChange('notaryFees', Number(e.target.value))}
-                    placeholder="8.00" 
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Utilisé pour tous les calculs des investissements
-                  </p>
                 </div>
               </div>
             </CardContent>
