@@ -145,7 +145,7 @@ export function useBatchPerformanceKPIs(investmentIds: string[]): UseBatchPerfor
 
   useEffect(() => {
     loadBatchKPIs();
-  }, [user, investmentIds.join(','), lastDataChangeTimestamp]);
+  }, [user?.id, investmentIds.join(','), lastDataChangeTimestamp]);
 
   return {
     batchKPIs,

@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -6,6 +6,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Building, TrendingUp } from 'lucide-react';
 import { LazyInvestmentTags } from '@/components/investments/LazyInvestmentTags';
+import { formatCurrency, formatPercentage, formatCurrencyWithSign, formatPercentageWithSign } from '@/lib/formatters';
 import type { InvestmentKPIs } from '@/types/kpi';
 
 interface InvestmentKPIRowProps {
@@ -26,19 +27,6 @@ export const InvestmentKPIRow = React.memo(({
 }: InvestmentKPIRowProps) => {
   const loading = !kpis;
   const navigate = useNavigate();
-
-  // Memoized formatters
-  const formatCurrency = useCallback((amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  }, []);
-
-  const formatPercentage = useCallback((value: number) => {
-    return `${value.toFixed(1)}%`;
-  }, []);
 
   // Memoized cell value calculation
   const getCellValue = useMemo(() => (columnKey: string) => {
@@ -77,40 +65,23 @@ export const InvestmentKPIRow = React.memo(({
         return (
           <div className="flex flex-col items-end">
             <span>
-              {(gain1 / fondPropre * 100) >= 0 ? '+' : ''}
-              {((gain1 / fondPropre * 100).toFixed(1))}%
+              {formatPercentageWithSign(gain1 / fondPropre * 100)}
             </span>
             {totalReturnYear && <span className="text-xs text-muted-foreground">({totalReturnYear})</span>}
           </div>
         );
       case 'totalCfni':
-        return (
-          <>
-            {(kpis?.xirrDetails?.totalCfni || 0) >= 0 ? '+' : ''}
-            {formatCurrency(kpis?.xirrDetails?.totalCfni || 0)}
-          </>
-        );
+        return formatCurrencyWithSign(kpis?.xirrDetails?.totalCfni || 0);
       case 'xirr':
-        return (
-          <>
-            {(kpis?.xirr || 0) >= 0 ? '+' : ''}
-            {formatPercentage(kpis?.xirr || 0)}
-          </>
-        );
+        return formatPercentageWithSign(kpis?.xirr || 0);
       case 'totalVarValeur':
-        return (
-          <>
-            {(kpis?.xirrDetails?.deltaValeur || 0) >= 0 ? '+' : ''}
-            {formatCurrency(kpis?.xirrDetails?.deltaValeur || 0)}
-          </>
-        );
+        return formatCurrencyWithSign(kpis?.xirrDetails?.deltaValeur || 0);
       case 'lastVarValeur':
         const lastVarValeurYear = kpis?.xirrDetails?.lastVarValeurYear;
         return (
           <div className="flex flex-col items-end">
             <span>
-              {(kpis?.xirrDetails?.variationValeurDerniereAnnee || 0) >= 0 ? '+' : ''}
-              {formatCurrency(kpis?.xirrDetails?.variationValeurDerniereAnnee || 0)}
+              {formatCurrencyWithSign(kpis?.xirrDetails?.variationValeurDerniereAnnee || 0)}
             </span>
             {lastVarValeurYear && <span className="text-xs text-muted-foreground">({lastVarValeurYear})</span>}
           </div>
@@ -120,8 +91,7 @@ export const InvestmentKPIRow = React.memo(({
         return (
           <div className="flex flex-col items-end">
             <span>
-              {(kpis?.xirrDetails?.cfniDerniereAnnee || 0) >= 0 ? '+' : ''}
-              {formatCurrency(kpis?.xirrDetails?.cfniDerniereAnnee || 0)}
+              {formatCurrencyWithSign(kpis?.xirrDetails?.cfniDerniereAnnee || 0)}
             </span>
             {lastCfniYear && <span className="text-xs text-muted-foreground">({lastCfniYear})</span>}
           </div>
@@ -157,8 +127,7 @@ export const InvestmentKPIRow = React.memo(({
         return (
           <div className="flex flex-col items-end">
             <span>
-              {(kpis?.rendementNet || 0) >= 0 ? '+' : ''}
-              {formatPercentage(kpis?.rendementNet || 0)}
+              {formatPercentageWithSign(kpis?.rendementNet || 0)}
             </span>
             {rendementNetYear && <span className="text-xs text-muted-foreground">({rendementNetYear})</span>}
           </div>
@@ -168,8 +137,7 @@ export const InvestmentKPIRow = React.memo(({
         return (
           <div className="flex flex-col items-end">
             <span>
-              {(kpis?.xirrDetails?.gain1 || 0) >= 0 ? '+' : ''}
-              {formatCurrency(kpis?.xirrDetails?.gain1 || 0)}
+              {formatCurrencyWithSign(kpis?.xirrDetails?.gain1 || 0)}
             </span>
             {gain1Year && <span className="text-xs text-muted-foreground">({gain1Year})</span>}
           </div>
@@ -179,8 +147,7 @@ export const InvestmentKPIRow = React.memo(({
         return (
           <div className="flex flex-col items-end">
             <span>
-              {(kpis?.totalReturnDetails?.cocNet || 0) >= 0 ? '+' : ''}
-              {formatPercentage(kpis?.totalReturnDetails?.cocNet || 0)}
+              {formatPercentageWithSign(kpis?.totalReturnDetails?.cocNet || 0)}
             </span>
             {cocYear && <span className="text-xs text-muted-foreground">({cocYear})</span>}
           </div>
@@ -191,8 +158,7 @@ export const InvestmentKPIRow = React.memo(({
         return (
           <div className="flex flex-col items-end">
             <span className={cfValue >= 0 ? "text-success" : "text-destructive"}>
-              {cfValue >= 0 ? '+' : ''}
-              {formatCurrency(cfValue)}
+              {formatCurrencyWithSign(cfValue)}
             </span>
             {cfYear && <span className="text-xs text-muted-foreground">({cfYear})</span>}
           </div>
@@ -200,7 +166,7 @@ export const InvestmentKPIRow = React.memo(({
       default:
         return '-';
     }
-  }, [loading, investment, kpis, formatCurrency, formatPercentage]);
+  }, [loading, investment, kpis]);
 
   // Memoized cell class calculation
   const getCellClass = useMemo(() => (columnKey: string, columnType?: string, columnAlign?: string) => {
