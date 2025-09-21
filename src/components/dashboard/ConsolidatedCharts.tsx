@@ -331,7 +331,7 @@ export function ConsolidatedCharts({
       </div>
 
       {/* Second Row: LTV vs TRI + Value Distribution */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 charts-grid">
         {/* Scatter Plot (LTV vs TRI) */}
         <Card className="card-financial">
           <CardHeader>
@@ -437,7 +437,7 @@ export function ConsolidatedCharts({
       </div>
 
       {/* Third Row: Net Rendement + Distribution */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 charts-grid">
         {/* Histogram Net Rendement 2024 */}
         <Card className="card-financial">
           <CardHeader>

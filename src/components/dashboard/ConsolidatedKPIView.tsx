@@ -261,7 +261,7 @@ export function ConsolidatedKPIView({
   return (
     <div className="space-y-6">
       {/* Performance KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4 kpi-grid">
         {/* Fond Propre */}
         <div className="card-financial">
           <div className="p-4">
