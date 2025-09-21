@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { InvestmentTable } from '@/components/dashboard/InvestmentTable';
 import { ConsolidatedKPIView } from '@/components/dashboard/ConsolidatedKPIView';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Table } from 'lucide-react';
+import { BarChart3, Table, Printer } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 
 type ViewMode = 'table' | 'kpi';
@@ -18,6 +18,11 @@ export default function Investissements() {
   const handleSelectedRowsChange = (selectedRows: Set<string>) => {
     setSelectedInvestments(selectedRows);
   };
+  
+  const handlePrint = () => {
+    window.print();
+  };
+  
   const totalCount = filteredInvestments.length;
   const selectedCount = selectedInvestments.size;
   return (
@@ -44,6 +49,14 @@ export default function Investissements() {
           
           {/* View buttons */}
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handlePrint}
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimer
+            </Button>
             <Button 
               variant={viewMode === 'table' ? 'default' : 'outline'} 
               size="sm" 
