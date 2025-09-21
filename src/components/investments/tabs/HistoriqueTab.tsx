@@ -8,6 +8,8 @@ import { Clock, Filter, User, FileText, DollarSign, Edit, AlertCircle } from 'lu
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompanies } from '@/contexts/CompanyContext';
+import { logError } from '@/lib/errorHandler';
+import { formatRelativeTime } from '@/lib/formatters';
 
 interface HistoryEvent {
   id: string;
@@ -67,7 +69,7 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
       
       setHasMore(newHistory.length === LIMIT);
     } catch (error) {
-      console.error('Error loading investment history:', error);
+      logError(error, { component: 'HistoriqueTab', function: 'loadHistory', investmentId });
     } finally {
       if (resetHistory) {
         setLoading(false);
@@ -204,19 +206,6 @@ export function HistoriqueTab({ investmentId }: HistoriqueTabProps) {
     return matchesSearch && matchesType;
   });
 
-  const formatRelativeTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 24) {
-      return `Il y a ${diffInHours}h`;
-    } else if (diffInHours < 24 * 7) {
-      return `Il y a ${Math.floor(diffInHours / 24)}j`;
-    } else {
-      return date.toLocaleDateString('fr-FR');
-    }
-  };
 
   if (loading) {
     return (

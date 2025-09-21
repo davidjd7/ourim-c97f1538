@@ -8,6 +8,7 @@ import { Calendar, FileText, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCompanies } from '@/contexts/CompanyContext';
 import { useNotes } from '@/hooks/useNotes';
+import { formatCurrency } from '@/lib/formatters';
 
 
 interface GeneralData {
@@ -147,13 +148,6 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
     }
   }, [investmentData]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
 
   return (
     <div className="space-y-6">

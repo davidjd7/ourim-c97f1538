@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logError } from '@/lib/errorHandler';
 
 export function useInvestmentTags() {
   const [investmentTags, setInvestmentTags] = useState<Record<string, string[]>>({});
@@ -23,7 +24,7 @@ export function useInvestmentTags() {
 
         if (error) throw error;
 
-        // Group tags by investment ID
+        // Group tags by investment ID using useMemo logic
         const tagsMap: Record<string, string[]> = {};
         data?.forEach(item => {
           if (!tagsMap[item.asset_id]) {
@@ -34,7 +35,7 @@ export function useInvestmentTags() {
 
         setInvestmentTags(tagsMap);
       } catch (error) {
-        console.error('Error fetching investment tags:', error);
+        logError(error, { component: 'useInvestmentTags', function: 'fetchInvestmentTags' });
       } finally {
         setLoading(false);
       }

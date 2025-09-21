@@ -25,6 +25,7 @@ import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { useBatchPerformanceKPIs } from '@/hooks/useBatchPerformanceKPIs';
 import { useCompanies } from '@/contexts/CompanyContext';
+import { formatCurrency, formatPercentage } from '@/lib/formatters';
 
 export default function InvestissementDetail() {
   const { id } = useParams<{ id: string }>();
@@ -104,7 +105,9 @@ export default function InvestissementDetail() {
   };
 
   const handleSaveChanges = async () => {
-    console.log('Saving changes:', tempEditData);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Saving changes:', tempEditData);
+    }
     
     try {
       // Prevent duplicate saves
@@ -134,7 +137,9 @@ export default function InvestissementDetail() {
         navigate(`/investissement/${newInvestment.id}`);
       } else {
         // Update existing investment
-        console.log('Updating investment with companyId:', tempEditData.companyId);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Updating investment with companyId:', tempEditData.companyId);
+        }
         
         // Save changes with only supported fields
         await updateInvestment(id!, {
@@ -146,7 +151,9 @@ export default function InvestissementDetail() {
           companyId: tempEditData.companyId,
         });
         
-        console.log('Investment updated successfully');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Investment updated successfully');
+        }
         
         toast({
           title: "Modifications sauvegardées",
@@ -205,17 +212,6 @@ export default function InvestissementDetail() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
-  };
 
   const getBackPath = () => {
     if (isNewInvestment) {
@@ -227,7 +223,9 @@ export default function InvestissementDetail() {
   };
 
   const handleBackClick = () => {
-    console.log('Back button clicked, navigating to:', getBackPath());
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Back button clicked, navigating to:', getBackPath());
+    }
     navigate(getBackPath());
   };
 

@@ -7,6 +7,8 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logError } from '@/lib/errorHandler';
+import { formatFileSize } from '@/lib/formatters';
 
 interface Document {
   id: string;
@@ -57,7 +59,7 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
         type: doc.type as 'contract' | 'financial' | 'legal' | 'other' | 'debt'
       })));
     } catch (error) {
-      console.error('Error loading documents:', error);
+      logError(error, { component: 'DocumentsTab', function: 'loadDocuments', investmentId });
       toast({
         title: "Erreur",
         description: "Erreur lors du chargement des documents.",
@@ -81,11 +83,6 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
     return 'other';
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
 
   const handleAddDocument = () => {
     if (!user || !canEdit) return;
@@ -145,7 +142,7 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
           description: `${uploadedFiles.length} document(s) ajouté(s) avec succès.`,
         });
       } catch (error) {
-        console.error('Error uploading documents:', error);
+        logError(error, { component: 'DocumentsTab', function: 'handleAddDocument', investmentId });
         toast({
           title: "Erreur",
           description: "Erreur lors de l'ajout des documents.",
@@ -184,7 +181,7 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
         description: `${doc.name} téléchargé avec succès.`,
       });
     } catch (error) {
-      console.error('Error downloading document:', error);
+      logError(error, { component: 'DocumentsTab', function: 'handleDownloadDocument', investmentId });
       toast({
         title: "Erreur",
         description: "Erreur lors du téléchargement du document.",
@@ -221,7 +218,7 @@ export function DocumentsTab({ investmentId }: DocumentsTabProps) {
         description: "Le document a été supprimé avec succès.",
       });
     } catch (error) {
-      console.error('Error deleting document:', error);
+      logError(error, { component: 'DocumentsTab', function: 'handleDeleteDocument', investmentId });
       toast({
         title: "Erreur",
         description: "Erreur lors de la suppression du document.",

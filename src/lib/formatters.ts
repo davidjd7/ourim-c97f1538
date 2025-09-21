@@ -42,3 +42,25 @@ export const formatPercentageWithSign = (value: number): string => {
   const formatted = formatPercentage(value);
   return value >= 0 ? `+${formatted}` : formatted;
 };
+
+// Utility for file size formatting
+export const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+};
+
+// Utility for relative time formatting
+export const formatRelativeTime = (timestamp: string): string => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+  
+  if (diffInHours < 24) {
+    return `Il y a ${diffInHours}h`;
+  } else if (diffInHours < 24 * 7) {
+    return `Il y a ${Math.floor(diffInHours / 24)}j`;
+  } else {
+    return date.toLocaleDateString('fr-FR');
+  }
+};
