@@ -4,24 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, FileText, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCompanies } from '@/contexts/CompanyContext';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { useNotes } from '@/hooks/useNotes';
 
-interface Note {
-  id: string;
-  immobilier_id: string;
-  user_id: string;
-  title: string;
-  content: string;
-  is_private: boolean;
-  author: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface GeneralData {
   name: string;
@@ -53,79 +40,30 @@ interface GeneralTabProps {
 export function GeneralTab({ investmentId, isEditMode = false, investmentData, tempEditData, onDataChange }: GeneralTabProps) {
   const { canEdit, userRole } = useUserRole();
   const { companies } = useCompanies();
-  const { user } = useAuth();
   
-  // Notes state
-  const [notes, setNotes] = useState<Note[]>([]);
+  // Notes management using custom hook
+  const { notes: filteredNotes, loading: notesLoading, addNote, updateNote, deleteNote } = useNotes(investmentId);
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [newNote, setNewNote] = useState({ title: '', content: '', isPrivate: false });
-  const [notesLoading, setNotesLoading] = useState(true);
-
-  // Load notes from Supabase
-  useEffect(() => {
-    const loadNotes = async () => {
-      if (!user || !investmentId || investmentId === 'nouveau') return;
-
-      try {
-        const { data, error } = await supabase
-          .from('notes')
-          .select('*')
-          .eq('immobilier_id', investmentId)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setNotes(data || []);
-      } catch (error) {
-        console.error('Error loading notes:', error);
-      } finally {
-        setNotesLoading(false);
-      }
-    };
-
-    loadNotes();
-  }, [user, investmentId]);
-
-  const filteredNotes = notes.filter(note => {
-    if (note.is_private && userRole !== 'admin') {
-      return false;
-    }
-    return true;
-  });
 
   const handleAddNote = async () => {
-    if (!user || !newNote.title.trim() || !newNote.content.trim()) return;
+    if (!newNote.title.trim() || !newNote.content.trim()) return;
 
-    try {
-      const noteData = {
-        immobilier_id: investmentId,
-        user_id: user.id,
-        title: newNote.title.trim(),
-        content: newNote.content.trim(),
-        is_private: newNote.isPrivate,
-        author: userRole === 'admin' ? 'D. Dahan' : 'A. Dahan'
-      };
+    const success = await addNote({
+      title: newNote.title,
+      content: newNote.content,
+      isPrivate: newNote.isPrivate
+    });
 
-      const { data, error } = await supabase
-        .from('notes')
-        .insert([noteData])
-        .select('*')
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        setNotes([data, ...notes]);
-        setNewNote({ title: '', content: '', isPrivate: false });
-        setIsAddingNote(false);
-      }
-    } catch (error) {
-      console.error('Error adding note:', error);
+    if (success) {
+      setNewNote({ title: '', content: '', isPrivate: false });
+      setIsAddingNote(false);
     }
   };
 
   const handleEditNote = (noteId: string) => {
-    const noteToEdit = notes.find(note => note.id === noteId);
+    const noteToEdit = filteredNotes.find(note => note.id === noteId);
     if (noteToEdit) {
       setNewNote({
         title: noteToEdit.title,
@@ -138,54 +76,23 @@ export function GeneralTab({ investmentId, isEditMode = false, investmentData, t
   };
 
   const handleUpdateNote = async () => {
-    if (!user || !editingNote || !newNote.title.trim() || !newNote.content.trim()) return;
+    if (!editingNote || !newNote.title.trim() || !newNote.content.trim()) return;
 
-    try {
-      const updateData = {
-        title: newNote.title.trim(),
-        content: newNote.content.trim(),
-        is_private: newNote.isPrivate
-      };
+    const success = await updateNote(editingNote, {
+      title: newNote.title,
+      content: newNote.content,
+      isPrivate: newNote.isPrivate
+    });
 
-      const { data, error } = await supabase
-        .from('notes')
-        .update(updateData)
-        .eq('id', editingNote)
-        .eq('user_id', user.id)
-        .select('*')
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        setNotes(notes.map(note => 
-          note.id === editingNote ? data : note
-        ));
-        setNewNote({ title: '', content: '', isPrivate: false });
-        setEditingNote(null);
-        setIsAddingNote(false);
-      }
-    } catch (error) {
-      console.error('Error updating note:', error);
+    if (success) {
+      setNewNote({ title: '', content: '', isPrivate: false });
+      setEditingNote(null);
+      setIsAddingNote(false);
     }
   };
 
   const handleDeleteNote = async (noteId: string) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('notes')
-        .delete()
-        .eq('id', noteId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      setNotes(notes.filter(note => note.id !== noteId));
-    } catch (error) {
-      console.error('Error deleting note:', error);
-    }
+    await deleteNote(noteId);
   };
 
   const handleCancelEdit = () => {

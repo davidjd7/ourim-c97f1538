@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useMemo, ReactNode, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logError } from '@/lib/errorHandler';
 
 export interface FilterValue {
   text?: string;
@@ -67,7 +68,10 @@ export function ColumnFiltersProvider({ children }: { children: ReactNode }) {
           setFilters(deserializedFilters);
         }
       } catch (error) {
-        console.error('Error loading column filters:', error);
+        logError(error, { 
+          component: 'ColumnFiltersContext',
+          function: 'loadColumnFilters'
+        });
       } finally {
         setIsInitialized(true);
       }
@@ -105,7 +109,10 @@ export function ColumnFiltersProvider({ children }: { children: ReactNode }) {
         try {
           localStorage.setItem(storageKey, serializeFilters(newFilters));
         } catch (error) {
-          console.error('Error saving column filters:', error);
+          logError(error, { 
+            component: 'ColumnFiltersContext',
+            function: 'applyFilter'
+          });
         }
       }
 
@@ -122,7 +129,10 @@ export function ColumnFiltersProvider({ children }: { children: ReactNode }) {
         try {
           localStorage.setItem(storageKey, serializeFilters(rest));
         } catch (error) {
-          console.error('Error saving column filters:', error);
+          logError(error, { 
+            component: 'ColumnFiltersContext',
+            function: 'clearFilter'
+          });
         }
       }
 
@@ -138,7 +148,10 @@ export function ColumnFiltersProvider({ children }: { children: ReactNode }) {
       try {
         localStorage.setItem(storageKey, serializeFilters({}));
       } catch (error) {
-        console.error('Error saving column filters:', error);
+        logError(error, { 
+          component: 'ColumnFiltersContext',
+          function: 'clearAllFilters'
+        });
       }
     }
   }, [isInitialized, storageKey]);
