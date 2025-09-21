@@ -261,7 +261,7 @@ export function ConsolidatedCharts({
       <h2 className="text-2xl font-bold">Graphiques Consolidés</h2>
       
       {/* First Row: Time Evolution only (full width) */}
-      <div className="grid gap-4">
+      <div className="w-full">
         {/* Time Evolution Curve */}
         <Card className="card-financial">
           <CardHeader>
