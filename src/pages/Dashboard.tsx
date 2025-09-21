@@ -2,7 +2,6 @@ import React from 'react';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { InvestmentTable } from '@/components/dashboard/InvestmentTable';
 import { InvestmentChart, CashflowChart } from '@/components/dashboard/InvestmentChart';
-import { ColumnFiltersProvider } from '@/contexts/ColumnFiltersContext';
 import { 
   Wallet, 
   TrendingUp, 
@@ -161,12 +160,10 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Investments Table */}
-      <ColumnFiltersProvider>
-        <InvestmentTable 
-          selectedRows={new Set<string>()} 
-          onSelectedRowsChange={() => {}} 
-        />
-      </ColumnFiltersProvider>
+      <InvestmentTable 
+        selectedRows={new Set<string>()} 
+        onSelectedRowsChange={() => {}} 
+      />
     </div>
   );
 }
