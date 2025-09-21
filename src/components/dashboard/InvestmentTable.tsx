@@ -75,6 +75,8 @@ export function InvestmentTable({
         rendementNetYear: kpis.rendementNetDetails.year,
         totalReturnYear: kpis.totalReturnDetails.year,
         cocNet: kpis.totalReturnDetails.cocNet,
+        coc: kpis.totalReturnDetails.cocNet, // Alias pour le tri de la colonne COC
+        cf: kpis.xirrDetails.totalCfni, // Valeur pour le tri de la colonne CF
       };
     });
     return map;
