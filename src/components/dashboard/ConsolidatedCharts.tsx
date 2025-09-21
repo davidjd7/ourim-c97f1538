@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   ScatterChart, 
   Scatter, 
@@ -16,6 +16,8 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartConfig } from '@/components/ui/chart';
 import { useInvestments } from '@/contexts/ImmobilierContext';
@@ -62,6 +64,7 @@ export function ConsolidatedCharts({
   syntheticTableData 
 }: ConsolidatedChartsProps) {
   const { investments } = useInvestments();
+  const [evolutionType, setEvolutionType] = useState<'gains' | 'valeur' | 'cfni'>('gains');
 
   // Utility function to calculate time series gains for each investment
   const calculateTimeSeriesGains = (investmentData: InvestmentRawData, investmentId: string) => {
@@ -161,57 +164,85 @@ export function ConsolidatedCharts({
         xirr: kpis.xirr,
         valeur: kpis.fondPropreDetails.valeur,
         name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
-        size: Math.max(10, Math.min(100, kpis.fondPropreDetails.valeur / 10000)) // Scale size
+        r: Math.max(5, Math.min(25, Math.sqrt(kpis.fondPropreDetails.valeur / 50000))) // Scale radius based on valeur
       };
     }).filter(Boolean);
   }, [selectedInvestments, batchKPIs, investments]);
 
   // 2. Time Evolution Data
   const timeEvolutionData = useMemo(() => {
-    const consolidatedGains = syntheticTableData.map(row => ({
+    const consolidatedData = syntheticTableData.map(row => ({
       year: new Date(row.date).getFullYear(),
-      consolidated: row.gain2,
+      consolidated: evolutionType === 'gains' ? row.gain2 : 
+                   evolutionType === 'valeur' ? row.valeur :
+                   row.cfni,
     }));
 
-    const individualGains = Object.entries(rawByInvestment).map(([investmentId, data]) => 
-      calculateTimeSeriesGains(data, investmentId)
-    ).flat();
+    const individualData = Object.entries(rawByInvestment).map(([investmentId, data]) => {
+      const synthesis = getSyntheseData(
+        data.cashflows,
+        data.immobilisations,
+        data.debtFlows,
+        data.valorisations
+      );
+      
+      return synthesis.map((row, index) => {
+        const previousRow = index > 0 ? synthesis[index - 1] : null;
+        let value;
+        
+        if (evolutionType === 'gains') {
+          const deltaValeur = previousRow ? row.valeur - previousRow.valeur : 0;
+          value = deltaValeur + row.flux;
+        } else if (evolutionType === 'valeur') {
+          value = row.valeur;
+        } else { // cfni
+          value = row.flux; // Assuming flux represents CFNI
+        }
+        
+        return {
+          year: new Date(row.date).getFullYear(),
+          [investmentId]: value,
+          investmentName: investments.find(inv => inv.id === investmentId)?.name || `Investment ${investmentId.slice(0, 8)}`
+        };
+      });
+    }).flat();
 
     // Group by year
     const yearMap = new Map();
-    consolidatedGains.forEach(item => {
+    consolidatedData.forEach(item => {
       if (!yearMap.has(item.year)) {
         yearMap.set(item.year, { year: item.year, consolidated: item.consolidated });
       }
     });
 
-    individualGains.forEach(item => {
+    individualData.forEach(item => {
       if (!yearMap.has(item.year)) {
         yearMap.set(item.year, { year: item.year, consolidated: 0 });
       }
-      yearMap.get(item.year)[item.investmentId] = item.gain;
+      Object.keys(item).forEach(key => {
+        if (key !== 'year' && key !== 'investmentName') {
+          yearMap.get(item.year)[key] = item[key];
+        }
+      });
     });
 
     return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
-  }, [syntheticTableData, rawByInvestment]);
+  }, [syntheticTableData, rawByInvestment, evolutionType, investments]);
 
-  // 3. Histogram Data (Rendement Net Comparison)
+  // 3. Histogram Data (Rendement Net 2024)
   const histogramData = useMemo(() => {
     return Array.from(selectedInvestments).map(investmentId => {
       const kpis = batchKPIs[investmentId];
-      const rawData = rawByInvestment[investmentId];
-      if (!kpis || !rawData) return null;
+      if (!kpis) return null;
 
       const investment = investments.find(inv => inv.id === investmentId);
-      const yields = calculateHistoricalYields(rawData);
       
       return {
         name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
         rendement2024: kpis.rendementNet,
-        rendementMoy3Y: yields.average3Y,
       };
     }).filter(Boolean).sort((a, b) => (b?.rendement2024 || 0) - (a?.rendement2024 || 0));
-  }, [selectedInvestments, batchKPIs, rawByInvestment, investments]);
+  }, [selectedInvestments, batchKPIs, investments]);
 
   // 4. Donut Data (Value Distribution)
   const donutData = useMemo(() => {
@@ -227,48 +258,41 @@ export function ConsolidatedCharts({
     }).filter(Boolean);
   }, [selectedInvestments, batchKPIs, investments]);
 
-  // 5. Boxplot Data (Distribution of Rendement Net)
+  // 5. Boxplot Data (Distribution of Rendement Net and XIRR)
   const boxplotData = useMemo(() => {
     const rendements = Array.from(selectedInvestments).map(investmentId => {
       const kpis = batchKPIs[investmentId];
       return kpis?.rendementNet || 0;
     }).sort((a, b) => a - b);
 
-    if (rendements.length === 0) return [];
+    const xirrs = Array.from(selectedInvestments).map(investmentId => {
+      const kpis = batchKPIs[investmentId];
+      return kpis?.xirr || 0;
+    }).sort((a, b) => a - b);
 
-    const q1Index = Math.floor(rendements.length * 0.25);
-    const q2Index = Math.floor(rendements.length * 0.5);
-    const q3Index = Math.floor(rendements.length * 0.75);
+    const createBoxplotStats = (values: number[]) => {
+      if (values.length === 0) return null;
+      
+      const q1Index = Math.floor(values.length * 0.25);
+      const q2Index = Math.floor(values.length * 0.5);
+      const q3Index = Math.floor(values.length * 0.75);
 
-    return [{
-      min: rendements[0],
-      q1: rendements[q1Index],
-      median: rendements[q2Index],
-      q3: rendements[q3Index],
-      max: rendements[rendements.length - 1],
-    }];
+      return {
+        min: values[0],
+        q1: values[q1Index],
+        median: values[q2Index],
+        q3: values[q3Index],
+        max: values[values.length - 1],
+      };
+    };
+
+    return {
+      rendement: createBoxplotStats(rendements),
+      xirr: createBoxplotStats(xirrs)
+    };
   }, [selectedInvestments, batchKPIs]);
 
-  // 6. Heatmap Data (TRI by Asset/Year)
-  const heatmapData = useMemo(() => {
-    const years = [2022, 2023, 2024];
-    const data: Array<{ asset: string; year: number; xirr: number }> = [];
-    
-    Array.from(selectedInvestments).forEach(investmentId => {
-      const rawData = rawByInvestment[investmentId];
-      if (!rawData) return;
-      
-      const investment = investments.find(inv => inv.id === investmentId);
-      const assetName = investment?.name || `Investment ${investmentId.slice(0, 8)}`;
-      
-      years.forEach(year => {
-        const xirr = calculateYearlyXIRR(rawData, year);
-        data.push({ asset: assetName, year, xirr });
-      });
-    });
-    
-    return data;
-  }, [selectedInvestments, rawByInvestment, investments]);
+  // 6. Heatmap Data (Removed as requested)
 
   // Colors for charts
   const COLORS = [
@@ -331,14 +355,20 @@ export function ConsolidatedCharts({
                     tickFormatter={(value) => `${value.toFixed(1)}%`}
                   />
                   <Tooltip 
-                    formatter={(value, name) => [
-                      name === 'xirr' ? formatPercentage(value as number) : 
-                      name === 'ltv' ? formatPercentage(value as number) :
-                      formatCurrency(value as number), 
-                      name === 'xirr' ? 'TRI' : 
-                      name === 'ltv' ? 'LTV' : 'Valeur'
-                    ]}
-                    labelFormatter={(label) => `${label}`}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length > 0) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                            <p className="font-semibold">{data.name}</p>
+                            <p className="text-sm">TRI: {formatPercentage(data.xirr)}</p>
+                            <p className="text-sm">LTV: {formatPercentage(data.ltv)}</p>
+                            <p className="text-sm">Valeur: {formatCurrency(data.valeur)}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
                   <Scatter
                     data={scatterData}
@@ -354,10 +384,30 @@ export function ConsolidatedCharts({
         {/* 2. Time Evolution Curve */}
         <Card className="card-financial">
           <CardHeader>
-            <CardTitle>Évolution des Gains</CardTitle>
+            <CardTitle>Évolution Temporelle</CardTitle>
             <CardDescription>
-              Evolution temporelle des gains par année
+              Evolution par année avec courbe consolidée sur axe droit
             </CardDescription>
+            <div className="flex space-x-6 mt-4">
+              <RadioGroup 
+                value={evolutionType} 
+                onValueChange={(value) => setEvolutionType(value as 'gains' | 'valeur' | 'cfni')}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="gains" id="gains" />
+                  <Label htmlFor="gains" className="text-sm">Gains</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="valeur" id="valeur" />
+                  <Label htmlFor="valeur" className="text-sm">Valeur</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cfni" id="cfni" />
+                  <Label htmlFor="cfni" className="text-sm">CFNI</Label>
+                </div>
+              </RadioGroup>
+            </div>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px]">
@@ -365,22 +415,17 @@ export function ConsolidatedCharts({
                 <LineChart data={timeEvolutionData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="year" />
-                  <YAxis tickFormatter={(value) => formatCurrency(value)} />
+                  <YAxis yAxisId="left" tickFormatter={(value) => formatCurrency(value)} />
+                  <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => formatCurrency(value)} />
                   <Tooltip 
-                    formatter={(value) => [formatCurrency(value as number), 'Gain']}
+                    formatter={(value, name) => [formatCurrency(value as number), name === 'consolidated' ? 'Consolidé' : investments.find(inv => inv.id === name)?.name || name]}
                     labelFormatter={(label) => `Année ${label}`}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="consolidated" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={3}
-                    name="Consolidé"
-                  />
                   {Array.from(selectedInvestments).map((investmentId, index) => (
                     <Line
                       key={investmentId}
+                      yAxisId="left"
                       type="monotone"
                       dataKey={investmentId}
                       stroke={COLORS[index % COLORS.length]}
@@ -389,6 +434,14 @@ export function ConsolidatedCharts({
                       name={investments.find(inv => inv.id === investmentId)?.name || `Inv. ${investmentId.slice(0, 8)}`}
                     />
                   ))}
+                  <Line 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="consolidated" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={3}
+                    name="Consolidé"
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -398,12 +451,12 @@ export function ConsolidatedCharts({
 
       {/* Second Row: Histogram + Donut */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* 3. Comparative Histogram */}
+        {/* 3. Histogram 2024 Only */}
         <Card className="card-financial">
           <CardHeader>
-            <CardTitle>Rendement Net Comparatif</CardTitle>
+            <CardTitle>Rendement Net 2024</CardTitle>
             <CardDescription>
-              Comparaison 2024 vs moyenne 3 ans (classement décroissant)
+              Classement par rendement décroissant
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -419,18 +472,11 @@ export function ConsolidatedCharts({
                   />
                   <YAxis tickFormatter={(value) => `${value.toFixed(1)}%`} />
                   <Tooltip 
-                    formatter={(value) => [formatPercentage(value as number), '']}
+                    formatter={(value) => [formatPercentage(value as number), 'Rendement 2024']}
                   />
-                  <Legend />
                   <Bar 
                     dataKey="rendement2024" 
                     fill="hsl(var(--primary))" 
-                    name="2024"
-                  />
-                  <Bar 
-                    dataKey="rendementMoy3Y" 
-                    fill="hsl(var(--success))" 
-                    name="Moyenne 3Y"
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -464,9 +510,19 @@ export function ConsolidatedCharts({
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value) => [formatCurrency(value as number), 'Valeur']}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length > 0) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                            <p className="font-semibold">{data.name}</p>
+                            <p className="text-sm">Valeur: {formatCurrency(data.value)}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
-                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -474,48 +530,85 @@ export function ConsolidatedCharts({
         </Card>
       </div>
 
-      {/* Third Row: Boxplot + Heatmap */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Third Row: Boxplot Only */}
+      <div className="grid gap-4 md:grid-cols-1">
         {/* 5. Boxplot */}
         <Card className="card-financial">
           <CardHeader>
-            <CardTitle>Distribution des Rendements</CardTitle>
+            <CardTitle>Distribution des Rendements et TRI</CardTitle>
             <CardDescription>
-              Analyse statistique des rendements nets
+              Analyse statistique comparative
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center">
-              {boxplotData.length > 0 ? (
-                <div className="w-full space-y-4">
-                  <div className="text-center space-y-2">
-                    <div className="grid grid-cols-5 gap-4 text-sm">
+              {boxplotData.rendement && boxplotData.xirr ? (
+                <div className="w-full space-y-8">
+                  {/* Rendement Net */}
+                  <div>
+                    <h4 className="text-sm font-semibold mb-4 text-center">Rendement Net (%)</h4>
+                    <div className="grid grid-cols-5 gap-4 text-xs mb-2">
                       <div>
                         <div className="font-semibold">Min</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData[0].min)}</div>
+                        <div className="text-muted-foreground">{formatPercentage(boxplotData.rendement.min)}</div>
                       </div>
                       <div>
                         <div className="font-semibold">Q1</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData[0].q1)}</div>
+                        <div className="text-muted-foreground">{formatPercentage(boxplotData.rendement.q1)}</div>
                       </div>
                       <div>
                         <div className="font-semibold">Médiane</div>
-                        <div className="text-success font-semibold">{formatPercentage(boxplotData[0].median)}</div>
+                        <div className="text-success font-semibold">{formatPercentage(boxplotData.rendement.median)}</div>
                       </div>
                       <div>
                         <div className="font-semibold">Q3</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData[0].q3)}</div>
+                        <div className="text-muted-foreground">{formatPercentage(boxplotData.rendement.q3)}</div>
                       </div>
                       <div>
                         <div className="font-semibold">Max</div>
-                        <div className="text-muted-foreground">{formatPercentage(boxplotData[0].max)}</div>
+                        <div className="text-muted-foreground">{formatPercentage(boxplotData.rendement.max)}</div>
                       </div>
                     </div>
-                    <div className="w-full h-8 bg-gradient-to-r from-destructive via-warning to-success rounded-lg relative">
+                    <div className="w-full h-6 bg-gradient-to-r from-destructive via-warning to-success rounded-lg relative">
                       <div 
                         className="absolute w-1 h-full bg-foreground rounded"
                         style={{ 
-                          left: `${((boxplotData[0].median - boxplotData[0].min) / (boxplotData[0].max - boxplotData[0].min)) * 100}%` 
+                          left: `${((boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min)) * 100}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* TRI */}
+                  <div>
+                    <h4 className="text-sm font-semibold mb-4 text-center">TRI (%)</h4>
+                    <div className="grid grid-cols-5 gap-4 text-xs mb-2">
+                      <div>
+                        <div className="font-semibold">Min</div>
+                        <div className="text-muted-foreground">{formatPercentage(boxplotData.xirr.min)}</div>
+                      </div>
+                      <div>
+                        <div className="font-semibold">Q1</div>
+                        <div className="text-muted-foreground">{formatPercentage(boxplotData.xirr.q1)}</div>
+                      </div>
+                      <div>
+                        <div className="font-semibold">Médiane</div>
+                        <div className="text-success font-semibold">{formatPercentage(boxplotData.xirr.median)}</div>
+                      </div>
+                      <div>
+                        <div className="font-semibold">Q3</div>
+                        <div className="text-muted-foreground">{formatPercentage(boxplotData.xirr.q3)}</div>
+                      </div>
+                      <div>
+                        <div className="font-semibold">Max</div>
+                        <div className="text-muted-foreground">{formatPercentage(boxplotData.xirr.max)}</div>
+                      </div>
+                    </div>
+                    <div className="w-full h-6 bg-gradient-to-r from-destructive via-warning to-success rounded-lg relative">
+                      <div 
+                        className="absolute w-1 h-full bg-foreground rounded"
+                        style={{ 
+                          left: `${((boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min)) * 100}%` 
                         }}
                       />
                     </div>
@@ -526,52 +619,6 @@ export function ConsolidatedCharts({
                   Pas assez de données pour l'analyse statistique
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 6. Heatmap (TRI by Asset/Year) */}
-        <Card className="card-financial">
-          <CardHeader>
-            <CardTitle>Heatmap TRI</CardTitle>
-            <CardDescription>
-              TRI par actif et par année
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] overflow-auto">
-              <div className="grid gap-2" style={{ gridTemplateColumns: `150px repeat(3, 1fr)` }}>
-                <div className="font-semibold text-sm p-2">Actif / Année</div>
-                <div className="font-semibold text-sm p-2 text-center">2022</div>
-                <div className="font-semibold text-sm p-2 text-center">2023</div>
-                <div className="font-semibold text-sm p-2 text-center">2024</div>
-                
-                {Array.from(new Set(heatmapData.map(d => d.asset))).map(asset => (
-                  <React.Fragment key={asset}>
-                    <div className="text-xs p-2 border-r border-border font-medium truncate" title={asset}>
-                      {asset}
-                    </div>
-                    {[2022, 2023, 2024].map(year => {
-                      const xirr = heatmapData.find(d => d.asset === asset && d.year === year)?.xirr || 0;
-                      const intensity = Math.min(100, Math.max(0, (xirr + 10) * 5)); // Scale from -10% to +10%
-                      return (
-                        <div 
-                          key={year}
-                          className="text-xs p-2 text-center rounded"
-                          style={{
-                            backgroundColor: xirr > 0 ? 
-                              `hsl(var(--success) / ${intensity}%)` : 
-                              `hsl(var(--destructive) / ${Math.abs(intensity)}%)`,
-                            color: Math.abs(xirr) > 5 ? 'white' : 'inherit'
-                          }}
-                        >
-                          {formatPercentage(xirr)}
-                        </div>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
-              </div>
             </div>
           </CardContent>
         </Card>
