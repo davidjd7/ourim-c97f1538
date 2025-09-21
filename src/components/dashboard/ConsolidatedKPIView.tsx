@@ -3,6 +3,7 @@ import { useInvestments } from '@/contexts/ImmobilierContext';
 import { useBatchPerformanceKPIs } from '@/hooks/useBatchPerformanceKPIs';
 import { getSyntheseData, calculateXIRR, calculateNOI } from '@/lib/kpiCalculations';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ConsolidatedCharts } from '@/components/dashboard/ConsolidatedCharts';
 import type { ConsolidatedRow } from '@/types/kpi';
 
 interface ConsolidatedKPIViewProps {
@@ -341,6 +342,14 @@ export function ConsolidatedKPIView({
           </div>
         </div>
       </div>
+
+      {/* Charts Section */}
+      <ConsolidatedCharts 
+        selectedInvestments={selectedInvestments}
+        batchKPIs={batchKPIs}
+        rawByInvestment={rawByInvestment}
+        syntheticTableData={syntheticTableData}
+      />
 
       {/* Synthetic Table */}
       <div className="card-financial">
