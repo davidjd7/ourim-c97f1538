@@ -49,7 +49,11 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
     if (selectedCompanyIds.length === 0) {
       return [];
     }
-    return investments.filter(inv => inv.companyId && selectedCompanyIds.includes(inv.companyId));
+    return investments.filter(inv => 
+      // Include investments with selected companies OR investments without any company assigned
+      (inv.companyId && selectedCompanyIds.includes(inv.companyId)) || 
+      (!inv.companyId)
+    );
   }, [investments, selectedCompanyIds]);
 
   // Convert database row to Immobilier interface
