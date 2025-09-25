@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Check, GripVertical } from 'lucide-react';
+import { Settings, Check, GripVertical, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -9,6 +9,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useColumnVisibility } from '@/hooks/useColumnVisibility';
 import { colDbg } from '@/lib/columnDebug';
+import { useToast } from '@/hooks/use-toast';
 import {
   DndContext,
   closestCenter,
@@ -99,8 +100,10 @@ function SortableColumnItem({ column, onToggle, isDragDisabled = false }: Sortab
 }
 
 export function ColumnSelector() {
-  const { visibleColumns, hiddenColumns, updateColumnVisibility, reorderColumns } = useColumnVisibility();
+  const { visibleColumns, hiddenColumns, updateColumnVisibility, reorderColumns, forceReload, isInitialized } = useColumnVisibility();
   const [isOpen, setIsOpen] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
+  const { toast } = useToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -140,6 +143,25 @@ const handleDragEnd = (event: DragEndEvent) => {
   }
 };
 
+const handleForceReload = async () => {
+  setIsReloading(true);
+  try {
+    await forceReload();
+    toast({
+      title: "Configuration rechargée",
+      description: "La configuration des colonnes a été rechargée avec succès.",
+    });
+  } catch (error) {
+    toast({
+      title: "Erreur de rechargement",
+      description: "Impossible de recharger la configuration des colonnes.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsReloading(false);
+  }
+};
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -149,10 +171,26 @@ const handleDragEnd = (event: DragEndEvent) => {
       </PopoverTrigger>
       <PopoverContent className="w-[600px] p-4 bg-card border shadow-lg z-50" align="end" side="bottom">
         <div className="space-y-4">
-          <h4 className="font-medium text-sm">Configuration des colonnes</h4>
-          <p className="text-xs text-muted-foreground">
-            Glissez pour réorganiser • Cliquez pour masquer/afficher
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium text-sm">Configuration des colonnes</h4>
+              <p className="text-xs text-muted-foreground">
+                Glissez pour réorganiser • Cliquez pour masquer/afficher
+              </p>
+            </div>
+            {isInitialized && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleForceReload}
+                disabled={isReloading}
+                className="h-7"
+              >
+                <RefreshCw className={`h-3 w-3 mr-1 ${isReloading ? 'animate-spin' : ''}`} />
+                Recharger
+              </Button>
+            )}
+          </div>
           
           <div className="grid grid-cols-2 gap-6">
             {/* Colonnes visibles - Colonne de gauche */}

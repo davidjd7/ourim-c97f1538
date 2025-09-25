@@ -45,6 +45,7 @@ interface ColumnVisibilityContextValue {
   updateColumnVisibility: (key: string, visible: boolean) => void;
   reorderColumns: (oldIndex: number, newIndex: number) => void;
   isInitialized: boolean;
+  forceReload: () => Promise<void>;
 }
 
 const ColumnVisibilityContext = createContext<ColumnVisibilityContextValue | undefined>(undefined);
@@ -174,19 +175,31 @@ const updateColumnVisibility = useCallback((key: string, visible: boolean) => {
   });
 }, []);
 
-const reorderColumns = useCallback((oldIndex: number, newIndex: number) => {
-  setColumns((current) => {
-    const before = colDbg.snap(current);
-    const newColumns = [...current];
-    const [reorderedColumn] = newColumns.splice(oldIndex, 1);
-    newColumns.splice(newIndex, 0, reorderedColumn);
-    
-    // Update order values
-    const updatedColumns = newColumns.map((col, index) => ({ ...col, order: index }));
-    colDbg.log('order.reorder', { oldIndex, newIndex, moved: reorderedColumn?.key, before, after: colDbg.snap(updatedColumns) });
-    return updatedColumns;
-  });
-}, []);
+  const reorderColumns = useCallback((oldIndex: number, newIndex: number) => {
+    setColumns((current) => {
+      const before = colDbg.snap(current);
+      const newColumns = [...current];
+      const [reorderedColumn] = newColumns.splice(oldIndex, 1);
+      newColumns.splice(newIndex, 0, reorderedColumn);
+      
+      // Update order values
+      const updatedColumns = newColumns.map((col, index) => ({ ...col, order: index }));
+      colDbg.log('order.reorder', { oldIndex, newIndex, moved: reorderedColumn?.key, before, after: colDbg.snap(updatedColumns) });
+      return updatedColumns;
+    });
+  }, []);
+
+  const forceReload = useCallback(async () => {
+    colDbg.log('forceReload.start', { currentUserId: userIdRef.current });
+    try {
+      await loadColumnsForUser(userIdRef.current);
+      colDbg.log('forceReload.success');
+    } catch (error) {
+      console.error('Error during force reload:', error);
+      colDbg.log('forceReload.error', { error: String(error) });
+      throw error;
+    }
+  }, [loadColumnsForUser]);
 
   const value: ColumnVisibilityContextValue = useMemo(() => {
     // Create immutable sorted copies to avoid mutation during render
@@ -201,8 +214,9 @@ const reorderColumns = useCallback((oldIndex: number, newIndex: number) => {
       updateColumnVisibility,
       reorderColumns,
       isInitialized,
+      forceReload,
     };
-  }, [columns, updateColumnVisibility, reorderColumns, isInitialized]);
+  }, [columns, updateColumnVisibility, reorderColumns, isInitialized, forceReload]);
 
   return (
     <ColumnVisibilityContext.Provider value={value}>
