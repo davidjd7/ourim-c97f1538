@@ -204,8 +204,8 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
     };
 
     // Calculate Total Return
-    const previousData = syntheseData.length > 1 ? syntheseData[syntheseData.length - 2] : null;
-    const deltaValeur = previousData ? latestData.valeur - previousData.valeur : 0;
+    const firstData = syntheseData.length > 0 ? syntheseData[0] : null;
+    const deltaValeur = firstData ? latestData.valeur - firstData.valeur : 0;
     
     // Calculate CFNI for latest period
     const latestImmobilisations = immobilisations
