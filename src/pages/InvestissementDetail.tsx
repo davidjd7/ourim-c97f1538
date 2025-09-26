@@ -516,13 +516,17 @@ export default function InvestissementDetail() {
       )}
 
       {/* Tabs */}
-      <Tabs defaultValue="general" className="w-full">
+      <Tabs defaultValue="performance" className="w-full">
         <TabsList className="grid w-full grid-cols-4 no-print">
-          <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="performance" className="space-y-4 no-print">
+          <PerformanceTab investmentId={isNewInvestment ? '' : id!} />
+        </TabsContent>
         
         <TabsContent value="general" className="space-y-4 no-break">
           {!isNewInvestment ? (
@@ -549,10 +553,6 @@ export default function InvestissementDetail() {
               onDataChange={(newData) => setTempEditData({ ...tempEditData, ...newData })}
             />
           )}
-        </TabsContent>
-        
-        <TabsContent value="performance" className="space-y-4 no-print">
-          <PerformanceTab investmentId={isNewInvestment ? '' : id!} />
         </TabsContent>
         
         <TabsContent value="documents" className="space-y-4 no-print">
