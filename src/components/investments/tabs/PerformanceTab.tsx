@@ -2099,7 +2099,7 @@ export function PerformanceTab({
                       ...editingValo.row,
                       note: e.target.value
                     }
-                  })} className="min-h-[60px]" /> : <div className="max-w-xs truncate">{valo.note}</div>}
+                  })} className="min-h-[60px]" /> : <div className="max-w-xs text-sm leading-tight line-clamp-2">{valo.note}</div>}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
