@@ -252,18 +252,27 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
       return sum + (rowNOI - rowImmoAmount - rowInteret);
     }, 0);
 
+    const prevData = syntheseData.length > 1 ? syntheseData[syntheseData.length - 2] : null;
+    const variationValeurDerniereAnnee = prevData ? (latestData.valeur - prevData.valeur) : 0;
+    const variationFpDerniereAnnee = prevData ? (latestData.fp - prevData.fp) : 0;
+    const latestRmbtCapital = debtFlows
+      .filter(df => df.date === latestData.date)
+      .reduce((sum, df) => sum + (df.rmbtCapital || 0), 0);
+    const latestCf = cfni - latestRmbtCapital;
+    const gain1Latest = variationFpDerniereAnnee + latestCf; // Gain 1 = Delta FP + CF (période la plus récente)
+
     const xirrDetails = {
       totalCfni,
       cfniDerniereAnnee: cfni,
       deltaValeur,
-      variationValeurDerniereAnnee: deltaValeur,
+      variationValeurDerniereAnnee,
       total: totalCfni + deltaValeur,
       years: syntheseData.length,
-      gain1: cfniPlusDeltaValeur,
+      gain1: gain1Latest,
       lastCfniYear: latestYear,
       lastVarValeurYear: latestYear,
       gain1Year: latestYear,
-      latestCf: latestData.flux,
+      latestCf,
       latestCfYear: latestYear
     };
 
