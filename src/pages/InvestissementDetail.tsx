@@ -505,7 +505,7 @@ export default function InvestissementDetail() {
                      CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)}
                    </div>
                    <div>
-                     Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)}
+                     Δ Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)}
                    </div>
                    <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
                  </div>
