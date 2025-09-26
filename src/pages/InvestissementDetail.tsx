@@ -473,7 +473,7 @@ export default function InvestissementDetail() {
                      {kpis.totalReturn >= 0 ? '+' : ''}{formatPercentage(kpis.totalReturn)}
                    </p>
                      <p className="text-sm text-muted-foreground mt-1">
-                       Gain : {formatCurrency(Math.abs(kpis.xirrDetails.latestCf || 0))}
+                       Gain : {formatCurrency(Math.abs(kpis.xirrDetails.gain1 || 0))}
                      </p>
                  </div>
                  <div className="text-xs text-muted-foreground space-y-1">
