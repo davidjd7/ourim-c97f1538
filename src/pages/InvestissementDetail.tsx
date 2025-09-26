@@ -467,11 +467,11 @@ export default function InvestissementDetail() {
                <p className="text-sm text-muted-foreground font-bold mb-3">Total Return (2024)</p>
                <div className="flex justify-between items-start">
                  <div className="flex flex-col">
-                   <p className={`text-2xl font-bold ${kpis.totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
-                     {kpis.totalReturn >= 0 ? '+' : ''}{formatPercentage(kpis.totalReturn)}
+                   <p className={`text-2xl font-bold ${kpis.xirrDetails.gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
+                     {kpis.xirrDetails.gain1 >= 0 ? '+' : ''}{formatPercentage(kpis.fondPropre > 0 ? (kpis.xirrDetails.gain1 / kpis.fondPropre) * 100 : 0)}
                    </p>
                      <p className="text-sm text-muted-foreground mt-1">
-                       Gain : {formatCurrency(Math.abs(kpis.totalReturnDetails.totalEarning || 0))}
+                       Gain : {formatCurrency(Math.abs(kpis.xirrDetails.gain1 || 0))}
                      </p>
                  </div>
                  <div className="text-xs text-muted-foreground space-y-1">
