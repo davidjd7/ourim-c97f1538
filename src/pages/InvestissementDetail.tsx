@@ -477,7 +477,7 @@ export default function InvestissementDetail() {
                  <div className="text-xs text-muted-foreground space-y-1">
                    <div>COC net: {kpis.totalReturnDetails.cocNet?.toFixed(1) || '0.0'}%</div>
                    <div>CFNI: {formatCurrency(kpis.totalReturnDetails.cfni)}</div>
-                   <div>Δ Valeur: {formatCurrency(kpis.totalReturnDetails.deltaValeur)}</div>
+                   <div>Δ Valeur: {formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)}</div>
                  </div>
                </div>
              </div>
