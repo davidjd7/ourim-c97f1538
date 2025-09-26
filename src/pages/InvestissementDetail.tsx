@@ -471,7 +471,7 @@ export default function InvestissementDetail() {
                      {kpis.xirrDetails.gain1 >= 0 ? '+' : ''}{formatPercentage(kpis.fondPropre > 0 ? (kpis.xirrDetails.gain1 / kpis.fondPropre) * 100 : 0)}
                    </p>
                      <p className="text-sm text-muted-foreground mt-1">
-                       Gain : {formatCurrency(Math.abs(kpis.xirrDetails.gain1 || 0))}
+                       Gain : {kpis.xirrDetails.gain1 >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.gain1 || 0)}
                      </p>
                  </div>
                  <div className="text-xs text-muted-foreground space-y-1">
