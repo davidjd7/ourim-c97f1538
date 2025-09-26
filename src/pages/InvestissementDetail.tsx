@@ -55,7 +55,7 @@ export default function InvestissementDetail() {
     rendementNet: 0,
     rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
     totalReturn: 0,
-    totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
+    totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, totalEarning: 0, year: 0 },
     xirr: 0,
     xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0, latestCf: 0, latestCfYear: 0 }
   } : batchKPIs[id || ''] || {
@@ -64,7 +64,7 @@ export default function InvestissementDetail() {
     rendementNet: 0,
     rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: 0, yieldBanque: 0 },
     totalReturn: 0,
-    totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: 0 },
+    totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, totalEarning: 0, year: 0 },
     xirr: 0,
     xirrDetails: { totalCfni: 0, cfniDerniereAnnee: 0, deltaValeur: 0, variationValeurDerniereAnnee: 0, total: 0, years: 0, gain1: 0, lastCfniYear: 0, lastVarValeurYear: 0, gain1Year: 0, latestCf: 0, latestCfYear: 0 }
   };
@@ -472,9 +472,9 @@ export default function InvestissementDetail() {
                    <p className={`text-2xl font-bold ${kpis.totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
                      {kpis.totalReturn >= 0 ? '+' : ''}{formatPercentage(kpis.totalReturn)}
                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Gain : {formatCurrency(Math.abs(kpis.totalReturnDetails.cfniPlusDeltaValeur || 0))}
-                    </p>
+                     <p className="text-sm text-muted-foreground mt-1">
+                       Gain : {formatCurrency(Math.abs(kpis.totalReturnDetails.totalEarning || 0))}
+                     </p>
                  </div>
                  <div className="text-xs text-muted-foreground space-y-1">
                    <div>COC net: {kpis.totalReturnDetails.cocNet?.toFixed(1) || '0.0'}%</div>

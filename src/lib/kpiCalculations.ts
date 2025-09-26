@@ -220,6 +220,10 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
     const cfni = noiAjuste - latestInteret;
     const cfniPlusDeltaValeur = cfni + deltaValeur;
     
+    // Calculate total earning (total flux + total gain valeur)
+    const totalFlux = syntheseData.reduce((sum, row) => sum + (row.flux || 0), 0);
+    const totalEarning = deltaValeur + totalFlux;
+    
     const totalReturn = latestData.fp > 0 ? (cfniPlusDeltaValeur / latestData.fp) * 100 : 0;
     const cocNet = latestData.fp > 0 ? (cfni / latestData.fp) * 100 : 0;
     
@@ -228,6 +232,7 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
       deltaValeur,
       cocNet,
       cfniPlusDeltaValeur,
+      totalEarning,
       year: latestYear
     };
 
@@ -285,7 +290,7 @@ const getDefaultKPIs = (): InvestmentKPIs => ({
   rendementNet: 0,
   rendementNetDetails: { noi: 0, loyer: 0, noiSurLoyer: 0, year: new Date().getFullYear(), yieldBanque: 0 },
   totalReturn: 0,
-  totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, year: new Date().getFullYear() },
+  totalReturnDetails: { cfni: 0, deltaValeur: 0, cocNet: 0, cfniPlusDeltaValeur: 0, totalEarning: 0, year: new Date().getFullYear() },
   xirr: 0,
   xirrDetails: { 
     totalCfni: 0, 
