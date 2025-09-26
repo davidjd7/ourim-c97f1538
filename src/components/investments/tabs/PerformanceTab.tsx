@@ -1498,7 +1498,7 @@ export function PerformanceTab({
                               <Tooltip>
                                 <TooltipTrigger className="cursor-help">CFNI</TooltipTrigger>
                                 <TooltipContent>
-                                  <p>NOI ajusté après interet</p>
+                                   <p>NOI net des immos et interet</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TableHead>
