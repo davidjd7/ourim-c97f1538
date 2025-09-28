@@ -31,8 +31,30 @@ src/
 
 ## Running Tests
 
-Add these scripts to your package.json:
+### Option 1: Alternative Script (Recommandé si pas d'accès terminal)
+```bash
+# Lancer tous les tests
+node run-tests.js
 
+# Tests en mode watch
+node run-tests.js watch
+
+# Interface UI des tests  
+node run-tests.js ui
+
+# Tests avec couverture
+node run-tests.js coverage
+```
+
+### Option 2: Commands directes (si accès terminal)
+```bash
+npx vitest run          # Lancer tous les tests
+npx vitest watch        # Mode watch
+npx vitest --ui         # Interface graphique
+npx vitest --coverage   # Avec couverture
+```
+
+### Option 3: Scripts package.json (nécessite modification)
 ```json
 {
   "scripts": {
