@@ -29,6 +29,8 @@ interface ColumnFiltersContextValue {
 
 const ColumnFiltersContext = createContext<ColumnFiltersContextValue | undefined>(undefined);
 
+export { ColumnFiltersContext };
+
 // Fonction pour sérialiser les filtres (gérer les dates)
 const serializeFilters = (filters: Record<string, ColumnFilter>): string => {
   return JSON.stringify(filters, (key, value) => {

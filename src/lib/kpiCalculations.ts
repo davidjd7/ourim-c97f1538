@@ -293,7 +293,7 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
 };
 
 // Default KPI values
-const getDefaultKPIs = (): InvestmentKPIs => ({
+export const getDefaultKPIs = (): InvestmentKPIs => ({
   fondPropre: 0,
   fondPropreDetails: { valeur: 0, crd: 0, ltv: 0, year: new Date().getFullYear() },
   rendementNet: 0,

@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { useColumnFilters } from '@/contexts/ColumnFiltersContext';
 import { useTags } from '@/hooks/useTags';
 
-interface Investment {
+export interface Investment {
   id: string;
   name: string;
   type: string;
@@ -10,7 +10,7 @@ interface Investment {
   [key: string]: any;
 }
 
-interface KPIData {
+export interface KPIData {
   [investmentId: string]: {
     [key: string]: number;
   };
