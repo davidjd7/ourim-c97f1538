@@ -15,7 +15,8 @@ import {
   Tooltip, 
   Legend,
   ResponsiveContainer,
-  ReferenceLine
+  ReferenceLine,
+  Customized
 } from 'recharts';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -330,6 +331,81 @@ export function ConsolidatedCharts({
     };
   }, [selectedInvestments, rawByInvestment, syntheticTableData, investments, batchKPIs, selectedYear]);
 
+  // Calculate global axis domains for CFNI vs Variation scatter (stable across all years)
+  const cfniAxisConfig = useMemo(() => {
+    let globalXMin = 0, globalXMax = 0, globalYMin = 0, globalYMax = 0;
+    
+    // Calculate for ALL years including "Total"
+    Array.from(selectedInvestments).forEach(investmentId => {
+      const data = rawByInvestment[investmentId];
+      if (!data) return;
+
+      const synthesis = getSyntheseData(
+        data.cashflows,
+        data.immobilisations,
+        data.debtFlows,
+        data.valorisations
+      );
+
+      // Calculate for each year AND total
+      const yearsToCheck = ['total', ...cfniVsValeurData.years.map(y => y.toString())];
+      
+      yearsToCheck.forEach(year => {
+        let cfni = 0;
+        let deltaValeur = 0;
+
+        if (year === 'total') {
+          synthesis.forEach((row, index) => {
+            cfni += row.flux;
+            if (index > 0) {
+              deltaValeur += row.valeur - synthesis[index - 1].valeur;
+            }
+          });
+        } else {
+          const yearNum = parseInt(year);
+          const yearRows = synthesis.filter(row => new Date(row.date).getFullYear() === yearNum);
+          
+          yearRows.forEach((row, index) => {
+            cfni += row.flux;
+            if (index > 0) {
+              deltaValeur += row.valeur - yearRows[index - 1].valeur;
+            } else if (yearRows.length > 0) {
+              const prevYearRows = synthesis.filter(r => new Date(r.date).getFullYear() === yearNum - 1);
+              if (prevYearRows.length > 0) {
+                deltaValeur += row.valeur - prevYearRows[prevYearRows.length - 1].valeur;
+              }
+            }
+          });
+        }
+
+        globalXMin = Math.min(globalXMin, cfni);
+        globalXMax = Math.max(globalXMax, cfni);
+        globalYMin = Math.min(globalYMin, deltaValeur);
+        globalYMax = Math.max(globalYMax, deltaValeur);
+      });
+    });
+
+    // Add padding (10%)
+    const xPadding = (globalXMax - globalXMin) * 0.1;
+    const yPadding = (globalYMax - globalYMin) * 0.1;
+    
+    const xDomain = [globalXMin - xPadding, globalXMax + xPadding];
+    const yDomain = [globalYMin - yPadding, globalYMax + yPadding];
+
+    // Generate nice ticks
+    const generateTicks = (min: number, max: number, count = 5) => {
+      const step = (max - min) / (count - 1);
+      return Array.from({ length: count }, (_, i) => min + step * i);
+    };
+
+    return {
+      xDomain,
+      yDomain,
+      xTicks: generateTicks(xDomain[0], xDomain[1], 5),
+      yTicks: generateTicks(yDomain[0], yDomain[1], 5)
+    };
+  }, [selectedInvestments, rawByInvestment, cfniVsValeurData.years]);
+
   // Colors for charts
   const COLORS = [
     'hsl(var(--primary))',
@@ -575,35 +651,16 @@ export function ConsolidatedCharts({
                     type="number" 
                     dataKey="cfni" 
                     name="CFNI"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={(props) => {
-                      const { x, y, payload, index } = props;
-                      // Calculate Y position for Y=0 line
-                      // We need to find where Y=0 is in the chart coordinates
-                      const chartHeight = 300;
-                      const dataMin = Math.min(...cfniVsValeurData.data.map(d => d.deltaValeur));
-                      const dataMax = Math.max(...cfniVsValeurData.data.map(d => d.deltaValeur));
-                      const range = dataMax - dataMin;
-                      const yZeroPosition = y - (0 - dataMin) / range * chartHeight * 0.7 + chartHeight * 0.85 * (dataMax / range);
-                      
-                      return (
-                        <text
-                          x={x}
-                          y={yZeroPosition + 15}
-                          textAnchor="middle"
-                          fill="hsl(var(--foreground))"
-                          fontSize={12}
-                        >
-                          {formatCurrency(payload.value)}
-                        </text>
-                      );
-                    }}
+                    domain={cfniAxisConfig.xDomain}
+                    ticks={cfniAxisConfig.xTicks}
+                    hide={true}
                   />
                   <YAxis 
                     type="number" 
                     dataKey="deltaValeur" 
                     name="Variation Valeur"
+                    domain={cfniAxisConfig.yDomain}
+                    ticks={cfniAxisConfig.yTicks}
                     tickFormatter={(value) => formatCurrency(value)}
                   />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={2} />
@@ -635,6 +692,38 @@ export function ConsolidatedCharts({
                       />
                     ))}
                   </Scatter>
+                  <Customized
+                    component={({ xAxisMap, yAxisMap }: any) => {
+                      if (!xAxisMap || !yAxisMap) return null;
+                      
+                      const xAxis = xAxisMap[0];
+                      const yAxis = yAxisMap[0];
+                      
+                      if (!xAxis || !yAxis) return null;
+
+                      const yZeroPixel = yAxis.scale(0);
+                      
+                      return (
+                        <g>
+                          {cfniAxisConfig.xTicks.map((tick, index) => {
+                            const xPixel = xAxis.scale(tick);
+                            return (
+                              <text
+                                key={index}
+                                x={xPixel}
+                                y={yZeroPixel + 20}
+                                textAnchor="middle"
+                                fill="hsl(var(--foreground))"
+                                fontSize={12}
+                              >
+                                {formatCurrency(tick)}
+                              </text>
+                            );
+                          })}
+                        </g>
+                      );
+                    }}
+                  />
                 </ScatterChart>
               </ResponsiveContainer>
             </ChartContainer>
