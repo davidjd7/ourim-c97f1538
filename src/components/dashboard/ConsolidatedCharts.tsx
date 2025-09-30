@@ -476,8 +476,8 @@ export function ConsolidatedCharts({
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Graphiques Consolidés</h2>
       
-      {/* First Row: Time Evolution only (full width) */}
-      <div className="w-full">
+      {/* First Row: Evolution Temporelle + Répartition des Valeurs */}
+      <div className="grid gap-4 md:grid-cols-2 charts-grid">
         {/* Time Evolution Curve */}
         <Card className="card-financial">
           <CardHeader>
@@ -544,9 +544,54 @@ export function ConsolidatedCharts({
             </ChartContainer>
           </CardContent>
         </Card>
+
+        {/* Donut Chart (Value Distribution) */}
+        <Card className="card-financial">
+          <CardHeader>
+            <CardTitle>Répartition des Valeurs</CardTitle>
+            <CardDescription>
+              Distribution par investissement
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={donutData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={140}
+                    dataKey="value"
+                    nameKey="name"
+                  >
+                    {donutData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length > 0) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                            <p className="font-semibold">{data.name}</p>
+                            <p className="text-sm">Valeur: {formatCurrency(data.value)}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Second Row: LTV vs TRI + Value Distribution */}
+      {/* Second Row: LTV vs TRI + CFNI vs Variation de Valeur */}
       <div className="grid gap-4 md:grid-cols-2 charts-grid">
         {/* Scatter Plot (LTV vs TRI) */}
         <Card className="card-financial">
@@ -610,54 +655,6 @@ export function ConsolidatedCharts({
           </CardContent>
         </Card>
 
-        {/* Donut Chart (Value Distribution) */}
-        <Card className="card-financial">
-          <CardHeader>
-            <CardTitle>Répartition des Valeurs</CardTitle>
-            <CardDescription>
-              Distribution par investissement
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={donutData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={120}
-                    dataKey="value"
-                    nameKey="name"
-                  >
-                    {donutData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length > 0) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
-                            <p className="font-semibold">{data.name}</p>
-                            <p className="text-sm">Valeur: {formatCurrency(data.value)}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Third Row: CFNI vs Variation Valeur + Net Rendement */}
-      <div className="grid gap-4 md:grid-cols-2 charts-grid">
         {/* CFNI vs Variation de Valeur Scatter Plot */}
         <Card className="card-financial">
           <CardHeader>
@@ -788,9 +785,11 @@ export function ConsolidatedCharts({
             </ChartContainer>
           </CardContent>
         </Card>
+      </div>
 
+      {/* Third Row: Rendement Net 2024 + Distribution des Rendements */}
+      <div className="grid gap-4 md:grid-cols-2 charts-grid">
         {/* Histogram Net Rendement 2024 */}
-        {/* Histogram Net Rendement 2024 (moved from above) */}
         <Card className="card-financial">
           <CardHeader>
             <CardTitle>Rendement Net 2024</CardTitle>
