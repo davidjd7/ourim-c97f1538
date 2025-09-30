@@ -413,7 +413,8 @@ export function ConsolidatedCharts({
         </div>
       </div>;
   }
-  return <div className="space-y-8">
+  return <TooltipProvider delayDuration={200}>
+    <div className="space-y-8">
       
       
       {/* First Row: Evolution Temporelle + Répartition des Valeurs */}
@@ -660,20 +661,18 @@ export function ConsolidatedCharts({
             <CardTitle>Distribution des Rendements</CardTitle>
             <CardDescription className="flex items-center gap-1.5">
               Analyse statistique - Rendement Net et TRI
-              <TooltipProvider>
-                <UITooltip>
-                  <TooltipTrigger asChild>
-                    <InfoIcon className="h-4 w-4 cursor-help text-muted-foreground hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="max-w-sm">
-                    <div className="space-y-1 text-sm">
-                      <p><strong>Médiane à gauche</strong> = majorité des actifs plutôt faibles, quelques pépites.</p>
-                      <p><strong>Médiane à droite</strong> = majorité plutôt solides, quelques boulets.</p>
-                      <p><strong>Médiane centrée</strong> = homogénéité.</p>
-                    </div>
-                  </TooltipContent>
-                </UITooltip>
-              </TooltipProvider>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <InfoIcon className="h-4 w-4 cursor-help text-muted-foreground hover:text-foreground transition-colors" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-sm">
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Médiane à gauche</strong> = majorité des actifs plutôt faibles, quelques pépites.</p>
+                    <p><strong>Médiane à droite</strong> = majorité plutôt solides, quelques boulets.</p>
+                    <p><strong>Médiane centrée</strong> = homogénéité.</p>
+                  </div>
+                </TooltipContent>
+              </UITooltip>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -739,5 +738,6 @@ export function ConsolidatedCharts({
           </CardContent>
         </Card>
       </div>
-    </div>;
+    </div>
+  </TooltipProvider>;
 }
