@@ -317,6 +317,7 @@ export function ConsolidatedCharts({
       return {
         cfni,
         deltaValeur,
+        gain: cfni + deltaValeur,
         name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
         size: kpis ? Math.max(20, Math.min(200, kpis.fondPropreDetails.valeur / 5000)) : 30,
         isConsolidated: false
@@ -730,6 +731,7 @@ export function ConsolidatedCharts({
                             <p className="font-semibold">{data.name}</p>
                             <p className="text-sm">CFNI: {formatCurrency(data.cfni)}</p>
                             <p className="text-sm">Δ Valeur: {formatCurrency(data.deltaValeur)}</p>
+                            <p className="text-sm font-semibold">Gain: {formatCurrency(data.gain)}</p>
                           </div>
                         );
                       }
