@@ -330,6 +330,25 @@ export function ConsolidatedCharts({
     };
   }, [selectedInvestments, rawByInvestment, syntheticTableData, investments, batchKPIs, selectedYear]);
 
+  // Calculate X-axis ticks for CFNI chart
+  const cfniXAxisTicks = useMemo(() => {
+    if (!cfniVsValeurData.data || cfniVsValeurData.data.length === 0) return [];
+    
+    const cfniValues = cfniVsValeurData.data.map(d => d.cfni);
+    const minCfni = Math.min(...cfniValues);
+    const maxCfni = Math.max(...cfniValues);
+    const range = maxCfni - minCfni;
+    
+    // Generate approximately 5 ticks
+    const tickCount = 5;
+    const step = range / (tickCount - 1);
+    
+    return Array.from({ length: tickCount }, (_, i) => {
+      const value = minCfni + (step * i);
+      return Math.round(value / 10000) * 10000; // Round to nearest 10k
+    });
+  }, [cfniVsValeurData.data]);
+
   // Colors for charts
   const COLORS = [
     'hsl(var(--primary))',
@@ -569,15 +588,13 @@ export function ConsolidatedCharts({
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart>
+                <ScatterChart margin={{ top: 20, right: 20, bottom: 40, left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     type="number" 
                     dataKey="cfni" 
                     name="CFNI"
-                    tickFormatter={(value) => formatCurrency(value)}
-                    axisLine={false}
-                    tickLine={false}
+                    hide={true}
                   />
                   <YAxis 
                     type="number" 
@@ -586,7 +603,29 @@ export function ConsolidatedCharts({
                     tickFormatter={(value) => formatCurrency(value)}
                   />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={2} />
-                  <Tooltip
+                  {cfniXAxisTicks.map((tickValue) => (
+                    <ReferenceLine
+                      key={tickValue}
+                      x={tickValue}
+                      stroke="transparent"
+                      label={({viewBox}) => {
+                        // Position label at y=0 line
+                        const yZero = viewBox.y + (viewBox.height / 2); // Approximate center
+                        return (
+                          <text
+                            x={viewBox.x}
+                            y={yZero + 15}
+                            textAnchor="middle"
+                            fill="hsl(var(--foreground))"
+                            fontSize={12}
+                          >
+                            {formatCurrency(tickValue)}
+                          </text>
+                        );
+                      }}
+                    />
+                  ))}
+                  <Tooltip 
                     content={({ active, payload }) => {
                       if (active && payload && payload.length > 0) {
                         const data = payload[0].payload;
@@ -609,7 +648,7 @@ export function ConsolidatedCharts({
                     {cfniVsValeurData.data.map((entry, index) => (
                       <Cell 
                         key={`cell-${index}`} 
-                        fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"}
+                        fill="hsl(var(--primary))"
                         r={Math.sqrt(entry.size)} 
                       />
                     ))}
