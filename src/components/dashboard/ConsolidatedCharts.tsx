@@ -575,9 +575,30 @@ export function ConsolidatedCharts({
                     type="number" 
                     dataKey="cfni" 
                     name="CFNI"
-                    tickFormatter={(value) => formatCurrency(value)}
                     axisLine={false}
                     tickLine={false}
+                    tick={(props) => {
+                      const { x, y, payload, index } = props;
+                      // Calculate Y position for Y=0 line
+                      // We need to find where Y=0 is in the chart coordinates
+                      const chartHeight = 300;
+                      const dataMin = Math.min(...cfniVsValeurData.data.map(d => d.deltaValeur));
+                      const dataMax = Math.max(...cfniVsValeurData.data.map(d => d.deltaValeur));
+                      const range = dataMax - dataMin;
+                      const yZeroPosition = y - (0 - dataMin) / range * chartHeight * 0.7 + chartHeight * 0.85 * (dataMax / range);
+                      
+                      return (
+                        <text
+                          x={x}
+                          y={yZeroPosition + 15}
+                          textAnchor="middle"
+                          fill="hsl(var(--foreground))"
+                          fontSize={12}
+                        >
+                          {formatCurrency(payload.value)}
+                        </text>
+                      );
+                    }}
                   />
                   <YAxis 
                     type="number" 
