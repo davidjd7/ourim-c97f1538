@@ -364,7 +364,7 @@ export function ConsolidatedKPIView({
         {/* Total Return */}
         <div className="card-financial">
           <div className="p-4">
-            <p className="text-sm text-muted-foreground font-bold mb-3">Total Return ({effectiveCutoffYear})</p>
+            <p className="text-sm text-muted-foreground font-bold mb-3">Total ROE ({effectiveCutoffYear})</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
                 <p className={`text-2xl font-bold ${getValueClass(consolidatedData.totalReturn)}`}>
