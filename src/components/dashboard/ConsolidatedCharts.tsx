@@ -389,8 +389,17 @@ export function ConsolidatedCharts({
     const xPadding = (globalXMax - globalXMin) * 0.1;
     const yPadding = (globalYMax - globalYMin) * 0.1;
     
-    const xDomain = [globalXMin - xPadding, globalXMax + xPadding];
-    const yDomain = [globalYMin - yPadding, globalYMax + yPadding];
+    // Round to nearest 50000
+    const roundTo50k = (value: number) => Math.round(value / 50000) * 50000;
+    
+    const xDomain = [
+      roundTo50k(globalXMin - xPadding),
+      roundTo50k(globalXMax + xPadding)
+    ];
+    const yDomain = [
+      roundTo50k(globalYMin - yPadding),
+      roundTo50k(globalYMax + yPadding)
+    ];
 
     // Generate nice ticks
     const generateTicks = (min: number, max: number, count = 5) => {
