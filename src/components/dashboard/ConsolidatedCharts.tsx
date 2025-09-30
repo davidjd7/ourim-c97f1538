@@ -19,6 +19,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChartContainer, ChartConfig } from '@/components/ui/chart';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { getSyntheseData, calculateXIRR, calculateNOI } from '@/lib/kpiCalculations';
@@ -64,6 +65,7 @@ export function ConsolidatedCharts({
 }: ConsolidatedChartsProps) {
   const { investments } = useInvestments();
   const [evolutionType, setEvolutionType] = useState<'gains' | 'valeur' | 'cfni'>('gains');
+  const [selectedYear, setSelectedYear] = useState<string>('total');
 
   // Utility function to calculate time series gains for each investment
   const calculateTimeSeriesGains = (investmentData: InvestmentRawData, investmentId: string) => {
@@ -246,6 +248,112 @@ export function ConsolidatedCharts({
       xirr: createBoxplotStats(xirrs)
     };
   }, [selectedInvestments, batchKPIs]);
+
+  // 6. CFNI vs Variation de Valeur scatter plot data
+  const cfniVsValeurData = useMemo(() => {
+    const availableYears = new Set<number>();
+    
+    // Collect all available years
+    Object.values(rawByInvestment).forEach(data => {
+      const synthesis = getSyntheseData(
+        data.cashflows,
+        data.immobilisations,
+        data.debtFlows,
+        data.valorisations
+      );
+      synthesis.forEach(row => {
+        availableYears.add(new Date(row.date).getFullYear());
+      });
+    });
+
+    const sortedYears = Array.from(availableYears).sort();
+    
+    const individualPoints = Array.from(selectedInvestments).map(investmentId => {
+      const data = rawByInvestment[investmentId];
+      if (!data) return null;
+
+      const synthesis = getSyntheseData(
+        data.cashflows,
+        data.immobilisations,
+        data.debtFlows,
+        data.valorisations
+      );
+
+      let cfni = 0;
+      let deltaValeur = 0;
+
+      if (selectedYear === 'total') {
+        // Calculate total for all years
+        synthesis.forEach((row, index) => {
+          cfni += row.flux;
+          if (index > 0) {
+            deltaValeur += row.valeur - synthesis[index - 1].valeur;
+          }
+        });
+      } else {
+        // Calculate for specific year
+        const yearNum = parseInt(selectedYear);
+        const yearRows = synthesis.filter(row => new Date(row.date).getFullYear() === yearNum);
+        
+        yearRows.forEach((row, index) => {
+          cfni += row.flux;
+          if (index > 0) {
+            deltaValeur += row.valeur - yearRows[index - 1].valeur;
+          } else if (yearRows.length > 0) {
+            // For first row of the year, calculate delta from previous year's last row
+            const prevYearRows = synthesis.filter(r => new Date(r.date).getFullYear() === yearNum - 1);
+            if (prevYearRows.length > 0) {
+              deltaValeur += row.valeur - prevYearRows[prevYearRows.length - 1].valeur;
+            }
+          }
+        });
+      }
+
+      const investment = investments.find(inv => inv.id === investmentId);
+      const kpis = batchKPIs[investmentId];
+      
+      return {
+        cfni,
+        deltaValeur,
+        name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
+        size: kpis ? Math.max(20, Math.min(200, kpis.fondPropreDetails.valeur / 5000)) : 30,
+        isConsolidated: false
+      };
+    }).filter(Boolean);
+
+    // Add consolidated point
+    if (syntheticTableData.length > 0) {
+      let consolidatedCfni = 0;
+      let consolidatedDeltaValeur = 0;
+
+      if (selectedYear === 'total') {
+        syntheticTableData.forEach(row => {
+          consolidatedCfni += row.cfni;
+          consolidatedDeltaValeur += row.deltaValeur;
+        });
+      } else {
+        const yearNum = parseInt(selectedYear);
+        const yearRows = syntheticTableData.filter(row => new Date(row.date).getFullYear() === yearNum);
+        yearRows.forEach(row => {
+          consolidatedCfni += row.cfni;
+          consolidatedDeltaValeur += row.deltaValeur;
+        });
+      }
+
+      individualPoints.push({
+        cfni: consolidatedCfni,
+        deltaValeur: consolidatedDeltaValeur,
+        name: 'Portefeuille Consolidé',
+        size: Math.max(30, Math.min(250, Math.abs(consolidatedCfni) / 5000)),
+        isConsolidated: true
+      });
+    }
+
+    return {
+      data: individualPoints,
+      years: sortedYears
+    };
+  }, [selectedInvestments, rawByInvestment, syntheticTableData, investments, batchKPIs, selectedYear]);
 
   // Colors for charts
   const COLORS = [
@@ -458,9 +566,84 @@ export function ConsolidatedCharts({
         </Card>
       </div>
 
-      {/* Third Row: Net Rendement + Distribution */}
+      {/* Third Row: CFNI vs Variation Valeur + Net Rendement */}
       <div className="grid gap-4 md:grid-cols-2 charts-grid">
+        {/* CFNI vs Variation de Valeur Scatter Plot */}
+        <Card className="card-financial">
+          <CardHeader>
+            <CardTitle>CFNI vs Variation de Valeur</CardTitle>
+            <CardDescription>
+              Relation entre flux et variation de valeur (rouge = consolidé)
+            </CardDescription>
+            <div className="mt-4">
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sélectionner l'année" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="total">Total (toutes années)</SelectItem>
+                  {cfniVsValeurData.years.map(year => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    type="number" 
+                    dataKey="cfni" 
+                    name="CFNI"
+                    tickFormatter={(value) => formatCurrency(value)}
+                  />
+                  <YAxis 
+                    type="number" 
+                    dataKey="deltaValeur" 
+                    name="Variation Valeur"
+                    tickFormatter={(value) => formatCurrency(value)}
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length > 0) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                            <p className="font-semibold">{data.name}</p>
+                            <p className="text-sm">CFNI: {formatCurrency(data.cfni)}</p>
+                            <p className="text-sm">Δ Valeur: {formatCurrency(data.deltaValeur)}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Scatter
+                    data={cfniVsValeurData.data}
+                    fill="hsl(var(--primary))"
+                    fillOpacity={0.6}
+                  >
+                    {cfniVsValeurData.data.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"}
+                        r={Math.sqrt(entry.size)} 
+                      />
+                    ))}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
         {/* Histogram Net Rendement 2024 */}
+        {/* Histogram Net Rendement 2024 (moved from above) */}
         <Card className="card-financial">
           <CardHeader>
             <CardTitle>Rendement Net 2024</CardTitle>
