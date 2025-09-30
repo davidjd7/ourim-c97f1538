@@ -384,8 +384,8 @@ export function ConsolidatedKPIView({
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
                 <div>COC net: {consolidatedData.totalReturnDetails.cocNet.toFixed(1)}%</div>
-                <div>CFNI: {formatCurrency(consolidatedData.totalReturnDetails.cfni)}</div>
-                <div>Δ Valeur: {formatCurrency(consolidatedData.totalReturnDetails.deltaValeur)}</div>
+                <div>CFNI: {formatCurrencyWithSign(consolidatedData.totalReturnDetails.cfni)}</div>
+                <div>Δ Valeur: {formatCurrencyWithSign(consolidatedData.totalReturnDetails.deltaValeur)}</div>
               </div>
             </div>
           </div>
