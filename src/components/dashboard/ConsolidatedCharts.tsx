@@ -407,11 +407,28 @@ export function ConsolidatedCharts({
       return Array.from({ length: count }, (_, i) => min + step * i);
     };
 
+    // Generate grid lines (every 25000 for secondary, every 50000 for primary)
+    const generateGridLines = (min: number, max: number) => {
+      const lines = [];
+      const start = Math.floor(min / 25000) * 25000;
+      const end = Math.ceil(max / 25000) * 25000;
+      
+      for (let i = start; i <= end; i += 25000) {
+        lines.push({
+          value: i,
+          isPrimary: i % 50000 === 0
+        });
+      }
+      return lines;
+    };
+
     return {
       xDomain,
       yDomain,
       xTicks: generateTicks(xDomain[0], xDomain[1], 5),
-      yTicks: generateTicks(yDomain[0], yDomain[1], 5)
+      yTicks: generateTicks(yDomain[0], yDomain[1], 5),
+      xGridLines: generateGridLines(xDomain[0], xDomain[1]),
+      yGridLines: generateGridLines(yDomain[0], yDomain[1])
     };
   }, [selectedInvestments, rawByInvestment, cfniVsValeurData.years]);
 
@@ -655,7 +672,26 @@ export function ConsolidatedCharts({
             <ChartContainer config={chartConfig} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  {/* Grid lines Y-axis */}
+                  {cfniAxisConfig.yGridLines.map((line, index) => (
+                    <ReferenceLine
+                      key={`y-${index}`}
+                      y={line.value}
+                      stroke={line.isPrimary ? "hsl(var(--border))" : "hsl(var(--muted))"}
+                      strokeWidth={line.isPrimary ? 1 : 0.5}
+                      strokeOpacity={line.isPrimary ? 0.6 : 0.3}
+                    />
+                  ))}
+                  {/* Grid lines X-axis */}
+                  {cfniAxisConfig.xGridLines.map((line, index) => (
+                    <ReferenceLine
+                      key={`x-${index}`}
+                      x={line.value}
+                      stroke={line.isPrimary ? "hsl(var(--border))" : "hsl(var(--muted))"}
+                      strokeWidth={line.isPrimary ? 1 : 0.5}
+                      strokeOpacity={line.isPrimary ? 0.6 : 0.3}
+                    />
+                  ))}
                   <XAxis 
                     type="number" 
                     dataKey="cfni" 
