@@ -576,6 +576,8 @@ export function ConsolidatedCharts({
                     dataKey="cfni" 
                     name="CFNI"
                     tickFormatter={(value) => formatCurrency(value)}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <YAxis 
                     type="number" 
