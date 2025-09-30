@@ -621,7 +621,6 @@ export function ConsolidatedCharts({
                     name="LTV"
                     unit="%" 
                     tickFormatter={(value) => `${value.toFixed(0)}%`}
-                    label={{ value: 'LTV (%)', position: 'insideRight', offset: -10 }}
                   />
                   <YAxis 
                     type="number" 
@@ -629,7 +628,6 @@ export function ConsolidatedCharts({
                     name="TRI"
                     unit="%" 
                     tickFormatter={(value) => `${value.toFixed(1)}%`}
-                    label={{ value: 'TRI (%)', angle: -90, position: 'insideTop', offset: 10 }}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
@@ -720,7 +718,6 @@ export function ConsolidatedCharts({
                     domain={cfniAxisConfig.xDomain}
                     ticks={cfniAxisConfig.xTicks}
                     hide={true}
-                    label={{ value: 'CFNI', position: 'insideRight', offset: -10 }}
                   />
                   <YAxis 
                     type="number" 
@@ -729,7 +726,6 @@ export function ConsolidatedCharts({
                     domain={cfniAxisConfig.yDomain}
                     ticks={cfniAxisConfig.yTicks}
                     tickFormatter={(value) => formatCurrency(value)}
-                    label={{ value: 'Variation de Valeur', angle: -90, position: 'insideTop', offset: 10 }}
                   />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={2} />
                   <Tooltip
