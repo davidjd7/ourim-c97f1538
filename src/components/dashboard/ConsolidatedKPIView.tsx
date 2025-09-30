@@ -5,24 +5,28 @@ import { getSyntheseData, calculateXIRR, calculateNOI } from '@/lib/kpiCalculati
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ConsolidatedCharts } from '@/components/dashboard/ConsolidatedCharts';
 import type { ConsolidatedRow } from '@/types/kpi';
-
 interface ConsolidatedKPIViewProps {
   selectedInvestments: Set<string>;
   cutoffYear: number | null;
   onCutoffYearChange: (year: number) => void;
 }
-
 export function ConsolidatedKPIView({
   selectedInvestments,
   cutoffYear,
   onCutoffYearChange
 }: ConsolidatedKPIViewProps) {
-  const { investments } = useInvestments();
-  
+  const {
+    investments
+  } = useInvestments();
+
   // Get investment IDs for batch KPI loading
   const investmentIds = Array.from(selectedInvestments);
-  const { batchKPIs, rawByInvestment, loading } = useBatchPerformanceKPIs(investmentIds);
-  
+  const {
+    batchKPIs,
+    rawByInvestment,
+    loading
+  } = useBatchPerformanceKPIs(investmentIds);
+
   // Calculate the default cutoff year (latest common year across all selected investments)
   const defaultCutoffYear = useMemo(() => {
     if (Object.keys(rawByInvestment).length === 0) {
@@ -33,7 +37,6 @@ export function ConsolidatedKPIView({
     // Then take the MINIMUM of these years (the latest year where ALL investments have data)
     const maxYearsByInvestment = Object.values(rawByInvestment).map(investmentData => {
       const allYears: number[] = [];
-      
       investmentData.cashflows.forEach(cf => {
         allYears.push(new Date(cf.date).getFullYear());
       });
@@ -46,10 +49,10 @@ export function ConsolidatedKPIView({
       investmentData.debtFlows.forEach(df => {
         allYears.push(new Date(df.date).getFullYear());
       });
-      
+
       // If no data for this investment, use a very old year
       if (allYears.length === 0) return 1900;
-      
+
       // Return the most recent year for this investment
       return Math.max(...allYears);
     });
@@ -59,7 +62,6 @@ export function ConsolidatedKPIView({
     if (validYears.length === 0) {
       return new Date().getFullYear();
     }
-
     return Math.min(...validYears);
   }, [rawByInvestment]);
 
@@ -72,7 +74,7 @@ export function ConsolidatedKPIView({
       onCutoffYearChange(defaultCutoffYear);
     }
   }, [cutoffYear, defaultCutoffYear, onCutoffYearChange]);
-  
+
   // Build consolidated synthesis data from raw investment data
   const consolidatedSynthesis = useMemo(() => {
     if (selectedInvestments.size === 0 || Object.keys(rawByInvestment).length === 0) {
@@ -89,95 +91,101 @@ export function ConsolidatedKPIView({
 
     // Filter data by cutoff year and collect all dates
     const cutoffDate = new Date(`${effectiveCutoffYear}-12-31`);
-    
     Object.values(rawByInvestment).forEach(investmentData => {
       // Group cashflows by date (filtered by cutoff)
-      investmentData.cashflows
-        .filter(cf => new Date(cf.date) <= cutoffDate)
-        .forEach(cf => {
-          if (!dateMap.has(cf.date)) {
-            dateMap.set(cf.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
-          }
-          dateMap.get(cf.date)!.cashflows.push(cf);
-        });
+      investmentData.cashflows.filter(cf => new Date(cf.date) <= cutoffDate).forEach(cf => {
+        if (!dateMap.has(cf.date)) {
+          dateMap.set(cf.date, {
+            cashflows: [],
+            immobilisations: [],
+            debtFlows: [],
+            valorisations: []
+          });
+        }
+        dateMap.get(cf.date)!.cashflows.push(cf);
+      });
 
       // Group immobilisations by date (filtered by cutoff)
-      investmentData.immobilisations
-        .filter(immo => new Date(immo.date) <= cutoffDate)
-        .forEach(immo => {
-          if (!dateMap.has(immo.date)) {
-            dateMap.set(immo.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
-          }
-          dateMap.get(immo.date)!.immobilisations.push(immo);
-        });
+      investmentData.immobilisations.filter(immo => new Date(immo.date) <= cutoffDate).forEach(immo => {
+        if (!dateMap.has(immo.date)) {
+          dateMap.set(immo.date, {
+            cashflows: [],
+            immobilisations: [],
+            debtFlows: [],
+            valorisations: []
+          });
+        }
+        dateMap.get(immo.date)!.immobilisations.push(immo);
+      });
 
       // Group debt flows by date (filtered by cutoff)
-      investmentData.debtFlows
-        .filter(df => new Date(df.date) <= cutoffDate)
-        .forEach(df => {
-          if (!dateMap.has(df.date)) {
-            dateMap.set(df.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
-          }
-          dateMap.get(df.date)!.debtFlows.push(df);
-        });
+      investmentData.debtFlows.filter(df => new Date(df.date) <= cutoffDate).forEach(df => {
+        if (!dateMap.has(df.date)) {
+          dateMap.set(df.date, {
+            cashflows: [],
+            immobilisations: [],
+            debtFlows: [],
+            valorisations: []
+          });
+        }
+        dateMap.get(df.date)!.debtFlows.push(df);
+      });
 
       // Group valorisations by date (filtered by cutoff)
-      investmentData.valorisations
-        .filter(valo => new Date(valo.date) <= cutoffDate)
-        .forEach(valo => {
-          if (!dateMap.has(valo.date)) {
-            dateMap.set(valo.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
-          }
-          dateMap.get(valo.date)!.valorisations.push(valo);
-        });
+      investmentData.valorisations.filter(valo => new Date(valo.date) <= cutoffDate).forEach(valo => {
+        if (!dateMap.has(valo.date)) {
+          dateMap.set(valo.date, {
+            cashflows: [],
+            immobilisations: [],
+            debtFlows: [],
+            valorisations: []
+          });
+        }
+        dateMap.get(valo.date)!.valorisations.push(valo);
+      });
     });
 
     // Build consolidated synthesis data using getSyntheseData for aggregation
     const consolidatedData: ConsolidatedRow[] = [];
-    
-    Array.from(dateMap.keys())
-      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-      .forEach(date => {
-        const dateData = dateMap.get(date)!;
-        
-        // Aggregate data for this date
-        const totalNOI = dateData.cashflows.reduce((sum, cf) => sum + calculateNOI(cf), 0);
-        const totalLoyer = dateData.cashflows.reduce((sum, cf) => sum + (cf.loyer || 0), 0);
-        const totalImmobilisations = dateData.immobilisations.reduce((sum, immo) => sum + (immo.montant || 0), 0);
-        const totalValeur = dateData.valorisations.reduce((sum, valo) => sum + (valo.valeur || 0), 0);
-        const totalCrd = dateData.debtFlows.reduce((sum, df) => sum + (df.capitalDebut - df.rmbtCapital), 0);
-        const totalRmbtInteret = dateData.debtFlows.reduce((sum, df) => sum + (df.rmbtInteret || 0), 0);
-        const totalRmbtCapital = dateData.debtFlows.reduce((sum, df) => sum + (df.rmbtCapital || 0), 0);
-        
-        // Calculate consolidated metrics
-        const noiAjuste = totalNOI - totalImmobilisations;
-        const cfni = noiAjuste - totalRmbtInteret;
-        const cf = cfni - totalRmbtCapital;
-        const fp = totalValeur - totalCrd;
+    Array.from(dateMap.keys()).sort((a, b) => new Date(a).getTime() - new Date(b).getTime()).forEach(date => {
+      const dateData = dateMap.get(date)!;
 
-        consolidatedData.push({
-          date,
-          cashFlow: cf,
-          valeur: totalValeur,
-          crd: totalCrd,
-          fp,
-          // Additional fields for table display
-          noi: totalNOI,
-          loyer: totalLoyer,
-          immobilisations: totalImmobilisations,
-          cfni,
-          rmbtInteret: totalRmbtInteret,
-          rmbtCapital: totalRmbtCapital
-        } as ConsolidatedRow & { 
-          noi: number; 
-          loyer: number; 
-          immobilisations: number; 
-          cfni: number; 
-          rmbtInteret: number; 
-          rmbtCapital: number; 
-        });
+      // Aggregate data for this date
+      const totalNOI = dateData.cashflows.reduce((sum, cf) => sum + calculateNOI(cf), 0);
+      const totalLoyer = dateData.cashflows.reduce((sum, cf) => sum + (cf.loyer || 0), 0);
+      const totalImmobilisations = dateData.immobilisations.reduce((sum, immo) => sum + (immo.montant || 0), 0);
+      const totalValeur = dateData.valorisations.reduce((sum, valo) => sum + (valo.valeur || 0), 0);
+      const totalCrd = dateData.debtFlows.reduce((sum, df) => sum + (df.capitalDebut - df.rmbtCapital), 0);
+      const totalRmbtInteret = dateData.debtFlows.reduce((sum, df) => sum + (df.rmbtInteret || 0), 0);
+      const totalRmbtCapital = dateData.debtFlows.reduce((sum, df) => sum + (df.rmbtCapital || 0), 0);
+
+      // Calculate consolidated metrics
+      const noiAjuste = totalNOI - totalImmobilisations;
+      const cfni = noiAjuste - totalRmbtInteret;
+      const cf = cfni - totalRmbtCapital;
+      const fp = totalValeur - totalCrd;
+      consolidatedData.push({
+        date,
+        cashFlow: cf,
+        valeur: totalValeur,
+        crd: totalCrd,
+        fp,
+        // Additional fields for table display
+        noi: totalNOI,
+        loyer: totalLoyer,
+        immobilisations: totalImmobilisations,
+        cfni,
+        rmbtInteret: totalRmbtInteret,
+        rmbtCapital: totalRmbtCapital
+      } as ConsolidatedRow & {
+        noi: number;
+        loyer: number;
+        immobilisations: number;
+        cfni: number;
+        rmbtInteret: number;
+        rmbtCapital: number;
       });
-
+    });
     return consolidatedData;
   }, [selectedInvestments, rawByInvestment, effectiveCutoffYear]);
 
@@ -186,37 +194,35 @@ export function ConsolidatedKPIView({
     if (consolidatedSynthesis.length === 0) {
       return null;
     }
-
     const latestData = consolidatedSynthesis[consolidatedSynthesis.length - 1] as any;
     const latestYear = new Date(latestData.date).getFullYear();
-    
+
     // Calculate consolidated metrics
     const fondPropre = latestData.fp;
-    const rendementNet = latestData.valeur > 0 ? (latestData.noi / latestData.valeur) * 100 : 0;
-    const cocNet = latestData.fp > 0 ? (latestData.cfni / latestData.fp) * 100 : 0;
-    
+    const rendementNet = latestData.valeur > 0 ? latestData.noi / latestData.valeur * 100 : 0;
+    const cocNet = latestData.fp > 0 ? latestData.cfni / latestData.fp * 100 : 0;
+
     // Calculate delta valeur and total return
     const previousData = consolidatedSynthesis.length > 1 ? consolidatedSynthesis[consolidatedSynthesis.length - 2] as any : null;
     const deltaValeur = previousData ? latestData.valeur - previousData.valeur : 0;
     const gain1 = latestData.cfni + deltaValeur;
-    const totalReturn = latestData.fp > 0 ? (gain1 / latestData.fp) * 100 : 0;
-    
+    const totalReturn = latestData.fp > 0 ? gain1 / latestData.fp * 100 : 0;
+
     // Calculate consolidated XIRR using the full series
     const xirr = calculateXIRR(consolidatedSynthesis);
-    
     return {
       fondPropre,
       fondPropreDetails: {
         valeur: latestData.valeur,
         crd: latestData.crd,
-        ltv: latestData.valeur > 0 ? (latestData.crd / latestData.valeur) * 100 : 0
+        ltv: latestData.valeur > 0 ? latestData.crd / latestData.valeur * 100 : 0
       },
       rendementNet,
       rendementNetDetails: {
         noi: latestData.noi,
         loyer: latestData.loyer,
-        noiSurLoyer: latestData.loyer > 0 ? (latestData.noi / latestData.loyer) * 100 : 0,
-        yieldBanque: latestData.crd > 0 ? (latestData.noi / latestData.crd) * 100 : 0
+        noiSurLoyer: latestData.loyer > 0 ? latestData.noi / latestData.loyer * 100 : 0,
+        yieldBanque: latestData.crd > 0 ? latestData.noi / latestData.crd * 100 : 0
       },
       totalReturn,
       totalReturnDetails: {
@@ -242,23 +248,21 @@ export function ConsolidatedKPIView({
     if (consolidatedSynthesis.length === 0) {
       return [];
     }
-
     return consolidatedSynthesis.map((row: any, index) => {
       const previousRow = index > 0 ? consolidatedSynthesis[index - 1] as any : null;
-      
+
       // Calculate metrics for this row
-      const rendementNet = row.valeur > 0 ? (row.noi / row.valeur) * 100 : 0;
-      const cocNet = row.fp > 0 ? (row.cfni / row.fp) * 100 : 0;
+      const rendementNet = row.valeur > 0 ? row.noi / row.valeur * 100 : 0;
+      const cocNet = row.fp > 0 ? row.cfni / row.fp * 100 : 0;
       const deltaValeur = previousRow ? row.valeur - previousRow.valeur : 0;
       const deltaFP = previousRow ? row.fp - previousRow.fp : 0;
       const gain1 = deltaFP + row.cashFlow;
       const gain2 = deltaValeur + row.cfni;
-      const totalReturn = row.fp > 0 ? (gain1 / row.fp) * 100 : 0;
-      
+      const totalReturn = row.fp > 0 ? gain1 / row.fp * 100 : 0;
+
       // Calculate rolling XIRR up to this point
       const rollingData = consolidatedSynthesis.slice(0, index + 1);
       const rollingXirr = rollingData.length >= 2 ? calculateXIRR(rollingData) : 0;
-
       return {
         date: row.date,
         valeur: row.valeur,
@@ -276,7 +280,6 @@ export function ConsolidatedKPIView({
       };
     });
   }, [consolidatedSynthesis]);
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -285,36 +288,28 @@ export function ConsolidatedKPIView({
       maximumFractionDigits: 0
     }).format(amount);
   };
-
   const formatPercentage = (value: number) => {
     const sign = value > 0 ? '+' : '';
     return `${sign}${value.toFixed(1)}%`;
   };
-
   const formatCurrencyWithSign = (amount: number) => {
     const formatted = formatCurrency(amount);
     return amount >= 0 ? `+${formatted}` : formatted;
   };
-
   const getValueClass = (value: number) => {
     return value >= 0 ? 'text-success' : 'text-destructive';
   };
-
   if (loading) {
-    return (
-      <div className="card-financial">
+    return <div className="card-financial">
         <div className="p-8 text-center">
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">
             Chargement des données consolidées...
           </h3>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!consolidatedData) {
-    return (
-      <div className="card-financial">
+    return <div className="card-financial">
         <div className="p-8 text-center">
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">
             Aucun investissement sélectionné
@@ -323,12 +318,9 @@ export function ConsolidatedKPIView({
             Veuillez sélectionner au moins un investissement dans la vue tableau pour voir les KPI consolidés.
           </p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Performance KPI Cards */}
       <div className="grid gap-4 md:grid-cols-4 kpi-grid">
         {/* Fond Propre */}
@@ -403,7 +395,7 @@ export function ConsolidatedKPIView({
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
                 <div>Total CFNI: {formatCurrency(consolidatedData.xirrDetails.totalCfni)}</div>
-                <div>CF ({consolidatedData.xirrDetails.cfDerniereAnneeYear}): {formatCurrency(consolidatedData.xirrDetails.cfDerniereAnnee)}</div>
+                
                 <div>Δ Valeur: {formatCurrency(consolidatedData.xirrDetails.deltaValeur)}</div>
                 <div>Total: {formatCurrency(consolidatedData.xirrDetails.total)}</div>
               </div>
@@ -413,12 +405,7 @@ export function ConsolidatedKPIView({
       </div>
 
       {/* Charts Section */}
-      <ConsolidatedCharts 
-        selectedInvestments={selectedInvestments}
-        batchKPIs={batchKPIs}
-        rawByInvestment={rawByInvestment}
-        syntheticTableData={syntheticTableData}
-      />
+      <ConsolidatedCharts selectedInvestments={selectedInvestments} batchKPIs={batchKPIs} rawByInvestment={rawByInvestment} syntheticTableData={syntheticTableData} />
 
       {/* Synthetic Table */}
       <div className="card-financial">
@@ -444,8 +431,7 @@ export function ConsolidatedKPIView({
                 </tr>
               </TableHeader>
               <TableBody>
-                {syntheticTableData.map((row, index) => (
-                  <TableRow key={index}>
+                {syntheticTableData.map((row, index) => <TableRow key={index}>
                     <TableCell className="font-medium">{new Date(row.date).getFullYear()}</TableCell>
                     <TableCell className="text-right">{formatCurrency(row.valeur)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(row.fp)}</TableCell>
@@ -473,12 +459,10 @@ export function ConsolidatedKPIView({
                     <TableCell className={`text-right ${getValueClass(row.xirrGlissant)}`}>
                       {formatPercentage(row.xirrGlissant)}
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
                 
                 {/* Total Row */}
-                {syntheticTableData.length > 0 && (
-                  <TableRow className="border-t-2 font-semibold bg-muted/20">
+                {syntheticTableData.length > 0 && <TableRow className="border-t-2 font-semibold bg-muted/20">
                     <TableCell>Total</TableCell>
                     <TableCell className="text-right">-</TableCell>
                     <TableCell className="text-right">-</TableCell>
@@ -510,8 +494,7 @@ export function ConsolidatedKPIView({
                       {formatPercentage(syntheticTableData.filter(row => row.totalReturn !== 0).reduce((sum, row) => sum + row.totalReturn, 0) / syntheticTableData.filter(row => row.totalReturn !== 0).length || 0)}
                     </TableCell>
                     <TableCell className="text-right">-</TableCell>
-                  </TableRow>
-                )}
+                  </TableRow>}
               </TableBody>
             </Table>
           </div>
@@ -535,12 +518,10 @@ export function ConsolidatedKPIView({
               </thead>
               <tbody>
                 {investmentIds.map(id => {
-                  const investment = investments.find(inv => inv.id === id);
-                  const kpi = batchKPIs[id];
-                  if (!investment || !kpi) return null;
-                  
-                  return (
-                    <tr key={id} className="border-b">
+                const investment = investments.find(inv => inv.id === id);
+                const kpi = batchKPIs[id];
+                if (!investment || !kpi) return null;
+                return <tr key={id} className="border-b">
                       <td className="p-2 font-medium">{investment.name}</td>
                       <td className="p-2 text-right">{formatCurrency(kpi.fondPropre)}</td>
                       <td className={`p-2 text-right ${getValueClass(kpi.rendementNet)}`}>
@@ -552,9 +533,8 @@ export function ConsolidatedKPIView({
                       <td className={`p-2 text-right ${getValueClass(kpi.xirr)}`}>
                         {formatPercentage(kpi.xirr)}
                       </td>
-                    </tr>
-                  );
-                })}
+                    </tr>;
+              })}
                 <tr className="border-t-2 font-semibold bg-muted/20">
                   <td className="p-2">Total Consolidé</td>
                   <td className="p-2 text-right">{formatCurrency(consolidatedData.fondPropre)}</td>
@@ -573,6 +553,5 @@ export function ConsolidatedKPIView({
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
