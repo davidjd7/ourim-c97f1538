@@ -527,7 +527,10 @@ export function ConsolidatedKPIView({
                     <div>Rendement Net</div>
                     <div className="text-xs text-muted-foreground">({effectiveCutoffYear})</div>
                   </th>
-                  <th className="text-right p-2">Total ROE</th>
+                  <th className="text-right p-2">
+                    <div>Total ROE</div>
+                    <div className="text-xs text-muted-foreground">({effectiveCutoffYear})</div>
+                  </th>
                   <th className="text-right p-2">XIRR</th>
                 </tr>
               </thead>
