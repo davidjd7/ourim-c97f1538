@@ -89,7 +89,7 @@ export function ConsolidatedCharts({
 
   // 1. Scatter Plot Data (LTV vs TRI)
   const scatterData = useMemo(() => {
-    return Array.from(selectedInvestments).map(investmentId => {
+    const individualPoints = Array.from(selectedInvestments).map(investmentId => {
       const kpis = batchKPIs[investmentId];
       if (!kpis) return null;
       
@@ -99,10 +99,28 @@ export function ConsolidatedCharts({
         xirr: kpis.xirr,
         valeur: kpis.fondPropreDetails.valeur,
         name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
-        size: Math.max(20, Math.min(200, kpis.fondPropreDetails.valeur / 5000)) // Scale size based on valeur
+        size: Math.max(20, Math.min(200, kpis.fondPropreDetails.valeur / 5000)), // Scale size based on valeur
+        isConsolidated: false
       };
     }).filter(Boolean);
-  }, [selectedInvestments, batchKPIs, investments]);
+
+    // Add consolidated portfolio point
+    if (syntheticTableData.length > 0) {
+      const latestData = syntheticTableData[syntheticTableData.length - 1];
+      const consolidatedLTV = latestData.valeur > 0 ? (latestData.valeur - latestData.fp) / latestData.valeur * 100 : 0;
+      
+      individualPoints.push({
+        ltv: consolidatedLTV,
+        xirr: latestData.xirrGlissant,
+        valeur: latestData.valeur,
+        name: 'Portefeuille Consolidé',
+        size: Math.max(30, Math.min(250, latestData.valeur / 5000)),
+        isConsolidated: true
+      });
+    }
+
+    return individualPoints;
+  }, [selectedInvestments, batchKPIs, investments, syntheticTableData]);
 
   // 2. Time Evolution Data
   const timeEvolutionData = useMemo(() => {
@@ -381,7 +399,11 @@ export function ConsolidatedCharts({
                     fillOpacity={0.6}
                   >
                     {scatterData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} r={Math.sqrt(entry.size)} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"}
+                        r={Math.sqrt(entry.size)} 
+                      />
                     ))}
                   </Scatter>
                 </ScatterChart>
