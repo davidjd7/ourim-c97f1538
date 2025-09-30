@@ -291,6 +291,11 @@ export function ConsolidatedKPIView({
     return `${sign}${value.toFixed(1)}%`;
   };
 
+  const formatCurrencyWithSign = (amount: number) => {
+    const formatted = formatCurrency(amount);
+    return amount >= 0 ? `+${formatted}` : formatted;
+  };
+
   const getValueClass = (value: number) => {
     return value >= 0 ? 'text-success' : 'text-destructive';
   };
@@ -374,7 +379,7 @@ export function ConsolidatedKPIView({
                   {formatPercentage(consolidatedData.totalReturn)}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Gain : {formatCurrency(consolidatedData.totalReturnDetails.gain)}
+                  Gain : {formatCurrencyWithSign(consolidatedData.totalReturnDetails.gain)}
                 </p>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
