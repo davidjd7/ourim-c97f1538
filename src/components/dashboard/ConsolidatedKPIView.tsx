@@ -8,16 +8,64 @@ import type { ConsolidatedRow } from '@/types/kpi';
 
 interface ConsolidatedKPIViewProps {
   selectedInvestments: Set<string>;
+  cutoffYear: number | null;
+  onCutoffYearChange: (year: number) => void;
 }
 
 export function ConsolidatedKPIView({
-  selectedInvestments
+  selectedInvestments,
+  cutoffYear,
+  onCutoffYearChange
 }: ConsolidatedKPIViewProps) {
   const { investments } = useInvestments();
   
   // Get investment IDs for batch KPI loading
   const investmentIds = Array.from(selectedInvestments);
   const { batchKPIs, rawByInvestment, loading } = useBatchPerformanceKPIs(investmentIds);
+  
+  // Calculate the default cutoff year (latest common year across all selected investments)
+  const defaultCutoffYear = useMemo(() => {
+    if (Object.keys(rawByInvestment).length === 0) {
+      return new Date().getFullYear();
+    }
+
+    // Find the latest year where ALL investments have data
+    const allDates: Date[] = [];
+    Object.values(rawByInvestment).forEach(investmentData => {
+      investmentData.cashflows.forEach(cf => allDates.push(new Date(cf.date)));
+      investmentData.valorisations.forEach(v => allDates.push(new Date(v.date)));
+      investmentData.immobilisations.forEach(i => allDates.push(new Date(i.date)));
+      investmentData.debtFlows.forEach(df => allDates.push(new Date(df.date)));
+    });
+
+    if (allDates.length === 0) {
+      return new Date().getFullYear();
+    }
+
+    // Get the minimum of the maximum years for each investment
+    const maxYearsByInvestment = Object.values(rawByInvestment).map(investmentData => {
+      const dates: Date[] = [];
+      investmentData.cashflows.forEach(cf => dates.push(new Date(cf.date)));
+      investmentData.valorisations.forEach(v => dates.push(new Date(v.date)));
+      investmentData.immobilisations.forEach(i => dates.push(new Date(i.date)));
+      investmentData.debtFlows.forEach(df => dates.push(new Date(df.date)));
+      
+      if (dates.length === 0) return 1900;
+      return Math.max(...dates.map(d => d.getFullYear()));
+    });
+
+    return Math.min(...maxYearsByInvestment);
+  }, [rawByInvestment]);
+
+  // Use the provided cutoffYear or default to calculated value
+  const effectiveCutoffYear = cutoffYear ?? defaultCutoffYear;
+
+  // Update parent with default year if needed
+  React.useEffect(() => {
+    if (cutoffYear === null && defaultCutoffYear) {
+      onCutoffYearChange(defaultCutoffYear);
+    }
+  }, [cutoffYear, defaultCutoffYear, onCutoffYearChange]);
   
   // Build consolidated synthesis data from raw investment data
   const consolidatedSynthesis = useMemo(() => {
@@ -33,39 +81,49 @@ export function ConsolidatedKPIView({
       valorisations: any[];
     }>();
 
-    // Collect all dates and group data by date
+    // Filter data by cutoff year and collect all dates
+    const cutoffDate = new Date(`${effectiveCutoffYear}-12-31`);
+    
     Object.values(rawByInvestment).forEach(investmentData => {
-      // Group cashflows by date
-      investmentData.cashflows.forEach(cf => {
-        if (!dateMap.has(cf.date)) {
-          dateMap.set(cf.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
-        }
-        dateMap.get(cf.date)!.cashflows.push(cf);
-      });
+      // Group cashflows by date (filtered by cutoff)
+      investmentData.cashflows
+        .filter(cf => new Date(cf.date) <= cutoffDate)
+        .forEach(cf => {
+          if (!dateMap.has(cf.date)) {
+            dateMap.set(cf.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
+          }
+          dateMap.get(cf.date)!.cashflows.push(cf);
+        });
 
-      // Group immobilisations by date
-      investmentData.immobilisations.forEach(immo => {
-        if (!dateMap.has(immo.date)) {
-          dateMap.set(immo.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
-        }
-        dateMap.get(immo.date)!.immobilisations.push(immo);
-      });
+      // Group immobilisations by date (filtered by cutoff)
+      investmentData.immobilisations
+        .filter(immo => new Date(immo.date) <= cutoffDate)
+        .forEach(immo => {
+          if (!dateMap.has(immo.date)) {
+            dateMap.set(immo.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
+          }
+          dateMap.get(immo.date)!.immobilisations.push(immo);
+        });
 
-      // Group debt flows by date
-      investmentData.debtFlows.forEach(df => {
-        if (!dateMap.has(df.date)) {
-          dateMap.set(df.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
-        }
-        dateMap.get(df.date)!.debtFlows.push(df);
-      });
+      // Group debt flows by date (filtered by cutoff)
+      investmentData.debtFlows
+        .filter(df => new Date(df.date) <= cutoffDate)
+        .forEach(df => {
+          if (!dateMap.has(df.date)) {
+            dateMap.set(df.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
+          }
+          dateMap.get(df.date)!.debtFlows.push(df);
+        });
 
-      // Group valorisations by date
-      investmentData.valorisations.forEach(valo => {
-        if (!dateMap.has(valo.date)) {
-          dateMap.set(valo.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
-        }
-        dateMap.get(valo.date)!.valorisations.push(valo);
-      });
+      // Group valorisations by date (filtered by cutoff)
+      investmentData.valorisations
+        .filter(valo => new Date(valo.date) <= cutoffDate)
+        .forEach(valo => {
+          if (!dateMap.has(valo.date)) {
+            dateMap.set(valo.date, { cashflows: [], immobilisations: [], debtFlows: [], valorisations: [] });
+          }
+          dateMap.get(valo.date)!.valorisations.push(valo);
+        });
     });
 
     // Build consolidated synthesis data using getSyntheseData for aggregation
@@ -115,7 +173,7 @@ export function ConsolidatedKPIView({
       });
 
     return consolidatedData;
-  }, [selectedInvestments, rawByInvestment]);
+  }, [selectedInvestments, rawByInvestment, effectiveCutoffYear]);
 
   // Calculate consolidated KPIs from synthesis data
   const consolidatedData = useMemo(() => {
@@ -265,7 +323,7 @@ export function ConsolidatedKPIView({
         {/* Fond Propre */}
         <div className="card-financial">
           <div className="p-4">
-            <p className="text-sm text-muted-foreground font-bold mb-3">Fond Propre (2024)</p>
+            <p className="text-sm text-muted-foreground font-bold mb-3">Fond Propre ({effectiveCutoffYear})</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
                 <p className="text-2xl font-bold financial-value">
@@ -284,7 +342,7 @@ export function ConsolidatedKPIView({
         {/* Rendement Net */}
         <div className="card-financial">
           <div className="p-4">
-            <p className="text-sm text-muted-foreground font-bold mb-3">Rendement Net (2024)</p>
+            <p className="text-sm text-muted-foreground font-bold mb-3">Rendement Net ({effectiveCutoffYear})</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
                 <p className={`text-2xl font-bold ${getValueClass(consolidatedData.rendementNet)}`}>
@@ -303,7 +361,7 @@ export function ConsolidatedKPIView({
         {/* Total Return */}
         <div className="card-financial">
           <div className="p-4">
-            <p className="text-sm text-muted-foreground font-bold mb-3">Total Return (2024)</p>
+            <p className="text-sm text-muted-foreground font-bold mb-3">Total Return ({effectiveCutoffYear})</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
                 <p className={`text-2xl font-bold ${getValueClass(consolidatedData.totalReturn)}`}>

@@ -4,6 +4,7 @@ import { ConsolidatedKPIView } from '@/components/dashboard/ConsolidatedKPIView'
 import { Button } from '@/components/ui/button';
 import { BarChart3, Table, Printer } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
+import { YearPicker } from '@/components/ui/year-picker';
 
 type ViewMode = 'table' | 'kpi';
 
@@ -12,11 +13,22 @@ const EMPTY_SET = new Set<string>();
 export default function Investissements() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [selectedInvestments, setSelectedInvestments] = useState<Set<string>>(EMPTY_SET);
+  const [cutoffYear, setCutoffYear] = useState<number | null>(null);
   const {
     filteredInvestments
   } = useSearch();
+  
   const handleSelectedRowsChange = (selectedRows: Set<string>) => {
     setSelectedInvestments(selectedRows);
+  };
+
+  const handleCutoffYearChange = (year: number) => {
+    setCutoffYear(year);
+  };
+
+  const handleYearPickerChange = (dateString: string) => {
+    const year = new Date(dateString).getFullYear();
+    setCutoffYear(year);
   };
   
   const handlePrint = () => {
@@ -73,6 +85,16 @@ export default function Investissements() {
               <BarChart3 className="h-4 w-4 mr-2" />
               Vue KPI
             </Button>
+            
+            {/* Year picker - only visible in KPI view */}
+            {viewMode === 'kpi' && (
+              <YearPicker
+                value={cutoffYear ? `${cutoffYear}-12-31` : `${new Date().getFullYear()}-12-31`}
+                onChange={handleYearPickerChange}
+                startYear={2000}
+                endYear={new Date().getFullYear()}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -85,7 +107,11 @@ export default function Investissements() {
           filteredInvestments={filteredInvestments} 
         />
       ) : (
-        <ConsolidatedKPIView selectedInvestments={selectedInvestments} />
+        <ConsolidatedKPIView 
+          selectedInvestments={selectedInvestments}
+          cutoffYear={cutoffYear}
+          onCutoffYearChange={handleCutoffYearChange}
+        />
       )}
     </div>
   );
