@@ -14,7 +14,7 @@ import { HistoriqueTab } from '@/components/investments/tabs/HistoriqueTab';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { useBatchPerformanceKPIs } from '@/hooks/useBatchPerformanceKPIs';
 import { useCompanies } from '@/contexts/CompanyContext';
-import { formatCurrency, formatPercentage } from '@/lib/formatters';
+import { formatCurrency, formatPercentage, formatCurrencyWithSign } from '@/lib/formatters';
 export default function InvestissementDetail() {
   const {
     id
@@ -473,12 +473,12 @@ export default function InvestissementDetail() {
                      <p className="text-sm text-muted-foreground mt-1">
                        Gain : {kpis.xirrDetails.gain1 >= 0 ? '+' : ''}{formatCurrency(kpis.xirrDetails.gain1 || 0)}
                      </p>
-                 </div>
-                 <div className="text-xs text-muted-foreground space-y-1">
-                   <div>COC net: {kpis.totalReturnDetails.cocNet?.toFixed(1) || '0.0'}%</div>
-                   <div>CFNI: {formatCurrency(kpis.totalReturnDetails.cfni)}</div>
-                   <div>Δ Valeur: {formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)}</div>
-                 </div>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div>COC net: {kpis.totalReturnDetails.cocNet?.toFixed(1) || '0.0'}%</div>
+                  <div>CFNI: {formatCurrencyWithSign(kpis.totalReturnDetails.cfni)}</div>
+                  <div>Δ Valeur: {formatCurrency(kpis.xirrDetails.variationValeurDerniereAnnee)}</div>
+                </div>
                </div>
              </div>
            </div>
