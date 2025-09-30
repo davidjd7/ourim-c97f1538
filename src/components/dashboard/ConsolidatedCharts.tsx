@@ -676,13 +676,17 @@ export function ConsolidatedCharts({
                       <div className="absolute top-0 h-6 w-1 bg-black" style={{
                     left: `${(boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`
                   }} />
-                      <div className="flex justify-between text-xs mt-1">
-                        <span>{boxplotData.rendement.min.toFixed(1)}%</span>
-                        <span>{boxplotData.rendement.max.toFixed(1)}%</span>
-                      </div>
-                      <div className="text-center text-xs mt-1">
-                        Médiane: {boxplotData.rendement.median.toFixed(1)}%
-                      </div>
+                  <div className="flex justify-between text-xs mt-1">
+                    <span>{boxplotData.rendement.min.toFixed(1)}%</span>
+                    <span>{boxplotData.rendement.max.toFixed(1)}%</span>
+                  </div>
+                  <div className="absolute text-xs mt-1" style={{
+                    left: `${(boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`,
+                    transform: 'translateX(-50%)',
+                    top: '32px'
+                  }}>
+                    Médiane: {boxplotData.rendement.median.toFixed(1)}%
+                  </div>
                     </>}
                 </div>
               </div>
@@ -701,13 +705,17 @@ export function ConsolidatedCharts({
                       <div className="absolute top-0 h-6 w-1 bg-black" style={{
                     left: `${(boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`
                   }} />
-                      <div className="flex justify-between text-xs mt-1">
-                        <span>{boxplotData.xirr.min.toFixed(1)}%</span>
-                        <span>{boxplotData.xirr.max.toFixed(1)}%</span>
-                      </div>
-                      <div className="text-center text-xs mt-1">
-                        Médiane: {boxplotData.xirr.median.toFixed(1)}%
-                      </div>
+                  <div className="flex justify-between text-xs mt-1">
+                    <span>{boxplotData.xirr.min.toFixed(1)}%</span>
+                    <span>{boxplotData.xirr.max.toFixed(1)}%</span>
+                  </div>
+                  <div className="absolute text-xs mt-1" style={{
+                    left: `${(boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`,
+                    transform: 'translateX(-50%)',
+                    top: '32px'
+                  }}>
+                    Médiane: {boxplotData.xirr.median.toFixed(1)}%
+                  </div>
                     </>}
                 </div>
               </div>
