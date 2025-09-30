@@ -267,7 +267,9 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
       deltaValeur,
       variationValeurDerniereAnnee,
       total: totalCfni + deltaValeur,
-      years: syntheseData.length,
+      years: syntheseData.length > 0 
+        ? new Date(syntheseData[syntheseData.length - 1].date).getFullYear() - new Date(syntheseData[0].date).getFullYear()
+        : 0,
       gain1: gain1Latest,
       lastCfniYear: latestYear,
       lastVarValeurYear: latestYear,
