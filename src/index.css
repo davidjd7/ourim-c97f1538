@@ -279,8 +279,8 @@
 /* Print styles for full page layout */
 @media print {
   @page {
-    size: A3 landscape;
-    margin: 0.3in;
+    size: A4 portrait;
+    margin: 0.5cm;
   }
   
   /* Hide non-essential elements when printing */
@@ -353,15 +353,15 @@
   }
   
   /* Optimize spacing for print - smaller gaps */
-  .gap-1 { gap: 0.125rem !important; }
-  .gap-2 { gap: 0.25rem !important; }
-  .gap-3 { gap: 0.375rem !important; }
-  .gap-4 { gap: 0.5rem !important; }
-  .gap-6 { gap: 0.75rem !important; }
+  .gap-1 { gap: 0.1rem !important; }
+  .gap-2 { gap: 0.2rem !important; }
+  .gap-3 { gap: 0.3rem !important; }
+  .gap-4 { gap: 0.35rem !important; }
+  .gap-6 { gap: 0.5rem !important; }
   
-  .space-y-6 > * + * { margin-top: 0.75rem !important; }
-  .space-y-4 > * + * { margin-top: 0.5rem !important; }
-  .space-y-2 > * + * { margin-top: 0.25rem !important; }
+  .space-y-6 > * + * { margin-top: 0.5rem !important; }
+  .space-y-4 > * + * { margin-top: 0.35rem !important; }
+  .space-y-2 > * + * { margin-top: 0.2rem !important; }
   
   /* Optimize card styling for print */
   .card,
@@ -375,13 +375,13 @@
   }
   
   /* Optimize text sizes for print readability */
-  .text-3xl { font-size: 14pt !important; }
-  .text-2xl { font-size: 12pt !important; }
-  .text-xl { font-size: 11pt !important; }
-  .text-lg { font-size: 10pt !important; }
-  .text-base { font-size: 9pt !important; }
-  .text-sm { font-size: 8pt !important; }
-  .text-xs { font-size: 7pt !important; }
+  .text-3xl { font-size: 11pt !important; }
+  .text-2xl { font-size: 10pt !important; }
+  .text-xl { font-size: 9pt !important; }
+  .text-lg { font-size: 8.5pt !important; }
+  .text-base { font-size: 8pt !important; }
+  .text-sm { font-size: 7pt !important; }
+  .text-xs { font-size: 6.5pt !important; }
   
   /* Compact padding and margins */
   .p-1 { padding: 0.125rem !important; }
@@ -450,16 +450,16 @@
     margin-bottom: 0.5rem !important;
   }
 
-  /* Scale the KPI view to fit on one A3 landscape page */
+  /* Scale the KPI view to fit on one A4 portrait page */
   .investissements-print-root {
     transform-origin: top left !important;
-    transform: scale(0.85) !important;
-    width: calc(100% / 0.85) !important; /* Counter-scale to keep full width */
+    transform: scale(0.58) !important;
+    width: calc(100% / 0.58) !important; /* Counter-scale to keep full width */
   }
   
   /* Reduce heights of chart containers created via arbitrary Tailwind classes */
-  [class*="h-[400px]"] { height: 280px !important; }
-  [class*="h-[300px]"] { height: 200px !important; }
+  [class*="h-[400px]"] { height: 250px !important; }
+  [class*="h-[300px]"] { height: 180px !important; }
 
   /* Ensure KPI grid and charts grids keep desktop layout */
   .kpi-grid {
