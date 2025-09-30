@@ -367,7 +367,7 @@ export function ConsolidatedKPIView({
           </div>
         </div>
 
-        {/* Total Return */}
+        {/* Total ROE */}
         <div className="card-financial">
           <div className="p-4">
             <p className="text-sm text-muted-foreground font-bold mb-3">Total ROE ({effectiveCutoffYear})</p>
@@ -438,7 +438,7 @@ export function ConsolidatedKPIView({
                   <TableHead className="text-right">Δ Valeur</TableHead>
                   <TableHead className="text-right">Gain 1</TableHead>
                   <TableHead className="text-right">Gain 2</TableHead>
-                  <TableHead className="text-right">Total Return</TableHead>
+                  <TableHead className="text-right">Total ROE</TableHead>
                   <TableHead className="text-right">XIRR glissant</TableHead>
                 </tr>
               </TableHeader>
@@ -524,7 +524,7 @@ export function ConsolidatedKPIView({
                   <th className="text-left p-2">Investissement</th>
                   <th className="text-right p-2">Fond Propre</th>
                   <th className="text-right p-2">Rendement Net</th>
-                  <th className="text-right p-2">Total Return</th>
+                  <th className="text-right p-2">Total ROE</th>
                   <th className="text-right p-2">XIRR</th>
                 </tr>
               </thead>
