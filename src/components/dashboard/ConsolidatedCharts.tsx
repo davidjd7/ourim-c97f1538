@@ -47,6 +47,7 @@ interface ConsolidatedChartsProps {
     totalReturn: number;
     xirrGlissant: number;
   }>;
+  cutoffYear: number;
 }
 
 // Chart configuration for consistent theming
@@ -63,11 +64,17 @@ export function ConsolidatedCharts({
   selectedInvestments, 
   batchKPIs, 
   rawByInvestment,
-  syntheticTableData 
+  syntheticTableData,
+  cutoffYear
 }: ConsolidatedChartsProps) {
   const { investments } = useInvestments();
   const [evolutionType, setEvolutionType] = useState<'gains' | 'valeur' | 'cfni'>('gains');
   const [selectedYear, setSelectedYear] = useState<string>('total');
+
+  // Utility function to filter data by cutoff year
+  const filterByCutoffYear = (dateString: string) => {
+    return new Date(dateString).getFullYear() <= cutoffYear;
+  };
 
   // Utility function to calculate time series gains for each investment
   const calculateTimeSeriesGains = (investmentData: InvestmentRawData, investmentId: string) => {
@@ -76,7 +83,7 @@ export function ConsolidatedCharts({
       investmentData.immobilisations,
       investmentData.debtFlows,
       investmentData.valorisations
-    );
+    ).filter(row => filterByCutoffYear(row.date));
     
     return synthesis.map((row, index) => {
       const previousRow = index > 0 ? synthesis[index - 1] : null;
@@ -128,12 +135,14 @@ export function ConsolidatedCharts({
 
   // 2. Time Evolution Data
   const timeEvolutionData = useMemo(() => {
-    const consolidatedData = syntheticTableData.map(row => ({
-      year: new Date(row.date).getFullYear(),
-      consolidated: evolutionType === 'gains' ? row.gain2 : 
-                   evolutionType === 'valeur' ? row.valeur :
-                   row.cfni,
-    }));
+    const consolidatedData = syntheticTableData
+      .filter(row => filterByCutoffYear(row.date))
+      .map(row => ({
+        year: new Date(row.date).getFullYear(),
+        consolidated: evolutionType === 'gains' ? row.gain2 : 
+                     evolutionType === 'valeur' ? row.valeur :
+                     row.cfni,
+      }));
 
     const individualData = Object.entries(rawByInvestment).map(([investmentId, data]) => {
       const synthesis = getSyntheseData(
@@ -141,7 +150,7 @@ export function ConsolidatedCharts({
         data.immobilisations,
         data.debtFlows,
         data.valorisations
-      );
+      ).filter(row => filterByCutoffYear(row.date));
       
       return synthesis.map((row, index) => {
         const previousRow = index > 0 ? synthesis[index - 1] : null;
@@ -186,7 +195,7 @@ export function ConsolidatedCharts({
     const sortedData = Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
     // Omit the first year as requested
     return sortedData.slice(1);
-  }, [syntheticTableData, rawByInvestment, evolutionType, investments]);
+  }, [syntheticTableData, rawByInvestment, evolutionType, investments, cutoffYear]);
 
   // 3. Histogram Data (Rendement Net 2024)
   const histogramData = useMemo(() => {
@@ -255,14 +264,14 @@ export function ConsolidatedCharts({
   const cfniVsValeurData = useMemo(() => {
     const availableYears = new Set<number>();
     
-    // Collect all available years
+    // Collect all available years (filtered by cutoff)
     Object.values(rawByInvestment).forEach(data => {
       const synthesis = getSyntheseData(
         data.cashflows,
         data.immobilisations,
         data.debtFlows,
         data.valorisations
-      );
+      ).filter(row => filterByCutoffYear(row.date));
       synthesis.forEach(row => {
         availableYears.add(new Date(row.date).getFullYear());
       });
@@ -279,7 +288,7 @@ export function ConsolidatedCharts({
         data.immobilisations,
         data.debtFlows,
         data.valorisations
-      );
+      ).filter(row => filterByCutoffYear(row.date));
 
       let cfni = 0;
       let deltaValeur = 0;
@@ -330,13 +339,13 @@ export function ConsolidatedCharts({
       data: individualPoints,
       years: sortedYears
     };
-  }, [selectedInvestments, rawByInvestment, syntheticTableData, investments, batchKPIs, selectedYear]);
+  }, [selectedInvestments, rawByInvestment, syntheticTableData, investments, batchKPIs, selectedYear, cutoffYear]);
 
   // Calculate global axis domains for CFNI vs Variation scatter (stable across all years)
   const cfniAxisConfig = useMemo(() => {
     let globalXMin = 0, globalXMax = 0, globalYMin = 0, globalYMax = 0;
     
-    // Calculate for ALL years including "Total"
+    // Calculate for ALL years including "Total" (filtered by cutoff)
     Array.from(selectedInvestments).forEach(investmentId => {
       const data = rawByInvestment[investmentId];
       if (!data) return;
@@ -346,7 +355,7 @@ export function ConsolidatedCharts({
         data.immobilisations,
         data.debtFlows,
         data.valorisations
-      );
+      ).filter(row => filterByCutoffYear(row.date));
 
       // Calculate for each year AND total
       const yearsToCheck = ['total', ...cfniVsValeurData.years.map(y => y.toString())];
@@ -443,7 +452,7 @@ export function ConsolidatedCharts({
       xGridLines: generateGridLines(xDomain[0], xDomain[1]),
       yGridLines: generateGridLines(yDomain[0], yDomain[1])
     };
-  }, [selectedInvestments, rawByInvestment, cfniVsValeurData.years]);
+  }, [selectedInvestments, rawByInvestment, cfniVsValeurData.years, cutoffYear]);
 
   // Colors for charts
   const COLORS = [

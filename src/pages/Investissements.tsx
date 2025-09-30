@@ -14,6 +14,7 @@ export default function Investissements() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [selectedInvestments, setSelectedInvestments] = useState<Set<string>>(EMPTY_SET);
   const [cutoffYear, setCutoffYear] = useState<number | null>(null);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   const {
     filteredInvestments
   } = useSearch();
@@ -29,6 +30,10 @@ export default function Investissements() {
   const handleYearPickerChange = (dateString: string) => {
     const year = new Date(dateString).getFullYear();
     setCutoffYear(year);
+  };
+
+  const handleAvailableYearsChange = (years: number[]) => {
+    setAvailableYears(years);
   };
   
   const handlePrint = () => {
@@ -87,12 +92,11 @@ export default function Investissements() {
             </Button>
             
             {/* Year picker - only visible in KPI view */}
-            {viewMode === 'kpi' && (
+            {viewMode === 'kpi' && availableYears.length > 0 && (
               <YearPicker
                 value={cutoffYear ? `${cutoffYear}-12-31` : `${new Date().getFullYear()}-12-31`}
                 onChange={handleYearPickerChange}
-                startYear={2000}
-                endYear={new Date().getFullYear()}
+                availableYears={availableYears}
               />
             )}
           </div>
@@ -111,6 +115,7 @@ export default function Investissements() {
           selectedInvestments={selectedInvestments}
           cutoffYear={cutoffYear}
           onCutoffYearChange={handleCutoffYearChange}
+          onAvailableYearsChange={handleAvailableYearsChange}
         />
       )}
     </div>

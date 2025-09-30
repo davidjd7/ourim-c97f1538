@@ -9,11 +9,13 @@ interface ConsolidatedKPIViewProps {
   selectedInvestments: Set<string>;
   cutoffYear: number | null;
   onCutoffYearChange: (year: number) => void;
+  onAvailableYearsChange?: (years: number[]) => void;
 }
 export function ConsolidatedKPIView({
   selectedInvestments,
   cutoffYear,
-  onCutoffYearChange
+  onCutoffYearChange,
+  onAvailableYearsChange
 }: ConsolidatedKPIViewProps) {
   const {
     investments
@@ -27,48 +29,52 @@ export function ConsolidatedKPIView({
     loading
   } = useBatchPerformanceKPIs(investmentIds);
 
-  // Calculate the default cutoff year (latest common year across all selected investments)
-  const defaultCutoffYear = useMemo(() => {
+  // Calculate available years and default cutoff year
+  const { availableYears, defaultCutoffYear } = useMemo(() => {
     if (Object.keys(rawByInvestment).length === 0) {
-      return new Date().getFullYear();
+      return { availableYears: [], defaultCutoffYear: new Date().getFullYear() };
     }
 
-    // For each investment, find its most recent year with data
-    // Then take the MINIMUM of these years (the latest year where ALL investments have data)
-    const maxYearsByInvestment = Object.values(rawByInvestment).map(investmentData => {
-      const allYears: number[] = [];
+    // Collect ALL years from all selected investments
+    const allYearsSet = new Set<number>();
+    Object.values(rawByInvestment).forEach(investmentData => {
       investmentData.cashflows.forEach(cf => {
-        allYears.push(new Date(cf.date).getFullYear());
+        allYearsSet.add(new Date(cf.date).getFullYear());
       });
       investmentData.valorisations.forEach(v => {
-        allYears.push(new Date(v.date).getFullYear());
+        allYearsSet.add(new Date(v.date).getFullYear());
       });
       investmentData.immobilisations.forEach(i => {
-        allYears.push(new Date(i.date).getFullYear());
+        allYearsSet.add(new Date(i.date).getFullYear());
       });
       investmentData.debtFlows.forEach(df => {
-        allYears.push(new Date(df.date).getFullYear());
+        allYearsSet.add(new Date(df.date).getFullYear());
       });
-
-      // If no data for this investment, use a very old year
-      if (allYears.length === 0) return 1900;
-
-      // Return the most recent year for this investment
-      return Math.max(...allYears);
     });
 
-    // Filter out placeholder years and return the minimum (earliest common year)
-    const validYears = maxYearsByInvestment.filter(year => year > 1900);
-    if (validYears.length === 0) {
-      return new Date().getFullYear();
+    const sortedYears = Array.from(allYearsSet).sort((a, b) => a - b);
+    
+    if (sortedYears.length === 0) {
+      return { availableYears: [], defaultCutoffYear: new Date().getFullYear() };
     }
-    return Math.min(...validYears);
+
+    // Default to the latest available year
+    return { 
+      availableYears: sortedYears, 
+      defaultCutoffYear: sortedYears[sortedYears.length - 1] 
+    };
   }, [rawByInvestment]);
 
   // Use the provided cutoffYear or default to calculated value
   const effectiveCutoffYear = cutoffYear ?? defaultCutoffYear;
 
-  // Update parent with default year if needed
+  // Update parent with available years and default year
+  React.useEffect(() => {
+    if (onAvailableYearsChange) {
+      onAvailableYearsChange(availableYears);
+    }
+  }, [availableYears, onAvailableYearsChange]);
+
   React.useEffect(() => {
     if (cutoffYear === null && defaultCutoffYear) {
       onCutoffYearChange(defaultCutoffYear);
@@ -405,7 +411,13 @@ export function ConsolidatedKPIView({
       </div>
 
       {/* Charts Section */}
-      <ConsolidatedCharts selectedInvestments={selectedInvestments} batchKPIs={batchKPIs} rawByInvestment={rawByInvestment} syntheticTableData={syntheticTableData} />
+      <ConsolidatedCharts 
+        selectedInvestments={selectedInvestments} 
+        batchKPIs={batchKPIs} 
+        rawByInvestment={rawByInvestment} 
+        syntheticTableData={syntheticTableData}
+        cutoffYear={effectiveCutoffYear}
+      />
 
       {/* Synthetic Table */}
       <div className="card-financial">
