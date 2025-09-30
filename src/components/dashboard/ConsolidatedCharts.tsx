@@ -14,7 +14,8 @@ import {
   CartesianGrid, 
   Tooltip, 
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceLine
 } from 'recharts';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -321,33 +322,7 @@ export function ConsolidatedCharts({
       };
     }).filter(Boolean);
 
-    // Add consolidated point
-    if (syntheticTableData.length > 0) {
-      let consolidatedCfni = 0;
-      let consolidatedDeltaValeur = 0;
-
-      if (selectedYear === 'total') {
-        syntheticTableData.forEach(row => {
-          consolidatedCfni += row.cfni;
-          consolidatedDeltaValeur += row.deltaValeur;
-        });
-      } else {
-        const yearNum = parseInt(selectedYear);
-        const yearRows = syntheticTableData.filter(row => new Date(row.date).getFullYear() === yearNum);
-        yearRows.forEach(row => {
-          consolidatedCfni += row.cfni;
-          consolidatedDeltaValeur += row.deltaValeur;
-        });
-      }
-
-      individualPoints.push({
-        cfni: consolidatedCfni,
-        deltaValeur: consolidatedDeltaValeur,
-        name: 'Portefeuille Consolidé',
-        size: Math.max(30, Math.min(250, Math.abs(consolidatedCfni) / 5000)),
-        isConsolidated: true
-      });
-    }
+    // Do not add consolidated point as requested
 
     return {
       data: individualPoints,
@@ -573,7 +548,7 @@ export function ConsolidatedCharts({
           <CardHeader>
             <CardTitle>CFNI vs Variation de Valeur</CardTitle>
             <CardDescription>
-              Relation entre flux et variation de valeur (rouge = consolidé)
+              Relation entre flux et variation de valeur
             </CardDescription>
             <div className="mt-4">
               <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -608,7 +583,8 @@ export function ConsolidatedCharts({
                     name="Variation Valeur"
                     tickFormatter={(value) => formatCurrency(value)}
                   />
-                  <Tooltip 
+                  <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={2} />
+                  <Tooltip
                     content={({ active, payload }) => {
                       if (active && payload && payload.length > 0) {
                         const data = payload[0].payload;
