@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChartContainer, ChartConfig } from '@/components/ui/chart';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoIcon } from 'lucide-react';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { getSyntheseData, calculateXIRR, calculateNOI } from '@/lib/kpiCalculations';
 import type { BatchKPIData, InvestmentRawData } from '@/types/kpi';
@@ -656,8 +658,22 @@ export function ConsolidatedCharts({
         <Card className="card-financial">
           <CardHeader>
             <CardTitle>Distribution des Rendements</CardTitle>
-            <CardDescription>
+            <CardDescription className="flex items-center gap-1.5">
               Analyse statistique - Rendement Net et TRI
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <InfoIcon className="h-4 w-4 cursor-help text-muted-foreground hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-sm">
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Médiane à gauche</strong> = majorité des actifs plutôt faibles, quelques pépites.</p>
+                      <p><strong>Médiane à droite</strong> = majorité plutôt solides, quelques boulets.</p>
+                      <p><strong>Médiane centrée</strong> = homogénéité.</p>
+                    </div>
+                  </TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
             </CardDescription>
           </CardHeader>
           <CardContent>
