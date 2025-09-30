@@ -563,9 +563,27 @@ export function ConsolidatedCharts({
                   {cfniAxisConfig.yGridLines.map((line, index) => <ReferenceLine key={`y-${index}`} y={line.value} stroke={line.isPrimary ? "hsl(var(--border))" : "hsl(var(--muted))"} strokeWidth={line.isPrimary ? 1 : 0.5} strokeOpacity={line.isPrimary ? 0.6 : 0.3} />)}
                   {/* Grid lines X-axis */}
                   {cfniAxisConfig.xGridLines.map((line, index) => <ReferenceLine key={`x-${index}`} x={line.value} stroke={line.isPrimary ? "hsl(var(--border))" : "hsl(var(--muted))"} strokeWidth={line.isPrimary ? 1 : 0.5} strokeOpacity={line.isPrimary ? 0.6 : 0.3} />)}
-                  <XAxis type="number" dataKey="cfni" name="CFNI" domain={cfniAxisConfig.xDomain} ticks={cfniAxisConfig.xTicks} hide={true} />
-                  <YAxis type="number" dataKey="deltaValeur" name="Variation Valeur" domain={cfniAxisConfig.yDomain} ticks={cfniAxisConfig.yTicks} tickFormatter={value => formatCurrency(value)} />
+                  {/* Reference lines for axes */}
+                  <ReferenceLine x={0} stroke="hsl(var(--border))" strokeWidth={2} />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={2} />
+                  <XAxis 
+                    type="number" 
+                    dataKey="cfni" 
+                    name="CFNI" 
+                    domain={cfniAxisConfig.xDomain} 
+                    ticks={cfniAxisConfig.xTicks} 
+                    hide={true}
+                    label={{ value: 'CFNI', position: 'insideRight', offset: -10, style: { fill: 'hsl(var(--foreground))' } }}
+                  />
+                  <YAxis 
+                    type="number" 
+                    dataKey="deltaValeur" 
+                    name="Variation Valeur" 
+                    domain={cfniAxisConfig.yDomain} 
+                    ticks={cfniAxisConfig.yTicks} 
+                    tickFormatter={value => formatCurrency(value)}
+                    label={{ value: 'Variation de Valeur', angle: -90, position: 'insideTop', offset: 10, style: { fill: 'hsl(var(--foreground))' } }}
+                  />
                   <Tooltip content={({
                   active,
                   payload
