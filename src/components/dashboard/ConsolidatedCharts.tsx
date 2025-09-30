@@ -1,23 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { 
-  ScatterChart, 
-  Scatter, 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend,
-  ResponsiveContainer,
-  ReferenceLine,
-  Customized
-} from 'recharts';
+import { ScatterChart, Scatter, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Customized } from 'recharts';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +9,6 @@ import { useInvestments } from '@/contexts/ImmobilierContext';
 import { getSyntheseData, calculateXIRR, calculateNOI } from '@/lib/kpiCalculations';
 import type { BatchKPIData, InvestmentRawData } from '@/types/kpi';
 import { formatCurrency, formatPercentage } from '@/lib/formatters';
-
 interface ConsolidatedChartsProps {
   selectedInvestments: Set<string>;
   batchKPIs: BatchKPIData;
@@ -52,22 +33,41 @@ interface ConsolidatedChartsProps {
 
 // Chart configuration for consistent theming
 const chartConfig: ChartConfig = {
-  ltv: { label: "LTV (%)", color: "hsl(var(--primary))" },
-  xirr: { label: "TRI (%)", color: "hsl(var(--success))" },
-  rendementNet: { label: "Rendement Net (%)", color: "hsl(var(--primary))" },
-  valeur: { label: "Valeur", color: "hsl(var(--primary))" },
-  gain: { label: "Gain", color: "hsl(var(--success))" },
-  consolidated: { label: "Consolidé", color: "hsl(var(--primary))" },
+  ltv: {
+    label: "LTV (%)",
+    color: "hsl(var(--primary))"
+  },
+  xirr: {
+    label: "TRI (%)",
+    color: "hsl(var(--success))"
+  },
+  rendementNet: {
+    label: "Rendement Net (%)",
+    color: "hsl(var(--primary))"
+  },
+  valeur: {
+    label: "Valeur",
+    color: "hsl(var(--primary))"
+  },
+  gain: {
+    label: "Gain",
+    color: "hsl(var(--success))"
+  },
+  consolidated: {
+    label: "Consolidé",
+    color: "hsl(var(--primary))"
+  }
 } satisfies ChartConfig;
-
-export function ConsolidatedCharts({ 
-  selectedInvestments, 
-  batchKPIs, 
+export function ConsolidatedCharts({
+  selectedInvestments,
+  batchKPIs,
   rawByInvestment,
   syntheticTableData,
   cutoffYear
 }: ConsolidatedChartsProps) {
-  const { investments } = useInvestments();
+  const {
+    investments
+  } = useInvestments();
   const [evolutionType, setEvolutionType] = useState<'gains' | 'valeur' | 'cfni'>('gains');
   const [selectedYear, setSelectedYear] = useState<string>('total');
 
@@ -78,13 +78,7 @@ export function ConsolidatedCharts({
 
   // Utility function to calculate time series gains for each investment
   const calculateTimeSeriesGains = (investmentData: InvestmentRawData, investmentId: string) => {
-    const synthesis = getSyntheseData(
-      investmentData.cashflows,
-      investmentData.immobilisations,
-      investmentData.debtFlows,
-      investmentData.valorisations
-    ).filter(row => filterByCutoffYear(row.date));
-    
+    const synthesis = getSyntheseData(investmentData.cashflows, investmentData.immobilisations, investmentData.debtFlows, investmentData.valorisations).filter(row => filterByCutoffYear(row.date));
     return synthesis.map((row, index) => {
       const previousRow = index > 0 ? synthesis[index - 1] : null;
       const deltaValeur = previousRow ? row.valeur - previousRow.valeur : 0;
@@ -103,14 +97,14 @@ export function ConsolidatedCharts({
     const individualPoints = Array.from(selectedInvestments).map(investmentId => {
       const kpis = batchKPIs[investmentId];
       if (!kpis) return null;
-      
       const investment = investments.find(inv => inv.id === investmentId);
       return {
         ltv: kpis.fondPropreDetails.ltv,
         xirr: kpis.xirr,
         valeur: kpis.fondPropreDetails.valeur,
         name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
-        size: Math.max(20, Math.min(200, kpis.fondPropreDetails.valeur / 5000)), // Scale size based on valeur
+        size: Math.max(20, Math.min(200, kpis.fondPropreDetails.valeur / 5000)),
+        // Scale size based on valeur
         isConsolidated: false
       };
     }).filter(Boolean);
@@ -119,7 +113,6 @@ export function ConsolidatedCharts({
     if (syntheticTableData.length > 0) {
       const latestData = syntheticTableData[syntheticTableData.length - 1];
       const consolidatedLTV = latestData.valeur > 0 ? (latestData.valeur - latestData.fp) / latestData.valeur * 100 : 0;
-      
       individualPoints.push({
         ltv: consolidatedLTV,
         xirr: latestData.xirrGlissant,
@@ -129,42 +122,29 @@ export function ConsolidatedCharts({
         isConsolidated: true
       });
     }
-
     return individualPoints;
   }, [selectedInvestments, batchKPIs, investments, syntheticTableData]);
 
   // 2. Time Evolution Data
   const timeEvolutionData = useMemo(() => {
-    const consolidatedData = syntheticTableData
-      .filter(row => filterByCutoffYear(row.date))
-      .map(row => ({
-        year: new Date(row.date).getFullYear(),
-        consolidated: evolutionType === 'gains' ? row.gain2 : 
-                     evolutionType === 'valeur' ? row.valeur :
-                     row.cfni,
-      }));
-
+    const consolidatedData = syntheticTableData.filter(row => filterByCutoffYear(row.date)).map(row => ({
+      year: new Date(row.date).getFullYear(),
+      consolidated: evolutionType === 'gains' ? row.gain2 : evolutionType === 'valeur' ? row.valeur : row.cfni
+    }));
     const individualData = Object.entries(rawByInvestment).map(([investmentId, data]) => {
-      const synthesis = getSyntheseData(
-        data.cashflows,
-        data.immobilisations,
-        data.debtFlows,
-        data.valorisations
-      ).filter(row => filterByCutoffYear(row.date));
-      
+      const synthesis = getSyntheseData(data.cashflows, data.immobilisations, data.debtFlows, data.valorisations).filter(row => filterByCutoffYear(row.date));
       return synthesis.map((row, index) => {
         const previousRow = index > 0 ? synthesis[index - 1] : null;
         let value;
-        
         if (evolutionType === 'gains') {
           const deltaValeur = previousRow ? row.valeur - previousRow.valeur : 0;
           value = deltaValeur + row.flux;
         } else if (evolutionType === 'valeur') {
           value = row.valeur;
-        } else { // cfni
+        } else {
+          // cfni
           value = row.flux; // Assuming flux represents CFNI
         }
-        
         return {
           year: new Date(row.date).getFullYear(),
           [investmentId]: value,
@@ -177,13 +157,18 @@ export function ConsolidatedCharts({
     const yearMap = new Map();
     consolidatedData.forEach(item => {
       if (!yearMap.has(item.year)) {
-        yearMap.set(item.year, { year: item.year, consolidated: item.consolidated });
+        yearMap.set(item.year, {
+          year: item.year,
+          consolidated: item.consolidated
+        });
       }
     });
-
     individualData.forEach(item => {
       if (!yearMap.has(item.year)) {
-        yearMap.set(item.year, { year: item.year, consolidated: 0 });
+        yearMap.set(item.year, {
+          year: item.year,
+          consolidated: 0
+        });
       }
       Object.keys(item).forEach(key => {
         if (key !== 'year' && key !== 'investmentName') {
@@ -191,7 +176,6 @@ export function ConsolidatedCharts({
         }
       });
     });
-
     const sortedData = Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
     // Omit the first year as requested
     return sortedData.slice(1);
@@ -202,12 +186,10 @@ export function ConsolidatedCharts({
     return Array.from(selectedInvestments).map(investmentId => {
       const kpis = batchKPIs[investmentId];
       if (!kpis) return null;
-
       const investment = investments.find(inv => inv.id === investmentId);
-      
       return {
         name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
-        rendement2024: kpis.rendementNet,
+        rendement2024: kpis.rendementNet
       };
     }).filter(Boolean).sort((a, b) => (b?.rendement2024 || 0) - (a?.rendement2024 || 0));
   }, [selectedInvestments, batchKPIs, investments]);
@@ -217,11 +199,10 @@ export function ConsolidatedCharts({
     return Array.from(selectedInvestments).map(investmentId => {
       const kpis = batchKPIs[investmentId];
       if (!kpis) return null;
-      
       const investment = investments.find(inv => inv.id === investmentId);
       return {
         name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
-        value: kpis.fondPropreDetails.valeur,
+        value: kpis.fondPropreDetails.valeur
       };
     }).filter(Boolean);
   }, [selectedInvestments, batchKPIs, investments]);
@@ -232,28 +213,23 @@ export function ConsolidatedCharts({
       const kpis = batchKPIs[investmentId];
       return kpis?.rendementNet || 0;
     }).sort((a, b) => a - b);
-
     const xirrs = Array.from(selectedInvestments).map(investmentId => {
       const kpis = batchKPIs[investmentId];
       return kpis?.xirr || 0;
     }).sort((a, b) => a - b);
-
     const createBoxplotStats = (values: number[]) => {
       if (values.length === 0) return null;
-      
       const q1Index = Math.floor(values.length * 0.25);
       const q2Index = Math.floor(values.length * 0.5);
       const q3Index = Math.floor(values.length * 0.75);
-
       return {
         min: values[0],
         q1: values[q1Index],
         median: values[q2Index],
         q3: values[q3Index],
-        max: values[values.length - 1],
+        max: values[values.length - 1]
       };
     };
-
     return {
       rendement: createBoxplotStats(rendements),
       xirr: createBoxplotStats(xirrs)
@@ -263,36 +239,21 @@ export function ConsolidatedCharts({
   // 6. CFNI vs Variation de Valeur scatter plot data
   const cfniVsValeurData = useMemo(() => {
     const availableYears = new Set<number>();
-    
+
     // Collect all available years (filtered by cutoff)
     Object.values(rawByInvestment).forEach(data => {
-      const synthesis = getSyntheseData(
-        data.cashflows,
-        data.immobilisations,
-        data.debtFlows,
-        data.valorisations
-      ).filter(row => filterByCutoffYear(row.date));
+      const synthesis = getSyntheseData(data.cashflows, data.immobilisations, data.debtFlows, data.valorisations).filter(row => filterByCutoffYear(row.date));
       synthesis.forEach(row => {
         availableYears.add(new Date(row.date).getFullYear());
       });
     });
-
     const sortedYears = Array.from(availableYears).sort();
-    
     const individualPoints = Array.from(selectedInvestments).map(investmentId => {
       const data = rawByInvestment[investmentId];
       if (!data) return null;
-
-      const synthesis = getSyntheseData(
-        data.cashflows,
-        data.immobilisations,
-        data.debtFlows,
-        data.valorisations
-      ).filter(row => filterByCutoffYear(row.date));
-
+      const synthesis = getSyntheseData(data.cashflows, data.immobilisations, data.debtFlows, data.valorisations).filter(row => filterByCutoffYear(row.date));
       let cfni = 0;
       let deltaValeur = 0;
-
       if (selectedYear === 'total') {
         // Calculate total for all years
         synthesis.forEach((row, index) => {
@@ -305,7 +266,6 @@ export function ConsolidatedCharts({
         // Calculate for specific year
         const yearNum = parseInt(selectedYear);
         const yearRows = synthesis.filter(row => new Date(row.date).getFullYear() === yearNum);
-        
         yearRows.forEach((row, index) => {
           cfni += row.flux;
           if (index > 0) {
@@ -319,10 +279,8 @@ export function ConsolidatedCharts({
           }
         });
       }
-
       const investment = investments.find(inv => inv.id === investmentId);
       const kpis = batchKPIs[investmentId];
-      
       return {
         cfni,
         deltaValeur,
@@ -343,27 +301,22 @@ export function ConsolidatedCharts({
 
   // Calculate global axis domains for CFNI vs Variation scatter (stable across all years)
   const cfniAxisConfig = useMemo(() => {
-    let globalXMin = 0, globalXMax = 0, globalYMin = 0, globalYMax = 0;
-    
+    let globalXMin = 0,
+      globalXMax = 0,
+      globalYMin = 0,
+      globalYMax = 0;
+
     // Calculate for ALL years including "Total" (filtered by cutoff)
     Array.from(selectedInvestments).forEach(investmentId => {
       const data = rawByInvestment[investmentId];
       if (!data) return;
-
-      const synthesis = getSyntheseData(
-        data.cashflows,
-        data.immobilisations,
-        data.debtFlows,
-        data.valorisations
-      ).filter(row => filterByCutoffYear(row.date));
+      const synthesis = getSyntheseData(data.cashflows, data.immobilisations, data.debtFlows, data.valorisations).filter(row => filterByCutoffYear(row.date));
 
       // Calculate for each year AND total
       const yearsToCheck = ['total', ...cfniVsValeurData.years.map(y => y.toString())];
-      
       yearsToCheck.forEach(year => {
         let cfni = 0;
         let deltaValeur = 0;
-
         if (year === 'total') {
           synthesis.forEach((row, index) => {
             cfni += row.flux;
@@ -374,7 +327,6 @@ export function ConsolidatedCharts({
         } else {
           const yearNum = parseInt(year);
           const yearRows = synthesis.filter(row => new Date(row.date).getFullYear() === yearNum);
-          
           yearRows.forEach((row, index) => {
             cfni += row.flux;
             if (index > 0) {
@@ -387,7 +339,6 @@ export function ConsolidatedCharts({
             }
           });
         }
-
         globalXMin = Math.min(globalXMin, cfni);
         globalXMax = Math.max(globalXMax, cfni);
         globalYMin = Math.min(globalYMin, deltaValeur);
@@ -398,23 +349,18 @@ export function ConsolidatedCharts({
     // Add padding (10%)
     const xPadding = (globalXMax - globalXMin) * 0.1;
     const yPadding = (globalYMax - globalYMin) * 0.1;
-    
+
     // Round to nearest 50000
     const roundTo50k = (value: number) => Math.round(value / 50000) * 50000;
-    
-    const xDomain = [
-      roundTo50k(globalXMin - xPadding),
-      roundTo50k(globalXMax + xPadding)
-    ];
-    const yDomain = [
-      roundTo50k(globalYMin - yPadding),
-      roundTo50k(globalYMax + yPadding)
-    ];
+    const xDomain = [roundTo50k(globalXMin - xPadding), roundTo50k(globalXMax + xPadding)];
+    const yDomain = [roundTo50k(globalYMin - yPadding), roundTo50k(globalYMax + yPadding)];
 
     // Generate nice ticks
     const generateTicks = (min: number, max: number, count = 5) => {
       const step = (max - min) / (count - 1);
-      return Array.from({ length: count }, (_, i) => min + step * i);
+      return Array.from({
+        length: count
+      }, (_, i) => min + step * i);
     };
 
     // Generate ticks every 50000
@@ -422,7 +368,6 @@ export function ConsolidatedCharts({
       const ticks = [];
       const start = Math.floor(min / 50000) * 50000;
       const end = Math.ceil(max / 50000) * 50000;
-      
       for (let i = start; i <= end; i += 50000) {
         ticks.push(i);
       }
@@ -434,7 +379,6 @@ export function ConsolidatedCharts({
       const lines = [];
       const start = Math.floor(min / 25000) * 25000;
       const end = Math.ceil(max / 25000) * 25000;
-      
       for (let i = start; i <= end; i += 25000) {
         lines.push({
           value: i,
@@ -443,7 +387,6 @@ export function ConsolidatedCharts({
       }
       return lines;
     };
-
     return {
       xDomain,
       yDomain,
@@ -455,20 +398,9 @@ export function ConsolidatedCharts({
   }, [selectedInvestments, rawByInvestment, cfniVsValeurData.years, cutoffYear]);
 
   // Colors for charts
-  const COLORS = [
-    'hsl(var(--primary))',
-    'hsl(var(--success))', 
-    'hsl(var(--warning))',
-    'hsl(var(--destructive))',
-    'hsl(var(--secondary))',
-    'hsl(180 50% 60%)',
-    'hsl(260 50% 60%)',
-    'hsl(30 50% 60%)'
-  ];
-
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--secondary))', 'hsl(180 50% 60%)', 'hsl(260 50% 60%)', 'hsl(30 50% 60%)'];
   if (selectedInvestments.size === 0) {
-    return (
-      <div className="card-financial">
+    return <div className="card-financial">
         <div className="p-8 text-center">
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">
             Aucun investissement sélectionné
@@ -477,13 +409,10 @@ export function ConsolidatedCharts({
             Sélectionnez des investissements pour voir les graphiques.
           </p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-8">
-      <h2 className="text-2xl font-bold">Graphiques Consolidés</h2>
+  return <div className="space-y-8">
+      
       
       {/* First Row: Evolution Temporelle + Répartition des Valeurs */}
       <div className="grid gap-4 md:grid-cols-2 charts-grid">
@@ -495,11 +424,7 @@ export function ConsolidatedCharts({
               Evolution par année avec courbe consolidée sur axe droit
             </CardDescription>
             <div className="flex space-x-6 mt-4">
-              <RadioGroup 
-                value={evolutionType} 
-                onValueChange={(value) => setEvolutionType(value as 'gains' | 'valeur' | 'cfni')}
-                className="flex space-x-4"
-              >
+              <RadioGroup value={evolutionType} onValueChange={value => setEvolutionType(value as 'gains' | 'valeur' | 'cfni')} className="flex space-x-4">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="gains" id="gains" />
                   <Label htmlFor="gains" className="text-sm">Gains</Label>
@@ -521,33 +446,12 @@ export function ConsolidatedCharts({
                 <LineChart data={timeEvolutionData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="year" />
-                  <YAxis yAxisId="left" tickFormatter={(value) => formatCurrency(value)} />
-                  <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => formatCurrency(value)} />
-                  <Tooltip 
-                    formatter={(value, name) => [formatCurrency(value as number), name === 'consolidated' ? 'Consolidé' : investments.find(inv => inv.id === name)?.name || name]}
-                    labelFormatter={(label) => `Année ${label}`}
-                  />
+                  <YAxis yAxisId="left" tickFormatter={value => formatCurrency(value)} />
+                  <YAxis yAxisId="right" orientation="right" tickFormatter={value => formatCurrency(value)} />
+                  <Tooltip formatter={(value, name) => [formatCurrency(value as number), name === 'consolidated' ? 'Consolidé' : investments.find(inv => inv.id === name)?.name || name]} labelFormatter={label => `Année ${label}`} />
                   <Legend />
-                  {Array.from(selectedInvestments).map((investmentId, index) => (
-                    <Line
-                      key={investmentId}
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey={investmentId}
-                      stroke={COLORS[index % COLORS.length]}
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      name={investments.find(inv => inv.id === investmentId)?.name || `Inv. ${investmentId.slice(0, 8)}`}
-                    />
-                  ))}
-                  <Line 
-                    yAxisId="right"
-                    type="monotone" 
-                    dataKey="consolidated" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={3}
-                    name="Consolidé"
-                  />
+                  {Array.from(selectedInvestments).map((investmentId, index) => <Line key={investmentId} yAxisId="left" type="monotone" dataKey={investmentId} stroke={COLORS[index % COLORS.length]} strokeWidth={2} strokeDasharray="5 5" name={investments.find(inv => inv.id === investmentId)?.name || `Inv. ${investmentId.slice(0, 8)}`} />)}
+                  <Line yAxisId="right" type="monotone" dataKey="consolidated" stroke="hsl(var(--primary))" strokeWidth={3} name="Consolidé" />
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -566,33 +470,22 @@ export function ConsolidatedCharts({
             <ChartContainer config={chartConfig} className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={donutData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={80}
-                    outerRadius={140}
-                    dataKey="value"
-                    nameKey="name"
-                  >
-                    {donutData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
+                  <Pie data={donutData} cx="50%" cy="50%" innerRadius={80} outerRadius={140} dataKey="value" nameKey="name">
+                    {donutData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length > 0) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                  <Tooltip content={({
+                  active,
+                  payload
+                }) => {
+                  if (active && payload && payload.length > 0) {
+                    const data = payload[0].payload;
+                    return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
                             <p className="font-semibold">{data.name}</p>
                             <p className="text-sm">Valeur: {formatCurrency(data.value)}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
+                          </div>;
+                  }
+                  return null;
+                }} />
                 </PieChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -615,48 +508,25 @@ export function ConsolidatedCharts({
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    type="number" 
-                    dataKey="ltv" 
-                    name="LTV"
-                    unit="%" 
-                    tickFormatter={(value) => `${value.toFixed(0)}%`}
-                  />
-                  <YAxis 
-                    type="number" 
-                    dataKey="xirr" 
-                    name="TRI"
-                    unit="%" 
-                    tickFormatter={(value) => `${value.toFixed(1)}%`}
-                  />
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length > 0) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                  <XAxis type="number" dataKey="ltv" name="LTV" unit="%" tickFormatter={value => `${value.toFixed(0)}%`} />
+                  <YAxis type="number" dataKey="xirr" name="TRI" unit="%" tickFormatter={value => `${value.toFixed(1)}%`} />
+                  <Tooltip content={({
+                  active,
+                  payload
+                }) => {
+                  if (active && payload && payload.length > 0) {
+                    const data = payload[0].payload;
+                    return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
                             <p className="font-semibold">{data.name}</p>
                             <p className="text-sm">TRI: {formatPercentage(data.xirr)}</p>
                             <p className="text-sm">LTV: {formatPercentage(data.ltv)}</p>
                             <p className="text-sm">Valeur: {formatCurrency(data.valeur)}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Scatter
-                    data={scatterData}
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.6}
-                  >
-                    {scatterData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"}
-                        r={Math.sqrt(entry.size)} 
-                      />
-                    ))}
+                          </div>;
+                  }
+                  return null;
+                }} />
+                  <Scatter data={scatterData} fill="hsl(var(--primary))" fillOpacity={0.6}>
+                    {scatterData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={Math.sqrt(entry.size)} />)}
                   </Scatter>
                 </ScatterChart>
               </ResponsiveContainer>
@@ -678,11 +548,9 @@ export function ConsolidatedCharts({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="total">Total (toutes années)</SelectItem>
-                  {cfniVsValeurData.years.map(year => (
-                    <SelectItem key={year} value={year.toString()}>
+                  {cfniVsValeurData.years.map(year => <SelectItem key={year} value={year.toString()}>
                       {year}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -692,103 +560,48 @@ export function ConsolidatedCharts({
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart>
                   {/* Grid lines Y-axis */}
-                  {cfniAxisConfig.yGridLines.map((line, index) => (
-                    <ReferenceLine
-                      key={`y-${index}`}
-                      y={line.value}
-                      stroke={line.isPrimary ? "hsl(var(--border))" : "hsl(var(--muted))"}
-                      strokeWidth={line.isPrimary ? 1 : 0.5}
-                      strokeOpacity={line.isPrimary ? 0.6 : 0.3}
-                    />
-                  ))}
+                  {cfniAxisConfig.yGridLines.map((line, index) => <ReferenceLine key={`y-${index}`} y={line.value} stroke={line.isPrimary ? "hsl(var(--border))" : "hsl(var(--muted))"} strokeWidth={line.isPrimary ? 1 : 0.5} strokeOpacity={line.isPrimary ? 0.6 : 0.3} />)}
                   {/* Grid lines X-axis */}
-                  {cfniAxisConfig.xGridLines.map((line, index) => (
-                    <ReferenceLine
-                      key={`x-${index}`}
-                      x={line.value}
-                      stroke={line.isPrimary ? "hsl(var(--border))" : "hsl(var(--muted))"}
-                      strokeWidth={line.isPrimary ? 1 : 0.5}
-                      strokeOpacity={line.isPrimary ? 0.6 : 0.3}
-                    />
-                  ))}
-                  <XAxis 
-                    type="number" 
-                    dataKey="cfni" 
-                    name="CFNI"
-                    domain={cfniAxisConfig.xDomain}
-                    ticks={cfniAxisConfig.xTicks}
-                    hide={true}
-                  />
-                  <YAxis 
-                    type="number" 
-                    dataKey="deltaValeur" 
-                    name="Variation Valeur"
-                    domain={cfniAxisConfig.yDomain}
-                    ticks={cfniAxisConfig.yTicks}
-                    tickFormatter={(value) => formatCurrency(value)}
-                  />
+                  {cfniAxisConfig.xGridLines.map((line, index) => <ReferenceLine key={`x-${index}`} x={line.value} stroke={line.isPrimary ? "hsl(var(--border))" : "hsl(var(--muted))"} strokeWidth={line.isPrimary ? 1 : 0.5} strokeOpacity={line.isPrimary ? 0.6 : 0.3} />)}
+                  <XAxis type="number" dataKey="cfni" name="CFNI" domain={cfniAxisConfig.xDomain} ticks={cfniAxisConfig.xTicks} hide={true} />
+                  <YAxis type="number" dataKey="deltaValeur" name="Variation Valeur" domain={cfniAxisConfig.yDomain} ticks={cfniAxisConfig.yTicks} tickFormatter={value => formatCurrency(value)} />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={2} />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length > 0) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                  <Tooltip content={({
+                  active,
+                  payload
+                }) => {
+                  if (active && payload && payload.length > 0) {
+                    const data = payload[0].payload;
+                    return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
                             <p className="font-semibold">{data.name}</p>
                             <p className="text-sm">CFNI: {formatCurrency(data.cfni)}</p>
                             <p className="text-sm">Δ Valeur: {formatCurrency(data.deltaValeur)}</p>
                             <p className="text-sm font-semibold">Gain: {formatCurrency(data.gain)}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Scatter
-                    data={cfniVsValeurData.data}
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.6}
-                  >
-                    {cfniVsValeurData.data.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"}
-                        r={Math.sqrt(entry.size)} 
-                      />
-                    ))}
+                          </div>;
+                  }
+                  return null;
+                }} />
+                  <Scatter data={cfniVsValeurData.data} fill="hsl(var(--primary))" fillOpacity={0.6}>
+                    {cfniVsValeurData.data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={Math.sqrt(entry.size)} />)}
                   </Scatter>
-                  <Customized
-                    component={({ xAxisMap, yAxisMap }: any) => {
-                      if (!xAxisMap || !yAxisMap) return null;
-                      
-                      const xAxis = xAxisMap[0];
-                      const yAxis = yAxisMap[0];
-                      
-                      if (!xAxis || !yAxis) return null;
-
-                      const yZeroPixel = yAxis.scale(0);
-                      
-                      return (
-                        <g>
+                  <Customized component={({
+                  xAxisMap,
+                  yAxisMap
+                }: any) => {
+                  if (!xAxisMap || !yAxisMap) return null;
+                  const xAxis = xAxisMap[0];
+                  const yAxis = yAxisMap[0];
+                  if (!xAxis || !yAxis) return null;
+                  const yZeroPixel = yAxis.scale(0);
+                  return <g>
                           {cfniAxisConfig.xTicks.map((tick, index) => {
-                            const xPixel = xAxis.scale(tick);
-                            return (
-                              <text
-                                key={index}
-                                x={xPixel}
-                                y={yZeroPixel + 20}
-                                textAnchor="middle"
-                                fill="hsl(var(--foreground))"
-                                fontSize={12}
-                              >
+                      const xPixel = xAxis.scale(tick);
+                      return <text key={index} x={xPixel} y={yZeroPixel + 20} textAnchor="middle" fill="hsl(var(--foreground))" fontSize={12}>
                                 {formatCurrency(tick)}
-                              </text>
-                            );
-                          })}
-                        </g>
-                      );
-                    }}
-                  />
+                              </text>;
+                    })}
+                        </g>;
+                }} />
                 </ScatterChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -811,21 +624,10 @@ export function ConsolidatedCharts({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={histogramData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis tickFormatter={(value) => `${value.toFixed(1)}%`} />
-                  <Tooltip 
-                    formatter={(value) => [formatPercentage(value as number), 'Rendement 2024']}
-                  />
-                  <Bar 
-                    dataKey="rendement2024" 
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.8}
-                  />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                  <YAxis tickFormatter={value => `${value.toFixed(1)}%`} />
+                  <Tooltip formatter={value => [formatPercentage(value as number), 'Rendement 2024']} />
+                  <Bar dataKey="rendement2024" fill="hsl(var(--primary))" fillOpacity={0.8} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -846,23 +648,16 @@ export function ConsolidatedCharts({
               <div>
                 <h4 className="text-sm font-medium mb-2">Rendement Net (%)</h4>
                 <div className="relative">
-                  <div 
-                    className="h-6 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded"
-                    style={{
-                      background: `linear-gradient(to right, 
+                  <div className="h-6 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded" style={{
+                  background: `linear-gradient(to right, 
                         hsl(0 70% 70%) 0%, 
                         hsl(45 70% 70%) 50%, 
                         hsl(120 70% 70%) 100%)`
-                    }}
-                  />
-                  {boxplotData.rendement && (
-                    <>
-                      <div 
-                        className="absolute top-0 h-6 w-1 bg-black"
-                        style={{
-                          left: `${((boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min)) * 100}%`
-                        }}
-                      />
+                }} />
+                  {boxplotData.rendement && <>
+                      <div className="absolute top-0 h-6 w-1 bg-black" style={{
+                    left: `${(boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`
+                  }} />
                       <div className="flex justify-between text-xs mt-1">
                         <span>{boxplotData.rendement.min.toFixed(1)}%</span>
                         <span>{boxplotData.rendement.max.toFixed(1)}%</span>
@@ -870,8 +665,7 @@ export function ConsolidatedCharts({
                       <div className="text-center text-xs mt-1">
                         Médiane: {boxplotData.rendement.median.toFixed(1)}%
                       </div>
-                    </>
-                  )}
+                    </>}
                 </div>
               </div>
 
@@ -879,23 +673,16 @@ export function ConsolidatedCharts({
               <div>
                 <h4 className="text-sm font-medium mb-2">TRI (%)</h4>
                 <div className="relative">
-                  <div 
-                    className="h-6 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded"
-                    style={{
-                      background: `linear-gradient(to right, 
+                  <div className="h-6 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded" style={{
+                  background: `linear-gradient(to right, 
                         hsl(0 70% 70%) 0%, 
                         hsl(45 70% 70%) 50%, 
                         hsl(120 70% 70%) 100%)`
-                    }}
-                  />
-                  {boxplotData.xirr && (
-                    <>
-                      <div 
-                        className="absolute top-0 h-6 w-1 bg-black"
-                        style={{
-                          left: `${((boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min)) * 100}%`
-                        }}
-                      />
+                }} />
+                  {boxplotData.xirr && <>
+                      <div className="absolute top-0 h-6 w-1 bg-black" style={{
+                    left: `${(boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`
+                  }} />
                       <div className="flex justify-between text-xs mt-1">
                         <span>{boxplotData.xirr.min.toFixed(1)}%</span>
                         <span>{boxplotData.xirr.max.toFixed(1)}%</span>
@@ -903,14 +690,12 @@ export function ConsolidatedCharts({
                       <div className="text-center text-xs mt-1">
                         Médiane: {boxplotData.xirr.median.toFixed(1)}%
                       </div>
-                    </>
-                  )}
+                    </>}
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 }
