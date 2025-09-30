@@ -29,32 +29,38 @@ export function ConsolidatedKPIView({
       return new Date().getFullYear();
     }
 
-    // Find the latest year where ALL investments have data
-    const allDates: Date[] = [];
-    Object.values(rawByInvestment).forEach(investmentData => {
-      investmentData.cashflows.forEach(cf => allDates.push(new Date(cf.date)));
-      investmentData.valorisations.forEach(v => allDates.push(new Date(v.date)));
-      investmentData.immobilisations.forEach(i => allDates.push(new Date(i.date)));
-      investmentData.debtFlows.forEach(df => allDates.push(new Date(df.date)));
+    // For each investment, find its most recent year with data
+    // Then take the MINIMUM of these years (the latest year where ALL investments have data)
+    const maxYearsByInvestment = Object.values(rawByInvestment).map(investmentData => {
+      const allYears: number[] = [];
+      
+      investmentData.cashflows.forEach(cf => {
+        allYears.push(new Date(cf.date).getFullYear());
+      });
+      investmentData.valorisations.forEach(v => {
+        allYears.push(new Date(v.date).getFullYear());
+      });
+      investmentData.immobilisations.forEach(i => {
+        allYears.push(new Date(i.date).getFullYear());
+      });
+      investmentData.debtFlows.forEach(df => {
+        allYears.push(new Date(df.date).getFullYear());
+      });
+      
+      // If no data for this investment, use a very old year
+      if (allYears.length === 0) return 1900;
+      
+      // Return the most recent year for this investment
+      return Math.max(...allYears);
     });
 
-    if (allDates.length === 0) {
+    // Filter out placeholder years and return the minimum (earliest common year)
+    const validYears = maxYearsByInvestment.filter(year => year > 1900);
+    if (validYears.length === 0) {
       return new Date().getFullYear();
     }
 
-    // Get the minimum of the maximum years for each investment
-    const maxYearsByInvestment = Object.values(rawByInvestment).map(investmentData => {
-      const dates: Date[] = [];
-      investmentData.cashflows.forEach(cf => dates.push(new Date(cf.date)));
-      investmentData.valorisations.forEach(v => dates.push(new Date(v.date)));
-      investmentData.immobilisations.forEach(i => dates.push(new Date(i.date)));
-      investmentData.debtFlows.forEach(df => dates.push(new Date(df.date)));
-      
-      if (dates.length === 0) return 1900;
-      return Math.max(...dates.map(d => d.getFullYear()));
-    });
-
-    return Math.min(...maxYearsByInvestment);
+    return Math.min(...validYears);
   }, [rawByInvestment]);
 
   // Use the provided cutoffYear or default to calculated value
