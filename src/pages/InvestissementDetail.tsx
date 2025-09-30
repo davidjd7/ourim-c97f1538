@@ -464,7 +464,7 @@ export default function InvestissementDetail() {
            {/* Total Return */}
            <div className="card-financial">
              <div className="p-4">
-               <p className="text-sm text-muted-foreground font-bold mb-3">Total Return (2024)</p>
+               <p className="text-sm text-muted-foreground font-bold mb-3">Total ROE (2024)</p>
                <div className="flex justify-between items-start">
                  <div className="flex flex-col">
                    <p className={`text-2xl font-bold ${kpis.xirrDetails.gain1 >= 0 ? 'text-success' : 'text-destructive'}`}>
