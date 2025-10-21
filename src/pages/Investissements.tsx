@@ -13,7 +13,7 @@ const EMPTY_SET = new Set<string>();
 export default function Investissements() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [selectedInvestments, setSelectedInvestments] = useState<Set<string>>(EMPTY_SET);
-  const [cutoffYear, setCutoffYear] = useState<number | null>(null);
+  const [cutoffYear, setCutoffYear] = useState<number | null>(2024);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const {
     filteredInvestments
