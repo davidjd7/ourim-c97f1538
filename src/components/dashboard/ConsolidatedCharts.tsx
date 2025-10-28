@@ -376,6 +376,17 @@ export function ConsolidatedCharts({
       return ticks;
     };
 
+    // Generate ticks every 100000
+    const generateTicksBy100k = (min: number, max: number) => {
+      const ticks = [];
+      const start = Math.floor(min / 100000) * 100000;
+      const end = Math.ceil(max / 100000) * 100000;
+      for (let i = start; i <= end; i += 100000) {
+        ticks.push(i);
+      }
+      return ticks;
+    };
+
     // Generate grid lines (every 25000 for secondary, every 50000 for primary)
     const generateGridLines = (min: number, max: number) => {
       const lines = [];
@@ -392,8 +403,8 @@ export function ConsolidatedCharts({
     return {
       xDomain,
       yDomain,
-      xTicks: generateTicks(xDomain[0], xDomain[1], 5),
-      yTicks: generateTicksBy50k(yDomain[0], yDomain[1]),
+      xTicks: generateTicksBy50k(xDomain[0], xDomain[1]),
+      yTicks: generateTicksBy100k(yDomain[0], yDomain[1]),
       xGridLines: generateGridLines(xDomain[0], xDomain[1]),
       yGridLines: generateGridLines(yDomain[0], yDomain[1])
     };
