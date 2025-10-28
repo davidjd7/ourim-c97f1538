@@ -517,57 +517,63 @@ export function ConsolidatedCharts({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" dataKey="ltv" name="LTV" tickFormatter={value => `${value.toFixed(0)}%`} />
-                  <YAxis type="number" dataKey="xirr" name="TRI" tickFormatter={value => `${value.toFixed(1)}%`} />
-                  <Tooltip content={({
-                  active,
-                  payload
-                }) => {
-                  if (active && payload && payload.length > 0) {
-                    const data = payload[0].payload;
-                    return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
-                            <p className="font-semibold">{data.name}</p>
-                            <p className="text-sm">TRI: {formatPercentage(data.xirr)}</p>
-                            <p className="text-sm">LTV: {formatPercentage(data.ltv)}</p>
-                            <p className="text-sm">Valeur: {formatCurrency(data.valeur)}</p>
-                          </div>;
-                  }
-                  return null;
-                }} />
-                  <Scatter data={scatterData} fill="hsl(var(--primary))" fillOpacity={0.6}>
-                    {scatterData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={Math.sqrt(entry.size)} />)}
-                  </Scatter>
-                  {/* Linear Regression Line */}
-                  {(() => {
-                    if (scatterData.length < 2) return null;
-                    
-                    // Calculate linear regression
-                    const n = scatterData.length;
-                    const sumX = scatterData.reduce((sum, d) => sum + d.ltv, 0);
-                    const sumY = scatterData.reduce((sum, d) => sum + d.xirr, 0);
-                    const sumXY = scatterData.reduce((sum, d) => sum + d.ltv * d.xirr, 0);
-                    const sumX2 = scatterData.reduce((sum, d) => sum + d.ltv * d.ltv, 0);
-                    
-                    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-                    const intercept = (sumY - slope * sumX) / n;
-                    
-                    // Create line data points
-                    const minX = Math.min(...scatterData.map(d => d.ltv));
-                    const maxX = Math.max(...scatterData.map(d => d.ltv));
-                    const lineData = [
-                      { ltv: minX, xirr: slope * minX + intercept },
-                      { ltv: maxX, xirr: slope * maxX + intercept }
-                    ];
-                    
-                    return <Scatter data={lineData} fill="none" line={{ stroke: "hsl(var(--destructive))", strokeWidth: 2 }} shape={() => null} />;
-                  })()}
-                </ScatterChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+            {(() => {
+              // Calculate linear regression
+              const n = scatterData.length;
+              const sumX = scatterData.reduce((sum, d) => sum + d.ltv, 0);
+              const sumY = scatterData.reduce((sum, d) => sum + d.xirr, 0);
+              const sumXY = scatterData.reduce((sum, d) => sum + d.ltv * d.xirr, 0);
+              const sumX2 = scatterData.reduce((sum, d) => sum + d.ltv * d.ltv, 0);
+              
+              const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+              const intercept = (sumY - slope * sumX) / n;
+              
+              // Create line data points
+              const minX = Math.min(...scatterData.map(d => d.ltv));
+              const maxX = Math.max(...scatterData.map(d => d.ltv));
+              const lineData = [
+                { ltv: minX, xirr: slope * minX + intercept },
+                { ltv: maxX, xirr: slope * maxX + intercept }
+              ];
+              
+              return (
+                <ChartContainer config={chartConfig} className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" dataKey="ltv" name="LTV" tickFormatter={value => `${value.toFixed(0)}%`} />
+                      <YAxis type="number" dataKey="xirr" name="TRI" tickFormatter={value => `${value.toFixed(1)}%`} />
+                      <Tooltip content={({
+                      active,
+                      payload
+                    }) => {
+                      if (active && payload && payload.length > 0) {
+                        const data = payload[0].payload;
+                        const triAttendu = slope * data.ltv + intercept;
+                        const triResi = data.xirr - triAttendu;
+                        return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                                <p className="font-semibold">{data.name}</p>
+                                <p className="text-sm">TRI: {formatPercentage(data.xirr)}</p>
+                                <p className="text-sm">TRI Attendu: {formatPercentage(triAttendu)}</p>
+                                <p className="text-sm">TRI Resi: <span className={triResi >= 0 ? "text-success" : "text-destructive"}>{formatPercentage(triResi)}</span></p>
+                                <p className="text-sm">LTV: {formatPercentage(data.ltv)}</p>
+                                <p className="text-sm">Valeur: {formatCurrency(data.valeur)}</p>
+                              </div>;
+                      }
+                      return null;
+                    }} />
+                      <Scatter data={scatterData} fill="hsl(var(--primary))" fillOpacity={0.6}>
+                        {scatterData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={Math.sqrt(entry.size)} />)}
+                      </Scatter>
+                      {/* Linear Regression Line */}
+                      {scatterData.length >= 2 && (
+                        <Scatter data={lineData} fill="none" line={{ stroke: "hsl(var(--destructive))", strokeWidth: 2 }} shape={() => null} />
+                      )}
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              );
+            })()}
           </CardContent>
         </Card>
 
