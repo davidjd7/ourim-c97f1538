@@ -473,32 +473,24 @@ export function ConsolidatedCharts({
             <ChartContainer config={chartConfig} className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie 
-                    data={donutData} 
-                    cx="50%" 
-                    cy="50%" 
-                    innerRadius={80} 
-                    outerRadius={140} 
-                    dataKey="value" 
-                    nameKey="name"
-                    label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
-                    labelLine={true}
-                  >
+                  <Pie data={donutData} cx="50%" cy="50%" innerRadius={80} outerRadius={140} dataKey="value" nameKey="name" label={({
+                    percent
+                  }) => `${(percent * 100).toFixed(1)}%`} labelLine={true}>
                     {donutData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip content={({
-                  active,
-                  payload
-                }) => {
-                  if (active && payload && payload.length > 0) {
-                    const data = payload[0].payload;
-                    return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                    active,
+                    payload
+                  }) => {
+                    if (active && payload && payload.length > 0) {
+                      const data = payload[0].payload;
+                      return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
                             <p className="font-semibold">{data.name}</p>
                             <p className="text-sm">Valeur: {formatCurrency(data.value)}</p>
                           </div>;
-                  }
-                  return null;
-                }} />
+                    }
+                    return null;
+                  }} />
                 </PieChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -511,7 +503,7 @@ export function ConsolidatedCharts({
         {/* Scatter Plot (LTV vs TRI) */}
         <Card className="card-financial">
           <CardHeader>
-            <CardTitle>LTV vs TRI</CardTitle>
+            <CardTitle>TRI fonction de LTV</CardTitle>
             <CardDescription>
               Relation entre le levier et la rentabilité (taille = valeur)
             </CardDescription>
@@ -524,20 +516,20 @@ export function ConsolidatedCharts({
               const sumY = scatterData.reduce((sum, d) => sum + d.xirr, 0);
               const sumXY = scatterData.reduce((sum, d) => sum + d.ltv * d.xirr, 0);
               const sumX2 = scatterData.reduce((sum, d) => sum + d.ltv * d.ltv, 0);
-              
               const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
               const intercept = (sumY - slope * sumX) / n;
-              
+
               // Create line data points
               const minX = Math.min(...scatterData.map(d => d.ltv));
               const maxX = Math.max(...scatterData.map(d => d.ltv));
-              const lineData = [
-                { ltv: minX, xirr: slope * minX + intercept },
-                { ltv: maxX, xirr: slope * maxX + intercept }
-              ];
-              
-              return (
-                <ChartContainer config={chartConfig} className="h-[300px]">
+              const lineData = [{
+                ltv: minX,
+                xirr: slope * minX + intercept
+              }, {
+                ltv: maxX,
+                xirr: slope * maxX + intercept
+              }];
+              return <ChartContainer config={chartConfig} className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -566,13 +558,13 @@ export function ConsolidatedCharts({
                         {scatterData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={Math.sqrt(entry.size)} />)}
                       </Scatter>
                       {/* Linear Regression Line */}
-                      {scatterData.length >= 2 && (
-                        <Scatter data={lineData} fill="none" line={{ stroke: "hsl(var(--destructive))", strokeWidth: 2 }} shape={() => null} />
-                      )}
+                      {scatterData.length >= 2 && <Scatter data={lineData} fill="none" line={{
+                      stroke: "hsl(var(--destructive))",
+                      strokeWidth: 2
+                    }} shape={() => null} />}
                     </ScatterChart>
                   </ResponsiveContainer>
-                </ChartContainer>
-              );
+                </ChartContainer>;
             })()}
           </CardContent>
         </Card>
@@ -609,60 +601,59 @@ export function ConsolidatedCharts({
                   {/* Reference lines for axes */}
                   <ReferenceLine x={0} stroke="hsl(var(--border))" strokeWidth={2} />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={2} />
-                  <XAxis 
-                    type="number" 
-                    dataKey="cfni" 
-                    name="CFNI" 
-                    domain={cfniAxisConfig.xDomain} 
-                    ticks={cfniAxisConfig.xTicks} 
-                    hide={true}
-                    label={{ value: 'CFNI', position: 'insideRight', offset: -10, style: { fill: 'hsl(var(--foreground))' } }}
-                  />
-                  <YAxis 
-                    type="number" 
-                    dataKey="deltaValeur" 
-                    name="Variation Valeur" 
-                    domain={cfniAxisConfig.yDomain} 
-                    ticks={cfniAxisConfig.yTicks} 
-                    tickFormatter={value => formatCurrency(value)}
-                    label={{ value: 'Variation de Valeur', angle: -90, position: 'insideTop', offset: 10, style: { fill: 'hsl(var(--foreground))' } }}
-                  />
+                  <XAxis type="number" dataKey="cfni" name="CFNI" domain={cfniAxisConfig.xDomain} ticks={cfniAxisConfig.xTicks} hide={true} label={{
+                    value: 'CFNI',
+                    position: 'insideRight',
+                    offset: -10,
+                    style: {
+                      fill: 'hsl(var(--foreground))'
+                    }
+                  }} />
+                  <YAxis type="number" dataKey="deltaValeur" name="Variation Valeur" domain={cfniAxisConfig.yDomain} ticks={cfniAxisConfig.yTicks} tickFormatter={value => formatCurrency(value)} label={{
+                    value: 'Variation de Valeur',
+                    angle: -90,
+                    position: 'insideTop',
+                    offset: 10,
+                    style: {
+                      fill: 'hsl(var(--foreground))'
+                    }
+                  }} />
                   <Tooltip content={({
-                  active,
-                  payload
-                }) => {
-                  if (active && payload && payload.length > 0) {
-                    const data = payload[0].payload;
-                    return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                    active,
+                    payload
+                  }) => {
+                    if (active && payload && payload.length > 0) {
+                      const data = payload[0].payload;
+                      return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
                             <p className="font-semibold">{data.name}</p>
                             <p className="text-sm">CFNI: {formatCurrency(data.cfni)}</p>
                             <p className="text-sm">Δ Valeur: {formatCurrency(data.deltaValeur)}</p>
                             <p className="text-sm font-semibold">Gain: {formatCurrency(data.gain)}</p>
                           </div>;
-                  }
-                  return null;
-                }} />
+                    }
+                    return null;
+                  }} />
                   <Scatter data={cfniVsValeurData.data} fill="hsl(var(--primary))" fillOpacity={0.6}>
                     {cfniVsValeurData.data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={Math.sqrt(entry.size)} />)}
                   </Scatter>
                   <Customized component={({
-                  xAxisMap,
-                  yAxisMap
-                }: any) => {
-                  if (!xAxisMap || !yAxisMap) return null;
-                  const xAxis = xAxisMap[0];
-                  const yAxis = yAxisMap[0];
-                  if (!xAxis || !yAxis) return null;
-                  const yZeroPixel = yAxis.scale(0);
-                  return <g>
+                    xAxisMap,
+                    yAxisMap
+                  }: any) => {
+                    if (!xAxisMap || !yAxisMap) return null;
+                    const xAxis = xAxisMap[0];
+                    const yAxis = yAxisMap[0];
+                    if (!xAxis || !yAxis) return null;
+                    const yZeroPixel = yAxis.scale(0);
+                    return <g>
                           {cfniAxisConfig.xTicks.map((tick, index) => {
-                      const xPixel = xAxis.scale(tick);
-                      return <text key={index} x={xPixel} y={yZeroPixel + 20} textAnchor="middle" fill="hsl(var(--foreground))" fontSize={12}>
+                        const xPixel = xAxis.scale(tick);
+                        return <text key={index} x={xPixel} y={yZeroPixel + 20} textAnchor="middle" fill="hsl(var(--foreground))" fontSize={12}>
                                 {formatCurrency(tick)}
                               </text>;
-                    })}
+                      })}
                         </g>;
-                }} />
+                  }} />
                 </ScatterChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -722,24 +713,24 @@ export function ConsolidatedCharts({
                 <h4 className="text-sm font-medium mb-2">Rendement Net (%)</h4>
                 <div className="relative">
                   <div className="h-6 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded" style={{
-                  background: `linear-gradient(to right, 
+                    background: `linear-gradient(to right, 
                         hsl(0 70% 70%) 0%, 
                         hsl(45 70% 70%) 50%, 
                         hsl(120 70% 70%) 100%)`
-                }} />
+                  }} />
                   {boxplotData.rendement && <>
                       <div className="absolute top-0 h-6 w-1 bg-black" style={{
-                    left: `${(boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`
-                  }} />
+                      left: `${(boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`
+                    }} />
                   <div className="flex justify-between text-xs mt-1">
                     <span>{boxplotData.rendement.min.toFixed(1)}%</span>
                     <span>{boxplotData.rendement.max.toFixed(1)}%</span>
                   </div>
                   <div className="absolute text-xs mt-1" style={{
-                    left: `${(boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`,
-                    transform: 'translateX(-50%)',
-                    top: '32px'
-                  }}>
+                      left: `${(boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`,
+                      transform: 'translateX(-50%)',
+                      top: '32px'
+                    }}>
                     Médiane: {boxplotData.rendement.median.toFixed(1)}%
                   </div>
                     </>}
@@ -751,24 +742,24 @@ export function ConsolidatedCharts({
                 <h4 className="text-sm font-medium mb-2">TRI (%)</h4>
                 <div className="relative">
                   <div className="h-6 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded" style={{
-                  background: `linear-gradient(to right, 
+                    background: `linear-gradient(to right, 
                         hsl(0 70% 70%) 0%, 
                         hsl(45 70% 70%) 50%, 
                         hsl(120 70% 70%) 100%)`
-                }} />
+                  }} />
                   {boxplotData.xirr && <>
                       <div className="absolute top-0 h-6 w-1 bg-black" style={{
-                    left: `${(boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`
-                  }} />
+                      left: `${(boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`
+                    }} />
                   <div className="flex justify-between text-xs mt-1">
                     <span>{boxplotData.xirr.min.toFixed(1)}%</span>
                     <span>{boxplotData.xirr.max.toFixed(1)}%</span>
                   </div>
                   <div className="absolute text-xs mt-1" style={{
-                    left: `${(boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`,
-                    transform: 'translateX(-50%)',
-                    top: '32px'
-                  }}>
+                      left: `${(boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`,
+                      transform: 'translateX(-50%)',
+                      top: '32px'
+                    }}>
                     Médiane: {boxplotData.xirr.median.toFixed(1)}%
                   </div>
                     </>}
