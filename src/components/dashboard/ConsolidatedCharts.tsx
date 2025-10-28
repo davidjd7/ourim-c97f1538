@@ -185,13 +185,20 @@ export function ConsolidatedCharts({
 
   // 3. Histogram Data (Rendement Net 2024) - Distribution
   const histogramData = useMemo(() => {
-    // Collect all rendement values
-    const rendements = Array.from(selectedInvestments).map(investmentId => {
+    // Collect all rendement values with investment details
+    const rendementDetails = Array.from(selectedInvestments).map(investmentId => {
       const kpis = batchKPIs[investmentId];
-      return kpis?.rendementNet || 0;
-    }).filter(r => r !== 0);
+      const investment = investments.find(inv => inv.id === investmentId);
+      return {
+        investmentId,
+        investmentName: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
+        rendementNet: kpis?.rendementNet || 0
+      };
+    }).filter(r => r.rendementNet !== 0);
 
-    if (rendements.length === 0) return { bins: [], normalCurve: [], median: 0, mean: 0, stdDev: 0 };
+    if (rendementDetails.length === 0) return { bins: [], normalCurve: [], median: 0, mean: 0, stdDev: 0 };
+
+    const rendements = rendementDetails.map(r => r.rendementNet);
 
     // Calculate statistics
     const mean = rendements.reduce((sum, r) => sum + r, 0) / rendements.length;
@@ -211,15 +218,16 @@ export function ConsolidatedCharts({
       { start: 11.5, end: 12.5, label: '11,5 – 12,5 %' }
     ];
 
-    // Create bins with fixed ranges
+    // Create bins with fixed ranges and investment details
     const allBins = fixedBins.map(bin => {
       const binCenter = (bin.start + bin.end) / 2;
-      const count = rendements.filter(r => r >= bin.start && r < bin.end).length;
+      const investmentsInBin = rendementDetails.filter(r => r.rendementNet >= bin.start && r.rendementNet < bin.end);
       
       return {
         range: bin.label,
         binCenter,
-        occurrences: count
+        occurrences: investmentsInBin.length,
+        investments: investmentsInBin
       };
     });
 
@@ -736,10 +744,22 @@ export function ConsolidatedCharts({
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (active && payload && payload.length > 0) {
+                        const data = payload[0].payload;
                         return (
-                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
-                            <p className="text-sm">Rendement: {payload[0].payload.range}</p>
-                            <p className="text-sm font-semibold">Occurrences: {payload[0].value}</p>
+                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg max-w-xs">
+                            <p className="text-sm font-semibold mb-2">{data.range}</p>
+                            <p className="text-sm mb-2">Occurrences: {data.occurrences}</p>
+                            <div className="border-t border-border pt-2">
+                              <p className="text-xs font-semibold mb-1">Actifs:</p>
+                              {data.investments.map((inv: any, idx: number) => (
+                                <div key={idx} className="text-xs mb-1">
+                                  <span className="font-medium">{inv.investmentName}</span>
+                                  <span className="text-muted-foreground ml-1">
+                                    ({formatPercentage(inv.rendementNet)})
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         );
                       }
