@@ -279,12 +279,14 @@ export function ConsolidatedCharts({
       const q1Index = Math.floor(values.length * 0.25);
       const q2Index = Math.floor(values.length * 0.5);
       const q3Index = Math.floor(values.length * 0.75);
+      const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
       return {
         min: values[0],
         q1: values[q1Index],
         median: values[q2Index],
         q3: values[q3Index],
-        max: values[values.length - 1]
+        max: values[values.length - 1],
+        mean
       };
     };
     return {
@@ -839,8 +841,13 @@ export function ConsolidatedCharts({
                         hsl(120 70% 70%) 100%)`
                   }} />
                   {boxplotData.rendement && <>
+                      {/* Médiane (noir) */}
                       <div className="absolute top-0 h-6 w-1 bg-black" style={{
                       left: `${(boxplotData.rendement.median - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`
+                    }} />
+                      {/* Moyenne (rouge) */}
+                      <div className="absolute top-0 h-6 w-1 bg-red-600" style={{
+                      left: `${(boxplotData.rendement.mean - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`
                     }} />
                   <div className="flex justify-between text-xs mt-1">
                     <span>{boxplotData.rendement.min.toFixed(1)}%</span>
@@ -852,6 +859,13 @@ export function ConsolidatedCharts({
                       top: '32px'
                     }}>
                     Médiane: {boxplotData.rendement.median.toFixed(1)}%
+                  </div>
+                  <div className="absolute text-xs mt-1 text-red-600" style={{
+                      left: `${(boxplotData.rendement.mean - boxplotData.rendement.min) / (boxplotData.rendement.max - boxplotData.rendement.min) * 100}%`,
+                      transform: 'translateX(-50%)',
+                      top: '50px'
+                    }}>
+                    Moyenne: {boxplotData.rendement.mean.toFixed(1)}%
                   </div>
                     </>}
                 </div>
@@ -868,8 +882,13 @@ export function ConsolidatedCharts({
                         hsl(120 70% 70%) 100%)`
                   }} />
                   {boxplotData.xirr && <>
+                      {/* Médiane (noir) */}
                       <div className="absolute top-0 h-6 w-1 bg-black" style={{
                       left: `${(boxplotData.xirr.median - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`
+                    }} />
+                      {/* Moyenne (rouge) */}
+                      <div className="absolute top-0 h-6 w-1 bg-red-600" style={{
+                      left: `${(boxplotData.xirr.mean - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`
                     }} />
                   <div className="flex justify-between text-xs mt-1">
                     <span>{boxplotData.xirr.min.toFixed(1)}%</span>
@@ -881,6 +900,13 @@ export function ConsolidatedCharts({
                       top: '32px'
                     }}>
                     Médiane: {boxplotData.xirr.median.toFixed(1)}%
+                  </div>
+                  <div className="absolute text-xs mt-1 text-red-600" style={{
+                      left: `${(boxplotData.xirr.mean - boxplotData.xirr.min) / (boxplotData.xirr.max - boxplotData.xirr.min) * 100}%`,
+                      transform: 'translateX(-50%)',
+                      top: '50px'
+                    }}>
+                    Moyenne: {boxplotData.xirr.mean.toFixed(1)}%
                   </div>
                     </>}
                 </div>
