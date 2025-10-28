@@ -563,7 +563,7 @@ export function ConsolidatedCharts({
                       { ltv: maxX, xirr: slope * maxX + intercept }
                     ];
                     
-                    return <Line data={lineData} type="monotone" dataKey="xirr" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />;
+                    return <Scatter data={lineData} fill="none" line={{ stroke: "hsl(var(--destructive))", strokeWidth: 2 }} shape={() => null} />;
                   })()}
                 </ScatterChart>
               </ResponsiveContainer>
