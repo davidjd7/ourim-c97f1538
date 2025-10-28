@@ -183,8 +183,8 @@ export function ConsolidatedCharts({
     // Omit the first year as requested
     sortedData = sortedData.slice(1);
 
-    // Apply cumulative calculation if needed
-    if (evolutionDisplay === 'cumule') {
+    // Apply cumulative calculation if needed (always for gains)
+    if (evolutionType === 'gains' || evolutionDisplay === 'cumule') {
       const cumulativeData = [];
       const cumulatives = {};
       
