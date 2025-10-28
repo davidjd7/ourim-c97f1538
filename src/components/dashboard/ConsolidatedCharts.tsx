@@ -71,6 +71,7 @@ export function ConsolidatedCharts({
     investments
   } = useInvestments();
   const [evolutionType, setEvolutionType] = useState<'gains' | 'valeur' | 'cfni'>('gains');
+  const [evolutionDisplay, setEvolutionDisplay] = useState<'cumule' | 'variation'>('variation');
   const [selectedYear, setSelectedYear] = useState<string>('total');
 
   // Utility function to filter data by cutoff year
@@ -178,10 +179,46 @@ export function ConsolidatedCharts({
         }
       });
     });
-    const sortedData = Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+    let sortedData = Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
     // Omit the first year as requested
-    return sortedData.slice(1);
-  }, [syntheticTableData, rawByInvestment, evolutionType, investments, cutoffYear]);
+    sortedData = sortedData.slice(1);
+
+    // Apply cumulative calculation if needed
+    if (evolutionDisplay === 'cumule') {
+      const cumulativeData = [];
+      const cumulatives = {};
+      
+      sortedData.forEach(yearData => {
+        const newYearData = { year: yearData.year };
+        
+        // Accumulate consolidated
+        if (cumulatives['consolidated'] === undefined) {
+          cumulatives['consolidated'] = yearData.consolidated;
+        } else {
+          cumulatives['consolidated'] += yearData.consolidated;
+        }
+        newYearData['consolidated'] = cumulatives['consolidated'];
+        
+        // Accumulate individual investments
+        Object.keys(yearData).forEach(key => {
+          if (key !== 'year' && key !== 'consolidated') {
+            if (cumulatives[key] === undefined) {
+              cumulatives[key] = yearData[key];
+            } else {
+              cumulatives[key] += yearData[key];
+            }
+            newYearData[key] = cumulatives[key];
+          }
+        });
+        
+        cumulativeData.push(newYearData);
+      });
+      
+      return cumulativeData;
+    }
+    
+    return sortedData;
+  }, [syntheticTableData, rawByInvestment, evolutionType, evolutionDisplay, investments, cutoffYear]);
 
   // 3. Histogram Data (Rendement Net 2024) - Distribution
   const histogramData = useMemo(() => {
@@ -483,21 +520,37 @@ export function ConsolidatedCharts({
             <CardDescription>
               Evolution par année avec courbe consolidée sur axe droit
             </CardDescription>
-            <div className="flex space-x-6 mt-4">
-              <RadioGroup value={evolutionType} onValueChange={value => setEvolutionType(value as 'gains' | 'valeur' | 'cfni')} className="flex space-x-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="gains" id="gains" />
-                  <Label htmlFor="gains" className="text-sm">Gains</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="valeur" id="valeur" />
-                  <Label htmlFor="valeur" className="text-sm">Valeur</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cfni" id="cfni" />
-                  <Label htmlFor="cfni" className="text-sm">CFNI</Label>
-                </div>
-              </RadioGroup>
+            <div className="space-y-3 mt-4">
+              <div className="flex items-center space-x-6">
+                <Label className="text-sm font-medium">Type de donnée:</Label>
+                <RadioGroup value={evolutionType} onValueChange={value => setEvolutionType(value as 'gains' | 'valeur' | 'cfni')} className="flex space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="gains" id="gains" />
+                    <Label htmlFor="gains" className="text-sm">Gains</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="valeur" id="valeur" />
+                    <Label htmlFor="valeur" className="text-sm">Valeur</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="cfni" id="cfni" />
+                    <Label htmlFor="cfni" className="text-sm">CFNI</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div className="flex items-center space-x-6">
+                <Label className="text-sm font-medium">Affichage:</Label>
+                <RadioGroup value={evolutionDisplay} onValueChange={value => setEvolutionDisplay(value as 'cumule' | 'variation')} className="flex space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="variation" id="variation" />
+                    <Label htmlFor="variation" className="text-sm">Variation</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="cumule" id="cumule" />
+                    <Label htmlFor="cumule" className="text-sm">Cumulé</Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
