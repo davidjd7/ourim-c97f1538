@@ -521,8 +521,8 @@ export function ConsolidatedCharts({
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" dataKey="ltv" name="LTV" unit="%" tickFormatter={value => `${value.toFixed(0)}%`} />
-                  <YAxis type="number" dataKey="xirr" name="TRI" unit="%" tickFormatter={value => `${value.toFixed(1)}%`} />
+                  <XAxis type="number" dataKey="ltv" name="LTV" tickFormatter={value => `${value.toFixed(0)}%`} />
+                  <YAxis type="number" dataKey="xirr" name="TRI" tickFormatter={value => `${value.toFixed(1)}%`} />
                   <Tooltip content={({
                   active,
                   payload
