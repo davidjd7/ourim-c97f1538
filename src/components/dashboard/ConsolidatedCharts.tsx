@@ -473,7 +473,17 @@ export function ConsolidatedCharts({
             <ChartContainer config={chartConfig} className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={donutData} cx="50%" cy="50%" innerRadius={80} outerRadius={140} dataKey="value" nameKey="name">
+                  <Pie 
+                    data={donutData} 
+                    cx="50%" 
+                    cy="50%" 
+                    innerRadius={80} 
+                    outerRadius={140} 
+                    dataKey="value" 
+                    nameKey="name"
+                    label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
+                    labelLine={true}
+                  >
                     {donutData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip content={({
