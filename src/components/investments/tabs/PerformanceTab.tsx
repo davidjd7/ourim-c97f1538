@@ -499,19 +499,6 @@ export function PerformanceTab({
       }
     });
 
-    // Third pass: Calculate cumulative values for Gain and Valeur
-    let cumulativeGain = 0;
-    const firstYearValeur = yearArray.length > 0 ? yearArray[0].valeur : 0;
-    
-    filteredYearArray.forEach((yearData) => {
-      // Cumulative Gain
-      cumulativeGain += yearData.gain;
-      yearData.gain = cumulativeGain;
-      
-      // Cumulative Valeur (variation from first year)
-      yearData.valeur = yearData.valeur - firstYearValeur;
-    });
-
     return filteredYearArray;
   };
 
