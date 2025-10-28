@@ -572,7 +572,7 @@ export function ConsolidatedCharts({
         {/* CFNI vs Variation de Valeur Scatter Plot */}
         <Card className="card-financial">
           <CardHeader>
-            <CardTitle>CFNI vs Variation de Valeur</CardTitle>
+            <CardTitle>Valeur fonction de CFNI</CardTitle>
             <CardDescription>
               Relation entre flux et variation de valeur
             </CardDescription>
