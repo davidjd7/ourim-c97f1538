@@ -208,8 +208,8 @@ export function ConsolidatedCharts({
     const numBins = Math.ceil(range / binSize) + 2; // Add padding bins
     const startVal = Math.floor(minVal / binSize) * binSize;
 
-    // Create bins
-    const bins = Array.from({ length: numBins }, (_, i) => {
+    // Create bins only for ranges with occurrences
+    const allBins = Array.from({ length: numBins }, (_, i) => {
       const binStart = startVal + i * binSize;
       const binEnd = binStart + binSize;
       const binCenter = (binStart + binEnd) / 2;
@@ -222,7 +222,10 @@ export function ConsolidatedCharts({
       };
     });
 
-    // Generate normal distribution curve
+    // Filter to keep only bins with occurrences
+    const bins = allBins.filter(bin => bin.occurrences > 0);
+
+    // Generate normal distribution curve only for bins with data
     const normalCurve = bins.map(bin => {
       const x = bin.binCenter;
       const normalValue = (rendements.length * binSize) * 
