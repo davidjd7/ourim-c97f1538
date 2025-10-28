@@ -200,23 +200,24 @@ export function ConsolidatedCharts({
     const sortedRendements = [...rendements].sort((a, b) => a - b);
     const median = sortedRendements[Math.floor(sortedRendements.length / 2)];
 
-    // Determine bin range and size
-    const minVal = Math.min(...rendements);
-    const maxVal = Math.max(...rendements);
-    const range = maxVal - minVal;
-    const binSize = 0.5; // 0.5% intervals
-    const numBins = Math.ceil(range / binSize) + 2; // Add padding bins
-    const startVal = Math.floor(minVal / binSize) * binSize;
+    // Fixed bin ranges
+    const fixedBins = [
+      { start: 5.5, end: 6.5, label: '5,5 – 6,5 %' },
+      { start: 6.5, end: 7.5, label: '6,5 – 7,5 %' },
+      { start: 7.5, end: 8.5, label: '7,5 – 8,5 %' },
+      { start: 8.5, end: 9.5, label: '8,5 – 9,5 %' },
+      { start: 9.5, end: 10.5, label: '9,5 – 10,5 %' },
+      { start: 10.5, end: 11.5, label: '10,5 – 11,5 %' },
+      { start: 11.5, end: 12.5, label: '11,5 – 12,5 %' }
+    ];
 
-    // Create bins only for ranges with occurrences
-    const allBins = Array.from({ length: numBins }, (_, i) => {
-      const binStart = startVal + i * binSize;
-      const binEnd = binStart + binSize;
-      const binCenter = (binStart + binEnd) / 2;
-      const count = rendements.filter(r => r >= binStart && r < binEnd).length;
+    // Create bins with fixed ranges
+    const allBins = fixedBins.map(bin => {
+      const binCenter = (bin.start + bin.end) / 2;
+      const count = rendements.filter(r => r >= bin.start && r < bin.end).length;
       
       return {
-        range: `${binCenter.toFixed(1)}%`,
+        range: bin.label,
         binCenter,
         occurrences: count
       };
@@ -226,6 +227,7 @@ export function ConsolidatedCharts({
     const bins = allBins.filter(bin => bin.occurrences > 0);
 
     // Generate normal distribution curve only for bins with data
+    const binSize = 1; // Fixed bin size of 1%
     const normalCurve = bins.map(bin => {
       const x = bin.binCenter;
       const normalValue = (rendements.length * binSize) * 
