@@ -541,6 +541,30 @@ export function ConsolidatedCharts({
                   <Scatter data={scatterData} fill="hsl(var(--primary))" fillOpacity={0.6}>
                     {scatterData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={Math.sqrt(entry.size)} />)}
                   </Scatter>
+                  {/* Linear Regression Line */}
+                  {(() => {
+                    if (scatterData.length < 2) return null;
+                    
+                    // Calculate linear regression
+                    const n = scatterData.length;
+                    const sumX = scatterData.reduce((sum, d) => sum + d.ltv, 0);
+                    const sumY = scatterData.reduce((sum, d) => sum + d.xirr, 0);
+                    const sumXY = scatterData.reduce((sum, d) => sum + d.ltv * d.xirr, 0);
+                    const sumX2 = scatterData.reduce((sum, d) => sum + d.ltv * d.ltv, 0);
+                    
+                    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+                    const intercept = (sumY - slope * sumX) / n;
+                    
+                    // Create line data points
+                    const minX = Math.min(...scatterData.map(d => d.ltv));
+                    const maxX = Math.max(...scatterData.map(d => d.ltv));
+                    const lineData = [
+                      { ltv: minX, xirr: slope * minX + intercept },
+                      { ltv: maxX, xirr: slope * maxX + intercept }
+                    ];
+                    
+                    return <Line data={lineData} type="monotone" dataKey="xirr" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />;
+                  })()}
                 </ScatterChart>
               </ResponsiveContainer>
             </ChartContainer>
