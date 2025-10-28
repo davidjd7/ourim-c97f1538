@@ -183,18 +183,60 @@ export function ConsolidatedCharts({
     return sortedData.slice(1);
   }, [syntheticTableData, rawByInvestment, evolutionType, investments, cutoffYear]);
 
-  // 3. Histogram Data (Rendement Net 2024)
+  // 3. Histogram Data (Rendement Net 2024) - Distribution
   const histogramData = useMemo(() => {
-    return Array.from(selectedInvestments).map(investmentId => {
+    // Collect all rendement values
+    const rendements = Array.from(selectedInvestments).map(investmentId => {
       const kpis = batchKPIs[investmentId];
-      if (!kpis) return null;
-      const investment = investments.find(inv => inv.id === investmentId);
+      return kpis?.rendementNet || 0;
+    }).filter(r => r !== 0);
+
+    if (rendements.length === 0) return { bins: [], normalCurve: [], median: 0, mean: 0, stdDev: 0 };
+
+    // Calculate statistics
+    const mean = rendements.reduce((sum, r) => sum + r, 0) / rendements.length;
+    const variance = rendements.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / rendements.length;
+    const stdDev = Math.sqrt(variance);
+    const sortedRendements = [...rendements].sort((a, b) => a - b);
+    const median = sortedRendements[Math.floor(sortedRendements.length / 2)];
+
+    // Determine bin range and size
+    const minVal = Math.min(...rendements);
+    const maxVal = Math.max(...rendements);
+    const range = maxVal - minVal;
+    const binSize = 0.5; // 0.5% intervals
+    const numBins = Math.ceil(range / binSize) + 2; // Add padding bins
+    const startVal = Math.floor(minVal / binSize) * binSize;
+
+    // Create bins
+    const bins = Array.from({ length: numBins }, (_, i) => {
+      const binStart = startVal + i * binSize;
+      const binEnd = binStart + binSize;
+      const binCenter = (binStart + binEnd) / 2;
+      const count = rendements.filter(r => r >= binStart && r < binEnd).length;
+      
       return {
-        name: investment?.name || `Investment ${investmentId.slice(0, 8)}`,
-        rendement2024: kpis.rendementNet
+        range: `${binCenter.toFixed(1)}%`,
+        binCenter,
+        occurrences: count
       };
-    }).filter(Boolean).sort((a, b) => (b?.rendement2024 || 0) - (a?.rendement2024 || 0));
-  }, [selectedInvestments, batchKPIs, investments]);
+    });
+
+    // Generate normal distribution curve
+    const normalCurve = bins.map(bin => {
+      const x = bin.binCenter;
+      const normalValue = (rendements.length * binSize) * 
+        Math.exp(-Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2))) / 
+        (stdDev * Math.sqrt(2 * Math.PI));
+      
+      return {
+        binCenter: bin.binCenter,
+        normalValue
+      };
+    });
+
+    return { bins, normalCurve, median, mean, stdDev };
+  }, [selectedInvestments, batchKPIs]);
 
   // 4. Donut Data (Value Distribution)
   const donutData = useMemo(() => {
@@ -666,20 +708,73 @@ export function ConsolidatedCharts({
         {/* Histogram Net Rendement 2024 */}
         <Card className="card-financial">
           <CardHeader>
-            <CardTitle>Rendement Net 2024</CardTitle>
+            <CardTitle>Distribution des Rendements Net 2024</CardTitle>
             <CardDescription>
-              Classement par rendement décroissant
+              Histogramme avec courbe normale et médiane
             </CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={histogramData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                  <YAxis tickFormatter={value => `${value.toFixed(1)}%`} />
-                  <Tooltip formatter={value => [formatPercentage(value as number), 'Rendement 2024']} />
-                  <Bar dataKey="rendement2024" fill="hsl(var(--primary))" fillOpacity={0.8} />
+                <BarChart data={histogramData.bins}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                  <XAxis 
+                    dataKey="range" 
+                    angle={0} 
+                    textAnchor="middle" 
+                    height={40}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <YAxis 
+                    label={{ value: 'Occurrences', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length > 0) {
+                        return (
+                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                            <p className="text-sm">Rendement: {payload[0].payload.range}</p>
+                            <p className="text-sm font-semibold">Occurrences: {payload[0].value}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar 
+                    dataKey="occurrences" 
+                    fill="hsl(200 70% 60%)" 
+                    fillOpacity={0.8}
+                    stroke="hsl(200 70% 50%)"
+                    strokeWidth={1}
+                  />
+                  {/* Normal distribution curve */}
+                  <Line 
+                    type="monotone" 
+                    dataKey={(data) => {
+                      const curvePoint = histogramData.normalCurve.find(
+                        c => c.binCenter === data.binCenter
+                      );
+                      return curvePoint?.normalValue || 0;
+                    }}
+                    stroke="hsl(var(--foreground))" 
+                    strokeWidth={2}
+                    dot={false}
+                    name="Distribution normale"
+                  />
+                  {/* Median line */}
+                  <ReferenceLine 
+                    x={`${histogramData.median.toFixed(1)}%`}
+                    stroke="hsl(0 84.2% 60.2%)" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    label={{ 
+                      value: 'Médiane', 
+                      position: 'top',
+                      fill: 'hsl(0 84.2% 60.2%)',
+                      fontSize: 12
+                    }}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
