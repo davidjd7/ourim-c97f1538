@@ -104,8 +104,7 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
       try {
         const { data, error } = await supabase
           .from('immobilier_investments')
-          .select('*')
-          .eq('user_id', user.id);
+          .select('*');
 
         if (error) throw error;
 
@@ -244,8 +243,7 @@ export function ImmobilierProvider({ children }: { children: ReactNode }) {
         // Reload data from database to revert optimistic updates
         const { data: freshData } = await supabase
           .from('immobilier_investments')
-          .select('*')
-          .eq('user_id', user.id);
+          .select('*');
         
         if (freshData) {
           const convertedInvestments = freshData.map(convertDbToInvestment);
