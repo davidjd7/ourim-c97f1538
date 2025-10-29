@@ -712,23 +712,8 @@ export function ConsolidatedCharts({
                   {/* Reference lines for axes */}
                   <ReferenceLine x={0} stroke="hsl(var(--border))" strokeWidth={2} />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={2} />
-                  <XAxis type="number" dataKey="cfni" name="CFNI" domain={cfniAxisConfig.xDomain} ticks={cfniAxisConfig.xTicks} hide={true} label={{
-                    value: 'CFNI',
-                    position: 'insideRight',
-                    offset: -10,
-                    style: {
-                      fill: 'hsl(var(--foreground))'
-                    }
-                  }} />
-                  <YAxis type="number" dataKey="deltaValeur" name="Variation Valeur" domain={cfniAxisConfig.yDomain} ticks={cfniAxisConfig.yTicks} tickFormatter={value => formatCurrency(value)} label={{
-                    value: 'Variation de Valeur',
-                    angle: -90,
-                    position: 'insideTop',
-                    offset: 10,
-                    style: {
-                      fill: 'hsl(var(--foreground))'
-                    }
-                  }} />
+                  <XAxis type="number" dataKey="cfni" name="CFNI" domain={cfniAxisConfig.xDomain} ticks={cfniAxisConfig.xTicks} hide={true} />
+                  <YAxis type="number" dataKey="deltaValeur" name="Variation Valeur" domain={cfniAxisConfig.yDomain} ticks={cfniAxisConfig.yTicks} tickFormatter={value => formatCurrency(value)} />
                   <Tooltip content={({
                     active,
                     payload
