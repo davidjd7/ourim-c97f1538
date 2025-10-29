@@ -73,7 +73,13 @@ export function useFilteredInvestments(
           case 'tags':
             if (value.tags && value.tags.length > 0) {
               const investmentTags = tags[investment.id] || [];
+              console.log('Filtering investment:', investment.name, {
+                selectedTags: value.tags,
+                investmentTags,
+                tagsParam: tags
+              });
               const hasMatchingTag = value.tags.some(tagId => investmentTags.includes(tagId));
+              console.log('Has matching tag:', hasMatchingTag);
               if (!hasMatchingTag) {
                 return false;
               }
