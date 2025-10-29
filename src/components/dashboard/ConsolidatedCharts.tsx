@@ -389,19 +389,10 @@ export function ConsolidatedCharts({
       };
     }).filter(Boolean);
 
-    // Calculate consolidated portfolio point
-    const consolidatedPoint = {
-      cfni: individualPoints.reduce((sum, point) => sum + point.cfni, 0),
-      deltaValeur: individualPoints.reduce((sum, point) => sum + point.deltaValeur, 0),
-      gain: 0,
-      name: 'Portefeuille Consolidé',
-      size: 100,
-      isConsolidated: true
-    };
-    consolidatedPoint.gain = consolidatedPoint.cfni + consolidatedPoint.deltaValeur;
+    // Do not add consolidated point as requested
 
     return {
-      data: [...individualPoints, consolidatedPoint],
+      data: individualPoints,
       years: sortedYears
     };
   }, [selectedInvestments, rawByInvestment, syntheticTableData, investments, batchKPIs, selectedYear, cutoffYear]);
