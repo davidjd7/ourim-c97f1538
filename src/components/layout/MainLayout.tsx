@@ -11,11 +11,11 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full overflow-x-hidden">
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="overflow-x-hidden">
           <Header />
-          <main className="flex-1 p-4 pt-2">
+          <main className="flex-1 p-4 pt-2 overflow-x-hidden">
             <ColumnFiltersProvider>{children}</ColumnFiltersProvider>
           </main>
         </SidebarInset>

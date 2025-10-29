@@ -326,9 +326,9 @@ export function ConsolidatedKPIView({
         </div>
       </div>;
   }
-  return <div className="space-y-6">
+  return <div className="space-y-6 overflow-x-hidden">
       {/* Performance KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-4 kpi-grid">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 kpi-grid">
         {/* Fond Propre */}
         <div className="card-financial">
           <div className="p-4">

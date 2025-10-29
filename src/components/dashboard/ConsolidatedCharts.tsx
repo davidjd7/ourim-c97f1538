@@ -11,6 +11,7 @@ import { useInvestments } from '@/contexts/ImmobilierContext';
 import { getSyntheseData, calculateXIRR, calculateNOI } from '@/lib/kpiCalculations';
 import type { BatchKPIData, InvestmentRawData } from '@/types/kpi';
 import { formatCurrency, formatPercentage } from '@/lib/formatters';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface ConsolidatedChartsProps {
   selectedInvestments: Set<string>;
   batchKPIs: BatchKPIData;
@@ -70,6 +71,7 @@ export function ConsolidatedCharts({
   const {
     investments
   } = useInvestments();
+  const isMobile = useIsMobile();
   const [evolutionType, setEvolutionType] = useState<'gains' | 'valeur' | 'cfni'>('gains');
   const [evolutionDisplay, setEvolutionDisplay] = useState<'cumule' | 'variation'>('variation');
   const [selectedYear, setSelectedYear] = useState<string>('total');
@@ -508,13 +510,12 @@ export function ConsolidatedCharts({
       </div>;
   }
   return <TooltipProvider delayDuration={200}>
-    <div className="space-y-8">
-      
+    <div className="space-y-6 overflow-x-hidden">
       
       {/* First Row: Evolution Temporelle + Répartition des Valeurs */}
-      <div className="grid gap-4 md:grid-cols-2 charts-grid">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 charts-grid">
         {/* Time Evolution Curve */}
-        <Card className="card-financial">
+        <Card className="card-financial overflow-hidden">
           <CardHeader>
             <CardTitle>Évolution Temporelle</CardTitle>
             <CardDescription>
@@ -553,8 +554,8 @@ export function ConsolidatedCharts({
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[400px]">
+          <CardContent className="overflow-hidden">
+            <ChartContainer config={chartConfig} className="w-full h-full min-h-[300px] md:min-h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={timeEvolutionData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -572,18 +573,18 @@ export function ConsolidatedCharts({
         </Card>
 
         {/* Donut Chart (Value Distribution) */}
-        <Card className="card-financial">
+        <Card className="card-financial overflow-hidden">
           <CardHeader>
             <CardTitle>Répartition des Valeurs</CardTitle>
             <CardDescription>
               Distribution par investissement
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[400px]">
+          <CardContent className="overflow-hidden">
+            <ChartContainer config={chartConfig} className="w-full h-full min-h-[300px] md:min-h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={donutData} cx="50%" cy="50%" innerRadius={80} outerRadius={140} dataKey="value" nameKey="name" label={({
+                  <Pie data={donutData} cx="50%" cy="50%" innerRadius={isMobile ? 40 : 80} outerRadius={isMobile ? 80 : 140} dataKey="value" nameKey="name" label={({
                     percent
                   }) => `${(percent * 100).toFixed(1)}%`} labelLine={true}>
                     {donutData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
@@ -609,16 +610,16 @@ export function ConsolidatedCharts({
       </div>
 
       {/* Second Row: LTV vs TRI + CFNI vs Variation de Valeur */}
-      <div className="grid gap-4 md:grid-cols-2 charts-grid">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 charts-grid">
         {/* Scatter Plot (LTV vs TRI) */}
-        <Card className="card-financial">
+        <Card className="card-financial overflow-hidden">
           <CardHeader>
             <CardTitle>TRI fonction de LTV</CardTitle>
             <CardDescription>
               Relation entre le levier et la rentabilité (taille = valeur)
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-hidden">
             {(() => {
               // Calculate linear regression
               const n = scatterData.length;
@@ -639,7 +640,7 @@ export function ConsolidatedCharts({
                 ltv: maxX,
                 xirr: slope * maxX + intercept
               }];
-              return <ChartContainer config={chartConfig} className="h-[300px]">
+              return <ChartContainer config={chartConfig} className="w-full h-full min-h-[250px] md:min-h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -665,7 +666,7 @@ export function ConsolidatedCharts({
                       return null;
                     }} />
                       <Scatter data={scatterData} fill="hsl(var(--primary))" fillOpacity={0.6}>
-                        {scatterData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={Math.sqrt(entry.size)} />)}
+                        {scatterData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={isMobile ? 3 : Math.sqrt(entry.size)} />)}
                       </Scatter>
                       {/* Linear Regression Line */}
                       {scatterData.length >= 2 && <Scatter data={lineData} fill="none" line={{
@@ -680,7 +681,7 @@ export function ConsolidatedCharts({
         </Card>
 
         {/* CFNI vs Variation de Valeur Scatter Plot */}
-        <Card className="card-financial">
+        <Card className="card-financial overflow-hidden">
           <CardHeader>
             <CardTitle>Valeur fonction de CFNI</CardTitle>
             <CardDescription>
@@ -700,8 +701,8 @@ export function ConsolidatedCharts({
               </Select>
             </div>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
+          <CardContent className="overflow-hidden">
+            <ChartContainer config={chartConfig} className="w-full h-full min-h-[250px] md:min-h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart>
                   {/* Grid lines Y-axis */}
@@ -744,7 +745,7 @@ export function ConsolidatedCharts({
                     return null;
                   }} />
                   <Scatter data={cfniVsValeurData.data} fill="hsl(var(--primary))" fillOpacity={0.6}>
-                    {cfniVsValeurData.data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={Math.sqrt(entry.size)} />)}
+                    {cfniVsValeurData.data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.isConsolidated ? "hsl(0 84.2% 60.2%)" : "hsl(var(--primary))"} r={isMobile ? 3 : Math.sqrt(entry.size)} />)}
                   </Scatter>
                   <Customized component={({
                     xAxisMap,
@@ -772,25 +773,25 @@ export function ConsolidatedCharts({
       </div>
 
       {/* Third Row: Rendement Net 2024 + Distribution des Rendements */}
-      <div className="grid gap-4 md:grid-cols-2 charts-grid">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 charts-grid">
         {/* Histogram Net Rendement 2024 */}
-        <Card className="card-financial">
+        <Card className="card-financial overflow-hidden">
           <CardHeader>
             <CardTitle>Distribution des Rendements Net 2024</CardTitle>
             <CardDescription>
               Histogramme avec courbe normale et médiane
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
+          <CardContent className="overflow-hidden">
+            <ChartContainer config={chartConfig} className="w-full h-full min-h-[250px] md:min-h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={histogramData.bins}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
                   <XAxis 
                     dataKey="range" 
-                    angle={0} 
-                    textAnchor="middle" 
-                    height={40}
+                    angle={isMobile ? -45 : 0} 
+                    textAnchor={isMobile ? 'end' : 'middle'} 
+                    height={isMobile ? 60 : 40}
                     tick={{ fontSize: 11 }}
                   />
                   <YAxis 
@@ -862,7 +863,7 @@ export function ConsolidatedCharts({
         </Card>
 
         {/* Boxplot Distribution */}
-        <Card className="card-financial">
+        <Card className="card-financial overflow-hidden">
           <CardHeader>
             <CardTitle>Distribution des Rendements</CardTitle>
             <CardDescription className="flex items-center gap-1.5">
@@ -881,7 +882,7 @@ export function ConsolidatedCharts({
               </UITooltip>
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-hidden">
             <div className="space-y-6">
               {/* Rendement Net Distribution */}
               <div>
