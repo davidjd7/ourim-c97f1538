@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useColumnFilters } from '@/contexts/ColumnFiltersContext';
 import { ColumnConfig } from '@/contexts/ColumnVisibilityContext';
 import { useTags } from '@/hooks/useTags';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface TagsFilterProps {
   column: ColumnConfig;
@@ -15,12 +16,18 @@ interface TagsFilterProps {
 export function TagsFilter({ column, onFilterApplied, onClose }: TagsFilterProps) {
   const { getFilterValue, setColumnFilter, clearColumnFilter } = useColumnFilters();
   const { tags, loading } = useTags();
+  const filterValue = getFilterValue(column.key);
   const [selectedTags, setSelectedTags] = useState<string[]>(
-    getFilterValue(column.key).tags || []
+    filterValue.tags || []
+  );
+  const [matchMode, setMatchMode] = useState<'OR' | 'AND'>(
+    filterValue.tagsMatchMode || 'OR'
   );
 
   useEffect(() => {
-    setSelectedTags(getFilterValue(column.key).tags || []);
+    const currentFilter = getFilterValue(column.key);
+    setSelectedTags(currentFilter.tags || []);
+    setMatchMode(currentFilter.tagsMatchMode || 'OR');
   }, [column.key, getFilterValue]);
 
   const handleToggle = (tagId: string) => {
@@ -33,7 +40,7 @@ export function TagsFilter({ column, onFilterApplied, onClose }: TagsFilterProps
 
   const handleApply = () => {
     if (selectedTags.length > 0) {
-      setColumnFilter(column.key, { tags: selectedTags });
+      setColumnFilter(column.key, { tags: selectedTags, tagsMatchMode: matchMode });
     } else {
       clearColumnFilter(column.key);
     }
@@ -42,6 +49,7 @@ export function TagsFilter({ column, onFilterApplied, onClose }: TagsFilterProps
 
   const handleClear = () => {
     setSelectedTags([]);
+    setMatchMode('OR');
     clearColumnFilter(column.key);
     onFilterApplied();
   };
@@ -53,8 +61,25 @@ export function TagsFilter({ column, onFilterApplied, onClose }: TagsFilterProps
   return (
     <div className="space-y-3">
       <div className="space-y-2">
-        <div className="text-sm text-muted-foreground">
-          {selectedTags.length} tag(s) sélectionné(s)
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            {selectedTags.length} tag(s) sélectionné(s)
+          </div>
+          {selectedTags.length > 1 && (
+            <ToggleGroup 
+              type="single" 
+              value={matchMode} 
+              onValueChange={(value) => value && setMatchMode(value as 'OR' | 'AND')}
+              size="sm"
+            >
+              <ToggleGroupItem value="OR" className="text-xs px-2 py-1">
+                OU
+              </ToggleGroupItem>
+              <ToggleGroupItem value="AND" className="text-xs px-2 py-1">
+                ET
+              </ToggleGroupItem>
+            </ToggleGroup>
+          )}
         </div>
         
         <div className="space-y-2 max-h-40 overflow-y-auto">

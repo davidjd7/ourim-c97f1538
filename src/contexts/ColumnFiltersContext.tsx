@@ -8,6 +8,7 @@ export interface FilterValue {
   dateRange?: { from?: Date; to?: Date };
   select?: string[];
   tags?: string[];
+  tagsMatchMode?: 'OR' | 'AND';
 }
 
 export interface ColumnFilter {

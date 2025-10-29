@@ -73,9 +73,20 @@ export function useFilteredInvestments(
           case 'tags':
             if (value.tags && value.tags.length > 0) {
               const investmentTags = tags[investment.id] || [];
-              const hasAllTags = value.tags.every(tagId => investmentTags.includes(tagId));
-              if (!hasAllTags) {
-                return false;
+              const matchMode = value.tagsMatchMode || 'OR';
+              
+              if (matchMode === 'AND') {
+                // Mode ET : l'investissement doit avoir TOUS les tags sélectionnés
+                const hasAllTags = value.tags.every(tagId => investmentTags.includes(tagId));
+                if (!hasAllTags) {
+                  return false;
+                }
+              } else {
+                // Mode OU : l'investissement doit avoir AU MOINS UN des tags sélectionnés
+                const hasAnyTag = value.tags.some(tagId => investmentTags.includes(tagId));
+                if (!hasAnyTag) {
+                  return false;
+                }
               }
             }
             break;
