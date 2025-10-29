@@ -30,8 +30,10 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, UserPlus, Trash2, Key, Loader2 } from 'lucide-react';
+import { Users, UserPlus, Trash2, Key, Loader2, Building2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const SUPABASE_URL = 'https://vpkkuxicbtvbwloetyly.supabase.co';
 
@@ -54,6 +56,55 @@ export function UserManagement() {
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [userToUpdatePassword, setUserToUpdatePassword] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [companyAccessDialogOpen, setCompanyAccessDialogOpen] = useState(false);
+  const [userForCompanyAccess, setUserForCompanyAccess] = useState<string | null>(null);
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
+
+  // Fetch all companies
+  const { data: companies } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch company access for a specific user
+  const { data: userCompanyAccess, refetch: refetchCompanyAccess } = useQuery({
+    queryKey: ['user-company-access', userForCompanyAccess],
+    queryFn: async () => {
+      if (!userForCompanyAccess) return [];
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/manage-users`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            action: 'get_company_access', 
+            userId: userForCompanyAccess 
+          })
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to fetch company access');
+      const { companyIds } = await response.json();
+      setSelectedCompanies(companyIds);
+      return companyIds;
+    },
+    enabled: !!userForCompanyAccess
+  });
 
   // Fetch all users with their roles via edge function
   const { data: users, isLoading } = useQuery({
@@ -170,6 +221,49 @@ export function UserManagement() {
         description: error.message || "Impossible de supprimer l'utilisateur.",
       });
     },
+  });
+
+  // Mutation to update company access
+  const updateCompanyAccessMutation = useMutation({
+    mutationFn: async ({ userId, companyIds }: { userId: string; companyIds: string[] }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/manage-users`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            action: 'update_company_access', 
+            userId, 
+            companyIds 
+          })
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to update company access');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-company-access'] });
+      toast({
+        title: "Accès mis à jour",
+        description: "Les accès aux sociétés ont été modifiés avec succès.",
+      });
+      setCompanyAccessDialogOpen(false);
+      setUserForCompanyAccess(null);
+      setSelectedCompanies([]);
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de mettre à jour les accès.",
+      });
+    }
   });
 
   const updatePasswordMutation = useMutation({
@@ -415,6 +509,17 @@ export function UserManagement() {
                     variant="outline"
                     size="icon"
                     onClick={() => {
+                      setUserForCompanyAccess(user.id);
+                      setCompanyAccessDialogOpen(true);
+                    }}
+                    title="Gérer les accès aux sociétés"
+                  >
+                    <Building2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
                       setUserToUpdatePassword(user.id);
                       setPasswordDialogOpen(true);
                     }}
@@ -495,6 +600,68 @@ export function UserManagement() {
             >
               {updatePasswordMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Modifier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Company Access Dialog */}
+      <Dialog open={companyAccessDialogOpen} onOpenChange={(open) => {
+        setCompanyAccessDialogOpen(open);
+        if (!open) {
+          setUserForCompanyAccess(null);
+          setSelectedCompanies([]);
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Gérer les accès aux sociétés</DialogTitle>
+            <DialogDescription>
+              Sélectionnez les sociétés auxquelles cet utilisateur aura accès.
+              Les administrateurs ont accès à toutes les sociétés par défaut.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <ScrollArea className="h-[300px] pr-4">
+              <div className="space-y-2">
+                {companies?.map((company) => (
+                  <div key={company.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={company.id}
+                      checked={selectedCompanies.includes(company.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedCompanies([...selectedCompanies, company.id]);
+                        } else {
+                          setSelectedCompanies(selectedCompanies.filter(id => id !== company.id));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={company.id} className="cursor-pointer flex-1">
+                      {company.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setCompanyAccessDialogOpen(false);
+              setUserForCompanyAccess(null);
+              setSelectedCompanies([]);
+            }}>
+              Annuler
+            </Button>
+            <Button 
+              onClick={() => userForCompanyAccess && updateCompanyAccessMutation.mutate({
+                userId: userForCompanyAccess,
+                companyIds: selectedCompanies
+              })}
+              disabled={updateCompanyAccessMutation.isPending}
+            >
+              {updateCompanyAccessMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enregistrer
             </Button>
           </DialogFooter>
         </DialogContent>

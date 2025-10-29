@@ -192,6 +192,51 @@ serve(async (req) => {
         );
       }
 
+      case 'get_company_access': {
+        const { userId } = params;
+        
+        const { data: companyAccess, error } = await supabaseAdmin
+          .from('user_company_access')
+          .select('company_id')
+          .eq('user_id', userId);
+
+        if (error) throw error;
+
+        return new Response(
+          JSON.stringify({ companyIds: companyAccess.map(ca => ca.company_id) }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'update_company_access': {
+        const { userId, companyIds } = params;
+        
+        // Delete all existing access
+        await supabaseAdmin
+          .from('user_company_access')
+          .delete()
+          .eq('user_id', userId);
+
+        // Add new access
+        if (companyIds && companyIds.length > 0) {
+          const accessRecords = companyIds.map((companyId: string) => ({
+            user_id: userId,
+            company_id: companyId
+          }));
+
+          const { error } = await supabaseAdmin
+            .from('user_company_access')
+            .insert(accessRecords);
+
+          if (error) throw error;
+        }
+
+        return new Response(
+          JSON.stringify({ success: true }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: 'Invalid action' }),
