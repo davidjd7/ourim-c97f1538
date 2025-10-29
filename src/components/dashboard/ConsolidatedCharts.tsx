@@ -444,14 +444,9 @@ export function ConsolidatedCharts({
       });
     });
 
-    // Add padding (10%)
-    const xPadding = (globalXMax - globalXMin) * 0.1;
-    const yPadding = (globalYMax - globalYMin) * 0.1;
-
-    // Round to nearest 50000
-    const roundTo50k = (value: number) => Math.round(value / 50000) * 50000;
-    const xDomain = [roundTo50k(globalXMin - xPadding), roundTo50k(globalXMax + xPadding)];
-    const yDomain = [roundTo50k(globalYMin - yPadding), roundTo50k(globalYMax + yPadding)];
+    // Fixed padding of 50000
+    const xDomain = [globalXMin - 50000, globalXMax + 50000];
+    const yDomain = [globalYMin - 50000, globalYMax + 50000];
 
     // Generate nice ticks
     const generateTicks = (min: number, max: number, count = 5) => {
