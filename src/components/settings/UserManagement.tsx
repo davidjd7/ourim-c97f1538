@@ -15,6 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Users, UserPlus, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+const SUPABASE_URL = 'https://vpkkuxicbtvbwloetyly.supabase.co';
+
 type UserRole = 'admin' | 'analyste' | 'lecteur';
 
 interface UserWithRole {
@@ -29,47 +31,59 @@ export function UserManagement() {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState<UserRole>('lecteur');
 
-  // Fetch all users with their roles
+  // Fetch all users with their roles via edge function
   const { data: users, isLoading } = useQuery({
     queryKey: ['users-with-roles'],
     queryFn: async () => {
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (authError) throw authError;
+      if (!session) throw new Error('No session');
 
-      const usersWithRoles: UserWithRole[] = [];
-      
-      for (const user of authUsers.users) {
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/manage-users`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action: 'list' })
+        }
+      );
 
-        usersWithRoles.push({
-          id: user.id,
-          email: user.email || '',
-          role: roleData?.role || 'lecteur'
-        });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch users');
       }
 
-      return usersWithRoles;
+      const { users } = await response.json();
+      return users as UserWithRole[];
     }
   });
 
   // Mutation to update user role
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: UserRole }) => {
-      const { error } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: userId,
-          role: role
-        }, {
-          onConflict: 'user_id,role'
-        });
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) throw new Error('No session');
 
-      if (error) throw error;
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/manage-users`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action: 'update_role', userId, role })
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update role');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
@@ -91,8 +105,26 @@ export function UserManagement() {
   // Mutation to delete user
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
-      if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) throw new Error('No session');
+
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/manage-users`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action: 'delete', userId })
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete user');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
@@ -122,18 +154,26 @@ export function UserManagement() {
     }
 
     try {
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: newUserEmail,
-        email_confirm: true,
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) throw new Error('No session');
 
-      if (error) throw error;
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/manage-users`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action: 'create', email: newUserEmail, role: newUserRole })
+        }
+      );
 
-      // Add role for the new user
-      await supabase.from('user_roles').insert({
-        user_id: data.user.id,
-        role: newUserRole
-      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create user');
+      }
 
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
       
@@ -144,10 +184,10 @@ export function UserManagement() {
 
       setNewUserEmail('');
       setNewUserRole('lecteur');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erreur",
-        description: "Impossible de créer l'utilisateur.",
+        description: error.message || "Impossible de créer l'utilisateur.",
         variant: "destructive",
       });
       console.error('Error creating user:', error);
