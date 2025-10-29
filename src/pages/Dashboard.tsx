@@ -2,16 +2,38 @@ import React, { useState, useMemo } from 'react';
 import { ConsolidatedKPIView } from '@/components/dashboard/ConsolidatedKPIView';
 import { useInvestments } from '@/contexts/ImmobilierContext';
 import { YearPicker } from '@/components/ui/year-picker';
+import { useTags } from '@/hooks/useTags';
+import { useAllInvestmentTags } from '@/hooks/useAllInvestmentTags';
 
 export default function Dashboard() {
   const { investments, loading } = useInvestments();
+  const { tags } = useTags();
   const [cutoffYear, setCutoffYear] = useState<number | null>(2024);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   
-  // Create a Set with all investment IDs
-  const allInvestmentIds = useMemo(() => {
-    return new Set(investments.map(inv => inv.id));
-  }, [investments]);
+  // Get all investment IDs to load their tags
+  const allInvestmentIds = investments.map(inv => inv.id);
+  const { investmentTags, loading: tagsLoading } = useAllInvestmentTags(allInvestmentIds);
+  
+  // Find the "Done" tag
+  const doneTag = useMemo(() => {
+    return tags.find(tag => tag.name === 'Done');
+  }, [tags]);
+  
+  // Filter investments that have the "Done" tag
+  const doneInvestments = useMemo(() => {
+    if (!doneTag) return [];
+    
+    return investments.filter(inv => {
+      const invTags = investmentTags[inv.id] || [];
+      return invTags.includes(doneTag.id);
+    });
+  }, [investments, investmentTags, doneTag]);
+  
+  // Create a Set with filtered investment IDs
+  const filteredInvestmentIds = useMemo(() => {
+    return new Set(doneInvestments.map(inv => inv.id));
+  }, [doneInvestments]);
 
   const handleCutoffYearChange = (year: number) => {
     setCutoffYear(year);
@@ -26,7 +48,7 @@ export default function Dashboard() {
     setAvailableYears(years);
   };
 
-  if (loading) {
+  if (loading || tagsLoading) {
     return (
       <div className="space-y-4">
         <div className="space-y-1">
@@ -63,9 +85,9 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Consolidated KPI View with all investments */}
+      {/* Consolidated KPI View with Done investments only */}
       <ConsolidatedKPIView 
-        selectedInvestments={allInvestmentIds}
+        selectedInvestments={filteredInvestmentIds}
         cutoffYear={cutoffYear}
         onCutoffYearChange={handleCutoffYearChange}
         onAvailableYearsChange={handleAvailableYearsChange}
