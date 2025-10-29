@@ -4,7 +4,7 @@ import { useBatchPerformanceKPIs } from '@/hooks/useBatchPerformanceKPIs';
 import { getSyntheseData, calculateXIRR, calculateNOI } from '@/lib/kpiCalculations';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ConsolidatedCharts } from '@/components/dashboard/ConsolidatedCharts';
-import type { ConsolidatedRow } from '@/types/kpi';
+import type { ConsolidatedRow, ValorisationRow } from '@/types/kpi';
 interface ConsolidatedKPIViewProps {
   selectedInvestments: Set<string>;
   cutoffYear: number | null;
@@ -97,7 +97,11 @@ export function ConsolidatedKPIView({
 
     // Filter data by cutoff year and collect all dates
     const cutoffDate = new Date(`${effectiveCutoffYear}-12-31`);
-    Object.values(rawByInvestment).forEach(investmentData => {
+    
+    // Use Maps to track unique entries per investment per date to prevent duplicates
+    const valorisationsByInvestmentDate = new Map<string, ValorisationRow>();
+    
+    Object.entries(rawByInvestment).forEach(([investmentId, investmentData]) => {
       // Group cashflows by date (filtered by cutoff)
       investmentData.cashflows.filter(cf => new Date(cf.date) <= cutoffDate).forEach(cf => {
         if (!dateMap.has(cf.date)) {
@@ -137,18 +141,27 @@ export function ConsolidatedKPIView({
         dateMap.get(df.date)!.debtFlows.push(df);
       });
 
-      // Group valorisations by date (filtered by cutoff)
+      // Group valorisations by date (filtered by cutoff) - using unique key to prevent duplicates
       investmentData.valorisations.filter(valo => new Date(valo.date) <= cutoffDate).forEach(valo => {
-        if (!dateMap.has(valo.date)) {
-          dateMap.set(valo.date, {
-            cashflows: [],
-            immobilisations: [],
-            debtFlows: [],
-            valorisations: []
-          });
+        const uniqueKey = `${investmentId}_${valo.date}`;
+        // Only keep the latest valorisation if multiple exist for same investment and date
+        if (!valorisationsByInvestmentDate.has(uniqueKey)) {
+          valorisationsByInvestmentDate.set(uniqueKey, valo);
         }
-        dateMap.get(valo.date)!.valorisations.push(valo);
       });
+    });
+    
+    // Now add all unique valorisations to dateMap
+    valorisationsByInvestmentDate.forEach((valo) => {
+      if (!dateMap.has(valo.date)) {
+        dateMap.set(valo.date, {
+          cashflows: [],
+          immobilisations: [],
+          debtFlows: [],
+          valorisations: []
+        });
+      }
+      dateMap.get(valo.date)!.valorisations.push(valo);
     });
 
     // Build consolidated synthesis data using getSyntheseData for aggregation
