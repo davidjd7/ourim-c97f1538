@@ -120,7 +120,7 @@ export function PerformanceTab({
       const {
         data: cashflowData,
         error
-      } = await supabase.from('immobilier_cashflows').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).order('date', {
+      } = await supabase.from('immobilier_cashflows').select('*').eq('immobilier_id', investmentId).order('date', {
         ascending: true
       });
       if (error) throw error;
@@ -143,7 +143,7 @@ export function PerformanceTab({
       const {
         data: immoData,
         error
-      } = await supabase.from('immobilier_immobilisations').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).order('date', {
+      } = await supabase.from('immobilier_immobilisations').select('*').eq('immobilier_id', investmentId).order('date', {
         ascending: true
       });
       if (error) throw error;
@@ -163,7 +163,7 @@ export function PerformanceTab({
       const {
         data: valoData,
         error
-      } = await supabase.from('immobilier_valorisations').select('*').eq('immobilier_id', investmentId).eq('user_id', user?.id).order('date', {
+      } = await supabase.from('immobilier_valorisations').select('*').eq('immobilier_id', investmentId).order('date', {
         ascending: true
       });
       if (error) throw error;
@@ -183,7 +183,7 @@ export function PerformanceTab({
       const {
         data: debtData,
         error
-      } = await supabase.from('debt_characteristics').select('*, documents(id, name, file_path)').eq('asset_id', investmentId).eq('user_id', user?.id).maybeSingle();
+      } = await supabase.from('debt_characteristics').select('*, documents(id, name, file_path)').eq('asset_id', investmentId).maybeSingle();
       if (error) throw error;
       if (debtData) {
         const d: any = debtData;
@@ -227,7 +227,7 @@ export function PerformanceTab({
   const loadDebtFlows = async () => {
     try {
       // First get debt characteristics to get the debt_characteristics_id
-      const debtCharacteristicsRes = await supabase.from('debt_characteristics').select('id').eq('asset_id', investmentId).eq('user_id', user?.id);
+      const debtCharacteristicsRes = await supabase.from('debt_characteristics').select('id').eq('asset_id', investmentId);
       
       if (debtCharacteristicsRes.error) throw debtCharacteristicsRes.error;
       
@@ -239,7 +239,7 @@ export function PerformanceTab({
         const {
           data: flowData,
           error
-        } = await supabase.from('debt_flows').select('*').in('debt_characteristics_id', debtCharacteristicsIds).eq('user_id', user?.id).order('date', {
+        } = await supabase.from('debt_flows').select('*').in('debt_characteristics_id', debtCharacteristicsIds).order('date', {
           ascending: true
         });
         
