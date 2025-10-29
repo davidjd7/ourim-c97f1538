@@ -33,17 +33,17 @@ export function useBatchPerformanceKPIs(investmentIds: string[]): UseBatchPerfor
 
       // Batch load all data in parallel with IN queries
       const [cashflowsRes, valorisationsRes, debtCharacteristicsRes, immobilisationsRes] = await Promise.all([
-        supabase.from('immobilier_cashflows').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id),
-        supabase.from('immobilier_valorisations').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id),
-        supabase.from('debt_characteristics').select('*').in('asset_id', investmentIds).eq('user_id', user.id),
-        supabase.from('immobilier_immobilisations').select('*').in('immobilier_id', investmentIds).eq('user_id', user.id)
+        supabase.from('immobilier_cashflows').select('*').in('immobilier_id', investmentIds),
+        supabase.from('immobilier_valorisations').select('*').in('immobilier_id', investmentIds),
+        supabase.from('debt_characteristics').select('*').in('asset_id', investmentIds),
+        supabase.from('immobilier_immobilisations').select('*').in('immobilier_id', investmentIds)
       ]);
 
       // Load debt flows based on debt characteristics
       let debtFlowsRes = { data: [] };
       if (debtCharacteristicsRes.data && debtCharacteristicsRes.data.length > 0) {
         const debtCharacteristicsIds = debtCharacteristicsRes.data.map(dc => dc.id);
-        debtFlowsRes = await supabase.from('debt_flows').select('*').in('debt_characteristics_id', debtCharacteristicsIds).eq('user_id', user.id);
+        debtFlowsRes = await supabase.from('debt_flows').select('*').in('debt_characteristics_id', debtCharacteristicsIds);
       }
 
       // Group data by investment ID
