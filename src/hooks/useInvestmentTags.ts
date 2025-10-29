@@ -19,7 +19,6 @@ export function useInvestmentTags() {
         const { data, error } = await supabase
           .from('asset_tags')
           .select('asset_id, tag_id')
-          .eq('user_id', user.id)
           .eq('asset_type', 'immobilier');
 
         if (error) throw error;

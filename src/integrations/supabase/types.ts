@@ -21,7 +21,6 @@ export type Database = {
           created_at: string
           id: string
           tag_id: string
-          user_id: string
         }
         Insert: {
           asset_id: string
@@ -29,7 +28,6 @@ export type Database = {
           created_at?: string
           id?: string
           tag_id: string
-          user_id: string
         }
         Update: {
           asset_id?: string
@@ -37,7 +35,6 @@ export type Database = {
           created_at?: string
           id?: string
           tag_id?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -462,7 +459,6 @@ export type Database = {
           id: string
           name: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           color?: string
@@ -470,7 +466,6 @@ export type Database = {
           id?: string
           name: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           color?: string
@@ -478,7 +473,6 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }

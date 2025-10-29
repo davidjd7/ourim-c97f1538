@@ -7,7 +7,6 @@ export interface Tag {
   id: string;
   name: string;
   color: string;
-  user_id: string;
 }
 
 export interface AssetTag {
@@ -30,7 +29,6 @@ export function useTags() {
       const { data, error } = await supabase
         .from('tags')
         .select('*')
-        .eq('user_id', user.id)
         .order('name');
 
       if (error) throw error;
@@ -51,8 +49,7 @@ export function useTags() {
         .from('tags')
         .insert([{
           name,
-          color,
-          user_id: user.id
+          color
         }])
         .select()
         .single();
@@ -80,8 +77,7 @@ export function useTags() {
       const { error } = await supabase
         .from('tags')
         .update({ name, color })
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('id', id);
 
       if (error) throw error;
       
@@ -106,15 +102,13 @@ export function useTags() {
       await supabase
         .from('asset_tags')
         .delete()
-        .eq('tag_id', id)
-        .eq('user_id', user.id);
+        .eq('tag_id', id);
 
       // Then delete the tag
       const { error } = await supabase
         .from('tags')
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('id', id);
 
       if (error) throw error;
       
@@ -155,8 +149,7 @@ export function useInvestmentTags(investmentId: string) {
         .from('asset_tags')
         .select('*')
         .eq('asset_id', investmentId)
-        .eq('asset_type', 'immobilier')
-        .eq('user_id', user.id);
+        .eq('asset_type', 'immobilier');
 
       if (assetTagsError) throw assetTagsError;
 
@@ -170,8 +163,7 @@ export function useInvestmentTags(investmentId: string) {
       const { data: tagsData, error: tagsError } = await supabase
         .from('tags')
         .select('*')
-        .in('id', tagIds)
-        .eq('user_id', user.id);
+        .in('id', tagIds);
 
       if (tagsError) throw tagsError;
 
@@ -209,8 +201,7 @@ export function useInvestmentTags(investmentId: string) {
         .insert([{
           asset_id: investmentId,
           tag_id: tagId,
-          asset_type: 'immobilier',
-          user_id: user.id
+          asset_type: 'immobilier'
         }]);
 
       if (error) throw error;
@@ -236,8 +227,7 @@ export function useInvestmentTags(investmentId: string) {
         .delete()
         .eq('asset_id', investmentId)
         .eq('tag_id', tagId)
-        .eq('asset_type', 'immobilier')
-        .eq('user_id', user.id);
+        .eq('asset_type', 'immobilier');
 
       if (error) throw error;
       

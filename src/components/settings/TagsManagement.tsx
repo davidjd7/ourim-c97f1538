@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2, Tag as TagIcon } from 'lucide-react';
 import { useTags, Tag } from '@/hooks/useTags';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const DEFAULT_COLORS = [
   '#EF4444', // Red
@@ -21,6 +22,7 @@ const DEFAULT_COLORS = [
 ];
 
 export function TagsManagement() {
+  const { userRole, isLoading: roleLoading } = useUserRole();
   const { tags, loading, createTag, updateTag, deleteTag } = useTags();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
@@ -72,6 +74,41 @@ export function TagsManagement() {
     setNewTagName('');
     setNewTagColor(DEFAULT_COLORS[0]);
   };
+
+  if (roleLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TagIcon className="h-5 w-5" />
+            Gestion des Tags
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center py-8 text-muted-foreground">Chargement...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (userRole !== 'admin') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TagIcon className="h-5 w-5" />
+            Gestion des Tags
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">
+            <TagIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>Accès réservé aux administrateurs</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
