@@ -1,168 +1,74 @@
-import React from 'react';
-import { KPICard } from '@/components/dashboard/KPICard';
-import { InvestmentTable } from '@/components/dashboard/InvestmentTable';
-import { InvestmentChart, CashflowChart } from '@/components/dashboard/InvestmentChart';
-import { 
-  Wallet, 
-  TrendingUp, 
-  DollarSign, 
-  Building,
-  BarChart3,
-  Target
-} from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ConsolidatedKPIView } from '@/components/dashboard/ConsolidatedKPIView';
+import { useInvestments } from '@/contexts/ImmobilierContext';
+import { YearPicker } from '@/components/ui/year-picker';
 
 export default function Dashboard() {
+  const { investments, loading } = useInvestments();
+  const [cutoffYear, setCutoffYear] = useState<number | null>(2024);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  
+  // Create a Set with all investment IDs
+  const allInvestmentIds = useMemo(() => {
+    return new Set(investments.map(inv => inv.id));
+  }, [investments]);
+
+  const handleCutoffYearChange = (year: number) => {
+    setCutoffYear(year);
+  };
+
+  const handleYearPickerChange = (dateString: string) => {
+    const year = new Date(dateString).getFullYear();
+    setCutoffYear(year);
+  };
+
+  const handleAvailableYearsChange = (years: number[]) => {
+    setAvailableYears(years);
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-lg text-muted-foreground">
+            Vue d'ensemble consolidée de votre portefeuille
+          </p>
+        </div>
+        <div className="card-financial p-8 text-center">
+          <p className="text-muted-foreground">Chargement des données...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-lg text-muted-foreground">
-          Vue d'ensemble de votre portefeuille d'investissements
-        </p>
-      </div>
-
-      {/* KPI Cards - Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Ces KPI seront connectés aux vraies données de performance */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-lg text-muted-foreground">
+            Vue d'ensemble consolidée de votre portefeuille
+          </p>
+        </div>
         
-        {/* Fond Propre */}
-        <div className="card-financial p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">Fond Propre (2024)</p>
-              <div className="flex items-center justify-between">
-                <p className="text-2xl font-bold financial-value">€1,367,000</p>
-                <div className="text-xs text-muted-foreground text-left">
-                  <div>Valeur: €2,390,000</div>
-                  <div>CRD: €1,023,000</div>
-                  <div>LTV: 42.8%</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Dernier Earning */}
-        <div className="card-financial p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">Dernier Earning (2024)</p>
-              <div className="flex items-center justify-between">
-                <p className="text-2xl font-bold financial-value text-success">+€113,275</p>
-                <div className="text-xs text-muted-foreground text-left">
-                  <div>Flux: +€163,329</div>
-                  <div>Var Valeur: -€50,000 (-2.0%)</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Dernier Flux */}
-        <div className="card-financial p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">Dernier Flux (2024)</p>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold financial-value text-success">+€163,329</p>
-                  <p className="text-xs text-muted-foreground">142% du loyer</p>
-                </div>
-                <div className="text-xs text-muted-foreground text-left">
-                  <div>Cap Rate: +6.8%</div>
-                  <div>COC: +11.9%</div>
-                  <div>Yield Banque: +16.0%</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* XIRR */}
-        <div className="card-financial p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">XIRR (3Y)</p>
-              <div className="flex items-center justify-between">
-                <p className="text-2xl font-bold financial-value text-primary">12.5%</p>
-                <div className="text-xs text-muted-foreground text-left">
-                  <div>Total: +€170,000</div>
-                  <div>Flux: +€220,000</div>
-                  <div>Valeur: -€50,000</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Year picker */}
+        {availableYears.length > 0 && (
+          <YearPicker
+            value={cutoffYear ? `${cutoffYear}-12-31` : `${new Date().getFullYear()}-12-31`}
+            onChange={handleYearPickerChange}
+            availableYears={availableYears}
+          />
+        )}
       </div>
 
-      {/* KPI Cards - By Asset Type */}
-      <div className="space-y-3">
-        <h2 className="text-xl font-semibold text-foreground">Par Type d'Actif</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Immobilier */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-              <Building className="h-5 w-5 text-primary" />
-              Immobilier
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <KPICard
-                title="Actifs"
-                value="8"
-                subtitle="Investis"
-                icon={Building}
-                className="text-sm"
-              />
-              <KPICard
-                title="Valeur"
-                value="€18.2M"
-                subtitle="Portefeuille immo"
-                icon={DollarSign}
-                className="text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Private Equity */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Private Equity  
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <KPICard
-                title="Fonds"
-                value="4"
-                subtitle="Investis"
-                icon={BarChart3}
-                className="text-sm"
-              />
-              <KPICard
-                title="Valeur"
-                value="€6.3M"
-                subtitle="Portefeuille PE"
-                icon={DollarSign}
-                className="text-sm"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <InvestmentChart />
-        <CashflowChart />
-      </div>
-
-      {/* Recent Investments Table */}
-      <InvestmentTable 
-        selectedRows={new Set<string>()} 
-        onSelectedRowsChange={() => {}} 
+      {/* Consolidated KPI View with all investments */}
+      <ConsolidatedKPIView 
+        selectedInvestments={allInvestmentIds}
+        cutoffYear={cutoffYear}
+        onCutoffYearChange={handleCutoffYearChange}
+        onAvailableYearsChange={handleAvailableYearsChange}
       />
     </div>
   );
