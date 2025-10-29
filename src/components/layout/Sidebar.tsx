@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface SidebarProps {
   open: boolean;
@@ -56,6 +57,15 @@ const navigation = [
 
 export function Sidebar({ open, onClose, className }: SidebarProps) {
   const location = useLocation();
+  const { userRole } = useUserRole();
+
+  // Filter navigation based on user role
+  const filteredNavigation = navigation.filter(item => {
+    if (item.href === '/parametres') {
+      return userRole === 'admin';
+    }
+    return true;
+  });
 
   return (
     <>
@@ -102,7 +112,7 @@ export function Sidebar({ open, onClose, className }: SidebarProps) {
           {/* Navigation */}
           <ScrollArea className="flex-1 px-3 py-4">
             <nav className="space-y-1">
-              {navigation.map((item) => {
+              {filteredNavigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
                 return (

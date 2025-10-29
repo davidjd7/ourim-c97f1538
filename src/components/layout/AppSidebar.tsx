@@ -21,6 +21,7 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const navigation = [
   {
@@ -49,6 +50,15 @@ export function AppSidebar() {
   const location = useLocation();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
+  const { userRole } = useUserRole();
+
+  // Filter navigation based on user role
+  const filteredNavigation = navigation.filter(item => {
+    if (item.href === '/parametres') {
+      return userRole === 'admin';
+    }
+    return true;
+  });
 
   return (
     <Sidebar collapsible="icon" className="animate-slide-in-right">
@@ -71,7 +81,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigation.map((item) => {
+              {filteredNavigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
                 return (
