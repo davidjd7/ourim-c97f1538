@@ -10,9 +10,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, UserPlus, Trash2 } from 'lucide-react';
+import { Users, UserPlus, Trash2, Key, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const SUPABASE_URL = 'https://vpkkuxicbtvbwloetyly.supabase.co';
@@ -29,7 +47,13 @@ export function UserManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState<UserRole>('lecteur');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [userToUpdatePassword, setUserToUpdatePassword] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   // Fetch all users with their roles via edge function
   const { data: users, isLoading } = useQuery({
@@ -107,24 +131,28 @@ export function UserManagement() {
     mutationFn: async (userId: string) => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session) throw new Error('No session');
+      if (!session) {
+        throw new Error('No active session');
+      }
 
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/manage-users`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ action: 'delete', userId })
-        }
-      );
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/manage-users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'delete',
+          userId,
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to delete user');
       }
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
@@ -132,23 +160,79 @@ export function UserManagement() {
         title: "Utilisateur supprimé",
         description: "L'utilisateur a été supprimé avec succès.",
       });
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
-        title: "Erreur",
-        description: "Impossible de supprimer l'utilisateur.",
         variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer l'utilisateur.",
       });
-      console.error('Error deleting user:', error);
-    }
+    },
+  });
+
+  const updatePasswordMutation = useMutation({
+    mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/manage-users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'update_password',
+          userId,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update password');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Mot de passe modifié",
+        description: "Le mot de passe a été modifié avec succès.",
+      });
+      setPasswordDialogOpen(false);
+      setUserToUpdatePassword(null);
+      setNewPassword('');
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de modifier le mot de passe.",
+      });
+    },
   });
 
   const handleAddUser = async () => {
     if (!newUserEmail) {
       toast({
-        title: "Erreur",
-        description: "Veuillez entrer un email.",
         variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez saisir une adresse email.",
+      });
+      return;
+    }
+
+    if (newUserPassword && newUserPassword.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Le mot de passe doit contenir au moins 6 caractères.",
       });
       return;
     }
@@ -158,6 +242,16 @@ export function UserManagement() {
       
       if (!session) throw new Error('No session');
 
+      const body: any = {
+        action: 'create',
+        email: newUserEmail,
+        role: newUserRole,
+      };
+
+      if (newUserPassword) {
+        body.password = newUserPassword;
+      }
+
       const response = await fetch(
         `${SUPABASE_URL}/functions/v1/manage-users`,
         {
@@ -166,7 +260,7 @@ export function UserManagement() {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ action: 'create', email: newUserEmail, role: newUserRole })
+          body: JSON.stringify(body)
         }
       );
 
@@ -183,6 +277,7 @@ export function UserManagement() {
       });
 
       setNewUserEmail('');
+      setNewUserPassword('');
       setNewUserRole('lecteur');
     } catch (error: any) {
       toast({
@@ -191,6 +286,21 @@ export function UserManagement() {
         variant: "destructive",
       });
       console.error('Error creating user:', error);
+    }
+  };
+
+  const handleUpdatePassword = () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Le mot de passe doit contenir au moins 6 caractères.",
+      });
+      return;
+    }
+
+    if (userToUpdatePassword) {
+      updatePasswordMutation.mutate({ userId: userToUpdatePassword, password: newPassword });
     }
   };
 
@@ -228,7 +338,7 @@ export function UserManagement() {
             <UserPlus className="h-4 w-4" />
             Ajouter un Utilisateur
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -237,6 +347,16 @@ export function UserManagement() {
                 placeholder="utilisateur@exemple.com"
                 value={newUserEmail}
                 onChange={(e) => setNewUserEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe (optionnel)</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Min. 6 caractères"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -258,6 +378,9 @@ export function UserManagement() {
               </Button>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Si aucun mot de passe n'est fourni, l'utilisateur recevra un email pour définir son mot de passe.
+          </p>
         </div>
 
         {/* Users List */}
@@ -289,9 +412,24 @@ export function UserManagement() {
                     </SelectContent>
                   </Select>
                   <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setUserToUpdatePassword(user.id);
+                      setPasswordDialogOpen(true);
+                    }}
+                    title="Modifier le mot de passe"
+                  >
+                    <Key className="h-4 w-4" />
+                  </Button>
+                  <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => deleteUserMutation.mutate(user.id)}
+                    onClick={() => {
+                      setUserToDelete(user.id);
+                      setDeleteDialogOpen(true);
+                    }}
+                    title="Supprimer l'utilisateur"
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -301,6 +439,66 @@ export function UserManagement() {
           </div>
         </div>
       </CardContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => userToDelete && deleteUserMutation.mutate(userToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le mot de passe</DialogTitle>
+            <DialogDescription>
+              Saisissez le nouveau mot de passe pour cet utilisateur. Le mot de passe doit contenir au moins 6 caractères.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nouveau mot de passe</Label>
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Minimum 6 caractères"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setPasswordDialogOpen(false);
+              setNewPassword('');
+            }}>
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleUpdatePassword}
+              disabled={updatePasswordMutation.isPending}
+            >
+              {updatePasswordMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Modifier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

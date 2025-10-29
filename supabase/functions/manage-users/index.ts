@@ -83,13 +83,19 @@ serve(async (req) => {
       }
 
       case 'create': {
-        const { email, role } = params;
+        const { email, role, password } = params;
         
-        // Create user
-        const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        // Create user with optional password
+        const createUserParams: any = {
           email,
           email_confirm: true,
-        });
+        };
+        
+        if (password) {
+          createUserParams.password = password;
+        }
+
+        const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser(createUserParams);
 
         if (createError) throw createError;
 
@@ -105,6 +111,29 @@ serve(async (req) => {
 
         return new Response(
           JSON.stringify({ success: true, user: { id: userData.user.id, email, role } }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'update_password': {
+        const { userId, password } = params;
+        
+        if (!password || password.length < 6) {
+          return new Response(
+            JSON.stringify({ error: 'Password must be at least 6 characters' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(
+          userId,
+          { password }
+        );
+
+        if (error) throw error;
+
+        return new Response(
+          JSON.stringify({ success: true }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
