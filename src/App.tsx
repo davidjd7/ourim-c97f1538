@@ -2,10 +2,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
-import Dashboard from "./pages/Dashboard";
+// import Dashboard from "./pages/Dashboard";
 import Investissements from "./pages/Investissements";
 import InvestissementDetail from "./pages/InvestissementDetail";
 import Dettes from "./pages/Dettes";
@@ -23,13 +23,14 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={
+          <Route path="/" element={<Navigate to="/investissements" replace />} />
+          {/* <Route path="/" element={
             <ProtectedRoute>
               <MainLayout>
                 <Dashboard />
               </MainLayout>
             </ProtectedRoute>
-          } />
+          } /> */}
           <Route path="/investissements" element={
             <ProtectedRoute>
               <MainLayout>

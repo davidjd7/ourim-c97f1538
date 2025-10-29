@@ -23,11 +23,11 @@ import {
 } from '@/components/ui/sidebar';
 
 const navigation = [
-  {
-    name: 'Dashboard',
-    href: '/',
-    icon: LayoutDashboard,
-  },
+  // {
+  //   name: 'Dashboard',
+  //   href: '/',
+  //   icon: LayoutDashboard,
+  // },
   {
     name: 'Investissements',
     href: '/investissements',
