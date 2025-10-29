@@ -59,7 +59,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         const { data, error } = await supabase
           .from('companies')
           .select('*')
-          .eq('user_id', user.id)
           .order('name');
 
         if (error) throw error;
@@ -122,8 +121,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('companies')
         .update({ name })
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('id', id);
 
       if (error) throw error;
 
@@ -145,8 +143,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('companies')
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('id', id);
 
       if (error) throw error;
 
