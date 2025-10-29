@@ -47,6 +47,56 @@ export default function Parametres() {
       setSettings(JSON.parse(savedSettings));
     }
   }, []);
+  // Bloquer l'accès si l'utilisateur n'est pas admin
+  if (roleLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Paramètres</h1>
+          <p className="text-lg text-muted-foreground">
+            Configuration de l'application Family Office
+          </p>
+        </div>
+        <Card className="card-financial">
+          <CardContent className="py-8">
+            <p className="text-center text-muted-foreground">Chargement...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (userRole !== 'admin') {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Paramètres</h1>
+          <p className="text-lg text-muted-foreground">
+            Configuration de l'application Family Office
+          </p>
+        </div>
+        <Card className="card-financial">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Accès Refusé
+            </CardTitle>
+            <CardDescription>
+              Cette page est réservée aux administrateurs
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12 text-muted-foreground">
+              <Settings className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <p className="text-lg mb-2">Accès non autorisé</p>
+              <p className="text-sm">Seuls les administrateurs peuvent accéder à cette page.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -91,39 +141,12 @@ export default function Parametres() {
           </Card>
         </TabsContent>
 
-
         <TabsContent value="tags" className="space-y-6">
           <TagsManagement />
         </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
-          {roleLoading ? (
-            <Card className="card-financial">
-              <CardContent className="py-8">
-                <p className="text-center text-muted-foreground">Chargement...</p>
-              </CardContent>
-            </Card>
-          ) : userRole === 'admin' ? (
-            <UserManagement />
-          ) : (
-            <Card className="card-financial">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  Gestion des Utilisateurs
-                </CardTitle>
-                <CardDescription>
-                  Administration des comptes et accès (ADMIN uniquement)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Fonctionnalité réservée aux administrateurs</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <UserManagement />
         </TabsContent>
 
         <TabsContent value="societes" className="space-y-6">
