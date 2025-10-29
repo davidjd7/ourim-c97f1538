@@ -8,9 +8,12 @@ import { Settings, Users, Building2, Tags } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CompanyManagement } from '@/components/companies/CompanyManagement';
 import { TagsManagement } from '@/components/settings/TagsManagement';
+import { UserManagement } from '@/components/settings/UserManagement';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export default function Parametres() {
   const { toast } = useToast();
+  const { userRole, isLoading: roleLoading } = useUserRole();
   
   // État pour les paramètres
   const [settings, setSettings] = useState({
@@ -94,23 +97,33 @@ export default function Parametres() {
         </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
-          <Card className="card-financial">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Gestion des Utilisateurs
-              </CardTitle>
-              <CardDescription>
-                Administration des comptes et accès (ADMIN uniquement)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Fonctionnalité réservée aux administrateurs</p>
-              </div>
-            </CardContent>
-          </Card>
+          {roleLoading ? (
+            <Card className="card-financial">
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">Chargement...</p>
+              </CardContent>
+            </Card>
+          ) : userRole === 'admin' ? (
+            <UserManagement />
+          ) : (
+            <Card className="card-financial">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Gestion des Utilisateurs
+                </CardTitle>
+                <CardDescription>
+                  Administration des comptes et accès (ADMIN uniquement)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Fonctionnalité réservée aux administrateurs</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="societes" className="space-y-6">

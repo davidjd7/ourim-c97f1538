@@ -18,19 +18,19 @@ export function useUserRole() {
           return;
         }
 
-        // For now, simulate role based on email since tables aren't ready
-        const email = user.email;
-        let role: UserRole = 'lecteur';
-        
-        if (email === 'd.dahan@h-dr.fr') {
-          role = 'admin';
-        } else if (email === 'a.dahan@h-dr.fr') {
-          role = 'analyste';
-        } else {
-          role = 'lecteur';
-        }
+        // Fetch user role from the user_roles table
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
 
-        setUserRole(role);
+        if (error) {
+          console.error('Error fetching user role:', error);
+          setUserRole('lecteur'); // Default to reader role
+        } else {
+          setUserRole(data.role as UserRole);
+        }
       } catch (error) {
         console.error('Error fetching user role:', error);
         setUserRole('lecteur'); // Default to reader role
