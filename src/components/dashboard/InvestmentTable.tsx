@@ -16,7 +16,7 @@ import { useInvestments } from '@/contexts/ImmobilierContext';
 import { useColumnVisibility } from '@/contexts/ColumnVisibilityContext';
 import { useColumnFilters } from '@/contexts/ColumnFiltersContext';
 import { useFilteredInvestments } from '@/hooks/useFilteredInvestments';
-import { useInvestmentTags } from '@/hooks/useInvestmentTags';
+import { useAllInvestmentTags } from '@/hooks/useAllInvestmentTags';
 import { useBatchPerformanceKPIs } from '@/hooks/useBatchPerformanceKPIs';
 import { ColumnSelector } from './ColumnSelector';
 import { InvestmentTags } from '@/components/investments/InvestmentTags';
@@ -41,13 +41,13 @@ export function InvestmentTable({
   const baseInvestments = filteredInvestments || investments;
   const { visibleColumns, isInitialized } = useColumnVisibility();
   const { hasActiveFilters, clearAllFilters } = useColumnFilters();
-  const { investmentTags } = useInvestmentTags();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   
   // Get investment IDs for batch loading
   const investmentIds = baseInvestments.map(inv => inv.id);
   const { batchKPIs, loading: kpisLoading } = useBatchPerformanceKPIs(investmentIds);
+  const { investmentTags, loading: tagsLoading } = useAllInvestmentTags(investmentIds);
   
   // Convert batch KPIs to legacy format for filtering with memoization
   const kpiMap: Record<string, any> = useMemo(() => {
