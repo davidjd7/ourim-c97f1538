@@ -488,7 +488,7 @@ export default function InvestissementDetail() {
            {/* XIRR */}
            <div className="card-financial">
              <div className="p-4">
-               <p className="text-sm text-muted-foreground font-bold mb-3">XIRR ({kpis.xirrDetails.years}Y)</p>
+               <p className="text-sm text-muted-foreground font-bold mb-3">IRR Leveraged ({kpis.xirrDetails.years}Y)</p>
                <div className="flex justify-between items-start">
                   <div className="flex flex-col">
                     <p className={`text-2xl font-bold ${kpis.xirr >= 0 ? 'text-success' : 'text-destructive'}`}>
