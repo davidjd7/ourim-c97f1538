@@ -1277,7 +1277,7 @@ export function PerformanceTab({
                                 </TooltipContent>
                               </Tooltip>
                             </TableHead>
-                            <TableHead className="text-xs text-center min-w-[80px]">XIRR glissant</TableHead>
+                            <TableHead className="text-xs text-center min-w-[80px]">XIRR Leveraged</TableHead>
                             <TableHead className="text-xs text-center min-w-[100px]">XIRR Unleveraged</TableHead>
                          </TableRow>
                       </TableHeader>
@@ -1585,7 +1585,7 @@ export function PerformanceTab({
                                  </TooltipContent>
                                </Tooltip>
                              </TableHead>
-                             <TableHead className="text-xs text-center">XIRR glissant</TableHead>
+                             <TableHead className="text-xs text-center">XIRR Leveraged</TableHead>
                              <TableHead className="text-xs text-center">XIRR Unleveraged</TableHead>
                           </TableRow>
                        </TableHeader>
@@ -1835,7 +1835,7 @@ export function PerformanceTab({
                                 {avgTotalReturn.toFixed(1)}%
                               </TableCell>
                               <TableCell className="financial-value text-xs text-center">
-                                {/* Pas de total pour le XIRR glissant */}
+                                {/* Pas de total pour le XIRR Leveraged */}
                               </TableCell>
                               <TableCell className="financial-value text-xs text-center">
                                 {/* Pas de total pour le XIRR Unleveraged */}
