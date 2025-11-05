@@ -19,7 +19,7 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
   { key: 'tags', label: 'Tags', visible: true, sortable: false, align: 'left', type: 'text', order: 3 },
   { key: 'fondPropre', label: 'Fond Propre', visible: true, sortable: true, align: 'right', type: 'currency', order: 4 },
   { key: 'totalReturn', label: 'Total Return', visible: true, sortable: true, align: 'right', type: 'percentage', order: 5 },
-  { key: 'xirr', label: 'XIRR glissant', visible: true, sortable: true, align: 'right', type: 'percentage', order: 6 },
+  { key: 'xirr', label: 'IRR Leveraged', visible: true, sortable: true, align: 'right', type: 'percentage', order: 6 },
   // Nouvelles colonnes (masquées par défaut)
   { key: 'coc', label: 'COC', visible: false, sortable: true, align: 'right', type: 'percentage', order: 7 },
   { key: 'totalCfni', label: 'Total CFNI', visible: false, sortable: true, align: 'right', type: 'currency', order: 8 },
