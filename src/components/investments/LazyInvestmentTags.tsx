@@ -9,6 +9,7 @@ const InvestmentTagsComponent = lazy(() =>
 
 interface LazyInvestmentTagsProps {
   investmentId: string;
+  showAddButton?: boolean;
 }
 
 const TagsSkeleton = () => (
@@ -18,10 +19,10 @@ const TagsSkeleton = () => (
   </div>
 );
 
-export function LazyInvestmentTags({ investmentId }: LazyInvestmentTagsProps) {
+export function LazyInvestmentTags({ investmentId, showAddButton = true }: LazyInvestmentTagsProps) {
   return (
     <Suspense fallback={<TagsSkeleton />}>
-      <InvestmentTagsComponent investmentId={investmentId} />
+      <InvestmentTagsComponent investmentId={investmentId} showAddButton={showAddButton} />
     </Suspense>
   );
 }

@@ -55,7 +55,7 @@ export const InvestmentKPIRow = React.memo(({
           new Date(investment.dateInvestment).toLocaleDateString('fr-FR') : 
           '-';
       case 'tags':
-        return <LazyInvestmentTags investmentId={investment.id} />;
+        return <LazyInvestmentTags investmentId={investment.id} showAddButton={false} />;
       case 'fondPropre':
         return formatCurrency(kpis?.fondPropre || 0);
       case 'totalReturn':

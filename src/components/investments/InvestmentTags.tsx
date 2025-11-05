@@ -10,9 +10,10 @@ import { useUserRole } from '@/hooks/useUserRole';
 
 interface InvestmentTagsProps {
   investmentId: string;
+  showAddButton?: boolean;
 }
 
-export function InvestmentTags({ investmentId }: InvestmentTagsProps) {
+export function InvestmentTags({ investmentId, showAddButton = true }: InvestmentTagsProps) {
   const [open, setOpen] = useState(false);
   const { canEdit } = useUserRole();
   const { investmentTags, addTagToInvestment, removeTagFromInvestment, loading: tagsLoading } = useInvestmentTags(investmentId);
@@ -39,10 +40,15 @@ export function InvestmentTags({ investmentId }: InvestmentTagsProps) {
     </div>;
   }
 
+  // Sort tags alphabetically by name
+  const sortedTags = [...investmentTags].sort((a, b) => 
+    a.tag.name.localeCompare(b.tag.name, 'fr')
+  );
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {/* Display current tags */}
-      {investmentTags.map((investmentTag) => (
+      {sortedTags.map((investmentTag) => (
         <Badge 
           key={investmentTag.id}
           variant="secondary"
@@ -67,7 +73,7 @@ export function InvestmentTags({ investmentId }: InvestmentTagsProps) {
       ))}
 
       {/* Add tag button */}
-      {canEdit && (
+      {canEdit && showAddButton && (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button 
