@@ -1334,10 +1334,10 @@ export function PerformanceTab({
                               // Premier flux: -valeur de la première année
                               unleveragedFlows.push({
                                 date: firstRow.date,
-                                flux: -firstRow.valeur,
-                                valeur: 0,
+                                flux: 0,
+                                valeur: firstRow.valeur,
                                 crd: 0,
-                                fp: 0
+                                fp: firstRow.valeur // calculateXIRR utilisera -fp => -valeur
                               });
                               
                               // Flux intermédiaires: NOI ajusté de chaque année (de l'année 2 à l'année n-1)
@@ -1363,10 +1363,10 @@ export function PerformanceTab({
                               // Dernier flux: valeur courante + NOI ajusté courant
                               unleveragedFlows.push({
                                 date: row.date,
-                                flux: row.valeur + noiAjuste,
-                                valeur: 0,
+                                flux: noiAjuste,
+                                valeur: row.valeur,
                                 crd: 0,
-                                fp: 0
+                                fp: row.valeur // calculateXIRR fera flux + fp => valeur + NOI
                               });
                               
                               // Calculer le XIRR
@@ -1650,43 +1650,43 @@ export function PerformanceTab({
                              const firstRow = syntheseData[0];
                              const unleveragedFlows: SyntheseRow[] = [];
                              
-                             // Premier flux: -valeur de la première année
-                             unleveragedFlows.push({
-                               date: firstRow.date,
-                               flux: -firstRow.valeur,
-                               valeur: 0,
-                               crd: 0,
-                               fp: 0
-                             });
-                             
-                             // Flux intermédiaires: NOI ajusté de chaque année (de l'année 2 à l'année n-1)
-                             for (let i = 1; i < index; i++) {
-                               const currentRow = syntheseData[i];
-                               
-                               // Calculer le NOI ajusté pour cette ligne
-                               const cashflowRow = cashflows.find(cf => cf.date === currentRow.date);
-                               const ebitdaRow = cashflowRow ? calculateEBITDA(cashflowRow) : 0;
-                               const immobilisationRow = immobilisations.find(immo => immo.date === currentRow.date);
-                               const immobilisationAmountRow = immobilisationRow?.montant || 0;
-                               const noiAjusteRow = ebitdaRow - immobilisationAmountRow;
-                               
-                               unleveragedFlows.push({
-                                 date: currentRow.date,
-                                 flux: noiAjusteRow,
-                                 valeur: 0,
-                                 crd: 0,
-                                 fp: 0
-                               });
-                             }
-                             
-                             // Dernier flux: valeur courante + NOI ajusté courant
-                             unleveragedFlows.push({
-                               date: row.date,
-                               flux: row.valeur + noiAjuste,
-                               valeur: 0,
-                               crd: 0,
-                               fp: 0
-                             });
+                              // Premier flux: -valeur de la première année
+                              unleveragedFlows.push({
+                                date: firstRow.date,
+                                flux: 0,
+                                valeur: firstRow.valeur,
+                                crd: 0,
+                                fp: firstRow.valeur // calculateXIRR utilisera -fp => -valeur
+                              });
+                              
+                              // Flux intermédiaires: NOI ajusté de chaque année (de l'année 2 à l'année n-1)
+                              for (let i = 1; i < index; i++) {
+                                const currentRow = syntheseData[i];
+                                
+                                // Calculer le NOI ajusté pour cette ligne
+                                const cashflowRow = cashflows.find(cf => cf.date === currentRow.date);
+                                const ebitdaRow = cashflowRow ? calculateEBITDA(cashflowRow) : 0;
+                                const immobilisationRow = immobilisations.find(immo => immo.date === currentRow.date);
+                                const immobilisationAmountRow = immobilisationRow?.montant || 0;
+                                const noiAjusteRow = ebitdaRow - immobilisationAmountRow;
+                                
+                                unleveragedFlows.push({
+                                  date: currentRow.date,
+                                  flux: noiAjusteRow,
+                                  valeur: 0,
+                                  crd: 0,
+                                  fp: 0
+                                });
+                              }
+                              
+                              // Dernier flux: valeur courante + NOI ajusté courant
+                              unleveragedFlows.push({
+                                date: row.date,
+                                flux: noiAjuste,
+                                valeur: row.valeur,
+                                crd: 0,
+                                fp: row.valeur // calculateXIRR fera flux + fp => valeur + NOI
+                              });
                              
                              // Calculer le XIRR
                              xirrUnleveraged = unleveragedFlows.length >= 2 ? calculateXIRR(unleveragedFlows) : 0;
