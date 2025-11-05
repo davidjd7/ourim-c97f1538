@@ -1286,6 +1286,7 @@ export function PerformanceTab({
                               </Tooltip>
                             </TableHead>
                             <TableHead className="text-xs text-center min-w-[80px]">XIRR glissant</TableHead>
+                            <TableHead className="text-xs text-center min-w-[100px]">XIRR Unleveraged</TableHead>
                          </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1321,6 +1322,48 @@ export function PerformanceTab({
                              
                            // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
                            const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
+                           
+                           // Calcul XIRR Unleveraged (basé uniquement sur les valeurs)
+                           let xirrUnleveraged = 0;
+                           if (index >= 1) {
+                             const firstRow = syntheseData[0];
+                             const unleveragedFlows: SyntheseRow[] = [];
+                             
+                             // 1. Valeur la plus ancienne (négative, comme un investissement)
+                             unleveragedFlows.push({
+                               date: firstRow.date,
+                               flux: -firstRow.valeur,
+                               valeur: 0,
+                               crd: 0,
+                               fp: 0
+                             });
+                             
+                             // 2. Gains de chaque année (variation de valeur)
+                             for (let i = 1; i <= index; i++) {
+                               const currentRow = syntheseData[i];
+                               const prevRow = syntheseData[i - 1];
+                               const yearGain = currentRow.valeur - prevRow.valeur;
+                               unleveragedFlows.push({
+                                 date: currentRow.date,
+                                 flux: yearGain,
+                                 valeur: 0,
+                                 crd: 0,
+                                 fp: 0
+                               });
+                             }
+                             
+                             // 3. Valeur la plus récente (positive, comme un retour final)
+                             unleveragedFlows.push({
+                               date: row.date,
+                               flux: row.valeur,
+                               valeur: 0,
+                               crd: 0,
+                               fp: 0
+                             });
+                             
+                             // Calculer le XIRR avec ces flux
+                             xirrUnleveraged = unleveragedFlows.length >= 2 ? calculateXIRR(unleveragedFlows) : 0;
+                           }
                               
                               // Calcul Total Return = Gain 1 / FP
                               const totalReturn = row.fp > 0 ? (gain1 / row.fp) * 100 : 0;
@@ -1364,6 +1407,9 @@ export function PerformanceTab({
                                 </TableCell>
                                 <TableCell className="financial-value font-medium text-xs text-center">
                                   {xirrGlissant.toFixed(1)}%
+                                </TableCell>
+                                <TableCell className={`financial-value font-medium text-xs text-center ${xirrUnleveraged >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                  {xirrUnleveraged.toFixed(1)}%
                                 </TableCell>
                              </TableRow>;
                           })}
@@ -1551,6 +1597,7 @@ export function PerformanceTab({
                                </Tooltip>
                              </TableHead>
                              <TableHead className="text-xs text-center">XIRR glissant</TableHead>
+                             <TableHead className="text-xs text-center">XIRR Unleveraged</TableHead>
                           </TableRow>
                        </TableHeader>
                   <TableBody>
@@ -1586,6 +1633,48 @@ export function PerformanceTab({
                          
                           // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
                           const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
+                          
+                          // Calcul XIRR Unleveraged (basé uniquement sur les valeurs)
+                          let xirrUnleveraged = 0;
+                          if (index >= 1) {
+                            const firstRow = syntheseData[0];
+                            const unleveragedFlows: SyntheseRow[] = [];
+                            
+                            // 1. Valeur la plus ancienne (négative, comme un investissement)
+                            unleveragedFlows.push({
+                              date: firstRow.date,
+                              flux: -firstRow.valeur,
+                              valeur: 0,
+                              crd: 0,
+                              fp: 0
+                            });
+                            
+                            // 2. Gains de chaque année (variation de valeur)
+                            for (let i = 1; i <= index; i++) {
+                              const currentRow = syntheseData[i];
+                              const prevRow = syntheseData[i - 1];
+                              const yearGain = currentRow.valeur - prevRow.valeur;
+                              unleveragedFlows.push({
+                                date: currentRow.date,
+                                flux: yearGain,
+                                valeur: 0,
+                                crd: 0,
+                                fp: 0
+                              });
+                            }
+                            
+                            // 3. Valeur la plus récente (positive, comme un retour final)
+                            unleveragedFlows.push({
+                              date: row.date,
+                              flux: row.valeur,
+                              valeur: 0,
+                              crd: 0,
+                              fp: 0
+                            });
+                            
+                            // Calculer le XIRR avec ces flux
+                            xirrUnleveraged = unleveragedFlows.length >= 2 ? calculateXIRR(unleveragedFlows) : 0;
+                          }
                           
                           // Calcul Total Return = Gain 1 / FP
                           const totalReturn = row.fp > 0 ? (gain1 / row.fp) * 100 : 0;
@@ -1630,10 +1719,13 @@ export function PerformanceTab({
                             <TableCell className={`financial-value text-xs text-center ${xirrGlissant >= 0 ? 'text-success' : 'text-destructive'}`}>
                               {xirrGlissant.toFixed(1)}%
                             </TableCell>
+                            <TableCell className={`financial-value text-xs text-center ${xirrUnleveraged >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {xirrUnleveraged.toFixed(1)}%
+                            </TableCell>
                          </TableRow>
                        })}
                        {getSyntheseData().length === 0 && <TableRow>
-                            <TableCell colSpan={13} className="text-center py-8 text-muted-foreground text-xs">
+                            <TableCell colSpan={14} className="text-center py-8 text-muted-foreground text-xs">
                               Aucune donnée disponible pour la synthèse
                             </TableCell>
                          </TableRow>}
@@ -1753,6 +1845,9 @@ export function PerformanceTab({
                               </TableCell>
                               <TableCell className="financial-value text-xs text-center">
                                 {/* Pas de total pour le XIRR glissant */}
+                              </TableCell>
+                              <TableCell className="financial-value text-xs text-center">
+                                {/* Pas de total pour le XIRR Unleveraged */}
                               </TableCell>
                             </TableRow>
                           );
