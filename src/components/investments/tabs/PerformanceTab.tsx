@@ -1263,7 +1263,7 @@ export function PerformanceTab({
                             </TableHead>
                             <TableHead className="text-xs text-center min-w-[70px]">
                               <Tooltip>
-                                <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                                <TooltipTrigger className="cursor-help">Gain</TooltipTrigger>
                                 <TooltipContent>
                                   <p>Delta FP + CF</p>
                                 </TooltipContent>
@@ -1273,7 +1273,7 @@ export function PerformanceTab({
                               <Tooltip>
                                 <TooltipTrigger className="cursor-help">Total Return</TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Gain 1 / FP</p>
+                                  <p>Gain / FP</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TableHead>
@@ -1571,7 +1571,7 @@ export function PerformanceTab({
                              </TableHead>
                              <TableHead className="text-xs text-center">
                                <Tooltip>
-                                 <TooltipTrigger className="cursor-help">Gain 1</TooltipTrigger>
+                                 <TooltipTrigger className="cursor-help">Gain</TooltipTrigger>
                                  <TooltipContent>
                                    <p>Delta FP + CF</p>
                                  </TooltipContent>
@@ -1581,7 +1581,7 @@ export function PerformanceTab({
                                <Tooltip>
                                  <TooltipTrigger className="cursor-help">Total Return</TooltipTrigger>
                                  <TooltipContent>
-                                   <p>Gain 1 / FP</p>
+                                   <p>Gain / FP</p>
                                  </TooltipContent>
                                </Tooltip>
                              </TableHead>
