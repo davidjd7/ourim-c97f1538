@@ -282,6 +282,50 @@ export function ConsolidatedKPIView({
       // Calculate rolling XIRR up to this point
       const rollingData = consolidatedSynthesis.slice(0, index + 1);
       const rollingXirr = rollingData.length >= 2 ? calculateXIRR(rollingData) : 0;
+
+      // Calculate unleveraged XIRR based on values only
+      // Sequence: - oldest value, gains per year, + most recent value
+      let xirrUnleveraged = 0;
+      if (index >= 1) {
+        const firstRow = consolidatedSynthesis[0] as any;
+        const unleveragedFlows: ConsolidatedRow[] = [];
+        
+        // 1. Oldest value (negative, like an investment)
+        unleveragedFlows.push({
+          date: firstRow.date,
+          cashFlow: -firstRow.valeur,
+          valeur: 0,
+          crd: 0,
+          fp: 0
+        });
+        
+        // 2. Gains for each year (using deltaValeur for each year)
+        for (let i = 1; i <= index; i++) {
+          const currentRow = consolidatedSynthesis[i] as any;
+          const prevRow = consolidatedSynthesis[i - 1] as any;
+          const yearGain = currentRow.valeur - prevRow.valeur;
+          unleveragedFlows.push({
+            date: currentRow.date,
+            cashFlow: yearGain,
+            valeur: 0,
+            crd: 0,
+            fp: 0
+          });
+        }
+        
+        // 3. Most recent value (positive, like a final return)
+        unleveragedFlows.push({
+          date: row.date,
+          cashFlow: row.valeur,
+          valeur: 0,
+          crd: 0,
+          fp: 0
+        });
+        
+        // Calculate XIRR with these flows
+        xirrUnleveraged = unleveragedFlows.length >= 2 ? calculateXIRR(unleveragedFlows) : 0;
+      }
+
       return {
         date: row.date,
         valeur: row.valeur,
@@ -295,7 +339,8 @@ export function ConsolidatedKPIView({
         gain1,
         gain2,
         totalReturn,
-        xirrGlissant: rollingXirr
+        xirrGlissant: rollingXirr,
+        xirrUnleveraged
       };
     });
   }, [consolidatedSynthesis]);
@@ -452,6 +497,7 @@ export function ConsolidatedKPIView({
                   <TableHead className="text-right">Gain 1</TableHead>
                   <TableHead className="text-right">Total ROE</TableHead>
                   <TableHead className="text-right">XIRR glissant</TableHead>
+                  <TableHead className="text-right">XIRR Unleveraged</TableHead>
                 </tr>
               </TableHeader>
               <TableBody>
@@ -479,6 +525,9 @@ export function ConsolidatedKPIView({
                     </TableCell>
                     <TableCell className={`text-right ${getValueClass(row.xirrGlissant)}`}>
                       {formatPercentage(row.xirrGlissant)}
+                    </TableCell>
+                    <TableCell className={`text-right ${getValueClass(row.xirrUnleveraged)}`}>
+                      {formatPercentage(row.xirrUnleveraged)}
                     </TableCell>
                   </TableRow>)}
                 
@@ -512,6 +561,9 @@ export function ConsolidatedKPIView({
                       {formatPercentage(syntheticTableData.filter(row => row.totalReturn !== 0).reduce((sum, row) => sum + row.totalReturn, 0) / syntheticTableData.filter(row => row.totalReturn !== 0).length || 0)}
                     </TableCell>
                     <TableCell className="text-right">-</TableCell>
+                    <TableCell className="text-right">
+                      {formatPercentage(syntheticTableData.filter(row => row.xirrUnleveraged !== 0).reduce((sum, row) => sum + row.xirrUnleveraged, 0) / syntheticTableData.filter(row => row.xirrUnleveraged !== 0).length || 0)}
+                    </TableCell>
                   </TableRow>}
               </TableBody>
             </Table>
