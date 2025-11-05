@@ -514,7 +514,7 @@ export function ConsolidatedCharts({
           <CardHeader>
             <CardTitle>Évolution Temporelle</CardTitle>
             <CardDescription>
-              Evolution par année avec courbe consolidée sur axe droit
+              Evolution par année de la courbe consolidée
             </CardDescription>
             <div className="space-y-3 mt-4">
               <div className="flex items-center space-x-6">
@@ -556,11 +556,9 @@ export function ConsolidatedCharts({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="year" />
                   <YAxis yAxisId="left" tickFormatter={value => formatCurrency(value)} />
-                  <YAxis yAxisId="right" orientation="right" tickFormatter={value => formatCurrency(value)} />
-                  <Tooltip formatter={(value, name) => [formatCurrency(value as number), name === 'consolidated' ? 'Consolidé' : investments.find(inv => inv.id === name)?.name || name]} labelFormatter={label => `Année ${label}`} />
+                  <Tooltip formatter={(value) => [formatCurrency(value as number), 'Consolidé']} labelFormatter={label => `Année ${label}`} />
                   <Legend />
-                  {Array.from(selectedInvestments).map((investmentId, index) => <Line key={investmentId} yAxisId="left" type="monotone" dataKey={investmentId} stroke={COLORS[index % COLORS.length]} strokeWidth={2} strokeDasharray="5 5" name={investments.find(inv => inv.id === investmentId)?.name || `Inv. ${investmentId.slice(0, 8)}`} />)}
-                  <Line yAxisId="right" type="monotone" dataKey="consolidated" stroke="hsl(var(--primary))" strokeWidth={3} name="Consolidé" />
+                  <Line yAxisId="left" type="monotone" dataKey="consolidated" stroke="hsl(var(--primary))" strokeWidth={3} name="Consolidé" />
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
