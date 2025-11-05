@@ -1323,63 +1323,55 @@ export function PerformanceTab({
                            // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
                            const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
                            
-                           // Calcul XIRR Unleveraged (basé uniquement sur les valeurs)
-                           let xirrUnleveraged = 0;
-                           if (index >= 1) {
-                             const firstRow = syntheseData[0];
-                             const unleveragedFlows: SyntheseRow[] = [];
-                             
-                             // 1. Valeur la plus ancienne (négative, comme un investissement)
-                             unleveragedFlows.push({
-                               date: firstRow.date,
-                               flux: -firstRow.valeur,
-                               valeur: 0,
-                               crd: 0,
-                               fp: 0
-                             });
-                             
-                            // 2. Gains de chaque année (Gain 1)
-                            for (let i = 1; i <= index; i++) {
-                              const currentRow = syntheseData[i];
-                              const prevRow = syntheseData[i - 1];
+                            // Calcul XIRR Unleveraged glissant
+                            let xirrUnleveraged = 0;
+                            if (index === 0) {
+                              xirrUnleveraged = 0; // Première année: 0 par défaut
+                            } else {
+                              const firstRow = syntheseData[0];
+                              const unleveragedFlows: SyntheseRow[] = [];
                               
-                              // Recalculer Gain 1 pour cette année
-                              const debtFlowYear = debtFlows.find(debt => debt.date === currentRow.date);
-                              const rmbtCapitalYear = debtFlowYear?.rmbtCapital || 0;
-                              const rmbtInteretYear = debtFlowYear?.rmbtInteret || 0;
-                              
-                              const cashflowYear = cashflows.find(cf => cf.date === currentRow.date);
-                              const ebitdaYear = cashflowYear ? calculateEBITDA(cashflowYear) : 0;
-                              const immobilisationYear = immobilisations.find(immo => immo.date === currentRow.date);
-                              const immobilisationAmountYear = immobilisationYear?.montant || 0;
-                              const noiAjusteYear = ebitdaYear - immobilisationAmountYear;
-                              const cfniYear = noiAjusteYear - rmbtInteretYear;
-                              const cfYear = cfniYear - rmbtCapitalYear;
-                              
-                              const variationFPYear = currentRow.fp - prevRow.fp;
-                              const yearGain1 = variationFPYear + cfYear; // Gain 1 = Variation FP + CF
-                              
+                              // Premier flux: -valeur de la première année
                               unleveragedFlows.push({
-                                date: currentRow.date,
-                                flux: yearGain1,
+                                date: firstRow.date,
+                                flux: -firstRow.valeur,
                                 valeur: 0,
                                 crd: 0,
                                 fp: 0
                               });
+                              
+                              // Flux intermédiaires: NOI ajusté de chaque année (de l'année 2 à l'année n-1)
+                              for (let i = 1; i < index; i++) {
+                                const currentRow = syntheseData[i];
+                                
+                                // Calculer le NOI ajusté pour cette ligne
+                                const cashflowRow = cashflows.find(cf => cf.date === currentRow.date);
+                                const ebitdaRow = cashflowRow ? calculateEBITDA(cashflowRow) : 0;
+                                const immobilisationRow = immobilisations.find(immo => immo.date === currentRow.date);
+                                const immobilisationAmountRow = immobilisationRow?.montant || 0;
+                                const noiAjusteRow = ebitdaRow - immobilisationAmountRow;
+                                
+                                unleveragedFlows.push({
+                                  date: currentRow.date,
+                                  flux: noiAjusteRow,
+                                  valeur: 0,
+                                  crd: 0,
+                                  fp: 0
+                                });
+                              }
+                              
+                              // Dernier flux: valeur courante + NOI ajusté courant
+                              unleveragedFlows.push({
+                                date: row.date,
+                                flux: row.valeur + noiAjuste,
+                                valeur: 0,
+                                crd: 0,
+                                fp: 0
+                              });
+                              
+                              // Calculer le XIRR
+                              xirrUnleveraged = unleveragedFlows.length >= 2 ? calculateXIRR(unleveragedFlows) : 0;
                             }
-                             
-                             // 3. Valeur la plus récente (positive, comme un retour final)
-                             unleveragedFlows.push({
-                               date: row.date,
-                               flux: row.valeur,
-                               valeur: 0,
-                               crd: 0,
-                               fp: 0
-                             });
-                             
-                             // Calculer le XIRR avec ces flux
-                             xirrUnleveraged = unleveragedFlows.length >= 2 ? calculateXIRR(unleveragedFlows) : 0;
-                           }
                               
                               // Calcul Total Return = Gain 1 / FP
                               const totalReturn = row.fp > 0 ? (gain1 / row.fp) * 100 : 0;
@@ -1650,63 +1642,55 @@ export function PerformanceTab({
                           // Calcul XIRR glissant (depuis le début jusqu'à cette ligne)
                           const xirrGlissant = index > 0 ? calculateXIRR(syntheseData.slice(0, index + 1)) : 0;
                           
-                          // Calcul XIRR Unleveraged (basé uniquement sur les valeurs)
-                          let xirrUnleveraged = 0;
-                          if (index >= 1) {
-                            const firstRow = syntheseData[0];
-                            const unleveragedFlows: SyntheseRow[] = [];
-                            
-                            // 1. Valeur la plus ancienne (négative, comme un investissement)
-                            unleveragedFlows.push({
-                              date: firstRow.date,
-                              flux: -firstRow.valeur,
-                              valeur: 0,
-                              crd: 0,
-                              fp: 0
-                            });
-                            
-                           // 2. Gains de chaque année (Gain 1)
-                           for (let i = 1; i <= index; i++) {
-                             const currentRow = syntheseData[i];
-                             const prevRow = syntheseData[i - 1];
+                           // Calcul XIRR Unleveraged glissant
+                           let xirrUnleveraged = 0;
+                           if (index === 0) {
+                             xirrUnleveraged = 0; // Première année: 0 par défaut
+                           } else {
+                             const firstRow = syntheseData[0];
+                             const unleveragedFlows: SyntheseRow[] = [];
                              
-                             // Recalculer Gain 1 pour cette année
-                             const debtFlowYear = debtFlows.find(debt => debt.date === currentRow.date);
-                             const rmbtCapitalYear = debtFlowYear?.rmbtCapital || 0;
-                             const rmbtInteretYear = debtFlowYear?.rmbtInteret || 0;
-                             
-                             const cashflowYear = cashflows.find(cf => cf.date === currentRow.date);
-                             const ebitdaYear = cashflowYear ? calculateEBITDA(cashflowYear) : 0;
-                             const immobilisationYear = immobilisations.find(immo => immo.date === currentRow.date);
-                             const immobilisationAmountYear = immobilisationYear?.montant || 0;
-                             const noiAjusteYear = ebitdaYear - immobilisationAmountYear;
-                             const cfniYear = noiAjusteYear - rmbtInteretYear;
-                             const cfYear = cfniYear - rmbtCapitalYear;
-                             
-                             const variationFPYear = currentRow.fp - prevRow.fp;
-                             const yearGain1 = variationFPYear + cfYear; // Gain 1 = Variation FP + CF
-                             
+                             // Premier flux: -valeur de la première année
                              unleveragedFlows.push({
-                               date: currentRow.date,
-                               flux: yearGain1,
+                               date: firstRow.date,
+                               flux: -firstRow.valeur,
                                valeur: 0,
                                crd: 0,
                                fp: 0
                              });
+                             
+                             // Flux intermédiaires: NOI ajusté de chaque année (de l'année 2 à l'année n-1)
+                             for (let i = 1; i < index; i++) {
+                               const currentRow = syntheseData[i];
+                               
+                               // Calculer le NOI ajusté pour cette ligne
+                               const cashflowRow = cashflows.find(cf => cf.date === currentRow.date);
+                               const ebitdaRow = cashflowRow ? calculateEBITDA(cashflowRow) : 0;
+                               const immobilisationRow = immobilisations.find(immo => immo.date === currentRow.date);
+                               const immobilisationAmountRow = immobilisationRow?.montant || 0;
+                               const noiAjusteRow = ebitdaRow - immobilisationAmountRow;
+                               
+                               unleveragedFlows.push({
+                                 date: currentRow.date,
+                                 flux: noiAjusteRow,
+                                 valeur: 0,
+                                 crd: 0,
+                                 fp: 0
+                               });
+                             }
+                             
+                             // Dernier flux: valeur courante + NOI ajusté courant
+                             unleveragedFlows.push({
+                               date: row.date,
+                               flux: row.valeur + noiAjuste,
+                               valeur: 0,
+                               crd: 0,
+                               fp: 0
+                             });
+                             
+                             // Calculer le XIRR
+                             xirrUnleveraged = unleveragedFlows.length >= 2 ? calculateXIRR(unleveragedFlows) : 0;
                            }
-                            
-                            // 3. Valeur la plus récente (positive, comme un retour final)
-                            unleveragedFlows.push({
-                              date: row.date,
-                              flux: row.valeur,
-                              valeur: 0,
-                              crd: 0,
-                              fp: 0
-                            });
-                            
-                            // Calculer le XIRR avec ces flux
-                            xirrUnleveraged = unleveragedFlows.length >= 2 ? calculateXIRR(unleveragedFlows) : 0;
-                          }
                           
                           // Calcul Total Return = Gain 1 / FP
                           const totalReturn = row.fp > 0 ? (gain1 / row.fp) * 100 : 0;
