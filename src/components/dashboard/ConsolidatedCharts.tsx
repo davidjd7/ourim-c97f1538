@@ -189,10 +189,11 @@ export function ConsolidatedCharts({
     if (evolutionDisplay === 'cumule') {
       const cumulativeData = [];
       const cumulatives = {};
-      
       sortedData.forEach(yearData => {
-        const newYearData = { year: yearData.year };
-        
+        const newYearData = {
+          year: yearData.year
+        };
+
         // Accumulate consolidated
         if (cumulatives['consolidated'] === undefined) {
           cumulatives['consolidated'] = yearData.consolidated;
@@ -200,7 +201,7 @@ export function ConsolidatedCharts({
           cumulatives['consolidated'] += yearData.consolidated;
         }
         newYearData['consolidated'] = cumulatives['consolidated'];
-        
+
         // Accumulate individual investments
         Object.keys(yearData).forEach(key => {
           if (key !== 'year' && key !== 'consolidated') {
@@ -212,13 +213,10 @@ export function ConsolidatedCharts({
             newYearData[key] = cumulatives[key];
           }
         });
-        
         cumulativeData.push(newYearData);
       });
-      
       return cumulativeData;
     }
-    
     return sortedData;
   }, [syntheticTableData, rawByInvestment, evolutionType, evolutionDisplay, investments, cutoffYear]);
 
@@ -234,9 +232,13 @@ export function ConsolidatedCharts({
         rendementNet: kpis?.rendementNet || 0
       };
     }).filter(r => r.rendementNet !== 0);
-
-    if (rendementDetails.length === 0) return { bins: [], normalCurve: [], median: 0, mean: 0, stdDev: 0 };
-
+    if (rendementDetails.length === 0) return {
+      bins: [],
+      normalCurve: [],
+      median: 0,
+      mean: 0,
+      stdDev: 0
+    };
     const rendements = rendementDetails.map(r => r.rendementNet);
 
     // Calculate statistics
@@ -247,21 +249,40 @@ export function ConsolidatedCharts({
     const median = sortedRendements[Math.floor(sortedRendements.length / 2)];
 
     // Fixed bin ranges
-    const fixedBins = [
-      { start: 5.5, end: 6.5, label: '5,5 – 6,5 %' },
-      { start: 6.5, end: 7.5, label: '6,5 – 7,5 %' },
-      { start: 7.5, end: 8.5, label: '7,5 – 8,5 %' },
-      { start: 8.5, end: 9.5, label: '8,5 – 9,5 %' },
-      { start: 9.5, end: 10.5, label: '9,5 – 10,5 %' },
-      { start: 10.5, end: 11.5, label: '10,5 – 11,5 %' },
-      { start: 11.5, end: 12.5, label: '11,5 – 12,5 %' }
-    ];
+    const fixedBins = [{
+      start: 5.5,
+      end: 6.5,
+      label: '5,5 – 6,5 %'
+    }, {
+      start: 6.5,
+      end: 7.5,
+      label: '6,5 – 7,5 %'
+    }, {
+      start: 7.5,
+      end: 8.5,
+      label: '7,5 – 8,5 %'
+    }, {
+      start: 8.5,
+      end: 9.5,
+      label: '8,5 – 9,5 %'
+    }, {
+      start: 9.5,
+      end: 10.5,
+      label: '9,5 – 10,5 %'
+    }, {
+      start: 10.5,
+      end: 11.5,
+      label: '10,5 – 11,5 %'
+    }, {
+      start: 11.5,
+      end: 12.5,
+      label: '11,5 – 12,5 %'
+    }];
 
     // Create bins with fixed ranges and investment details
     const allBins = fixedBins.map(bin => {
       const binCenter = (bin.start + bin.end) / 2;
       const investmentsInBin = rendementDetails.filter(r => r.rendementNet >= bin.start && r.rendementNet < bin.end);
-      
       return {
         range: bin.label,
         binCenter,
@@ -277,17 +298,19 @@ export function ConsolidatedCharts({
     const binSize = 1; // Fixed bin size of 1%
     const normalCurve = bins.map(bin => {
       const x = bin.binCenter;
-      const normalValue = (rendements.length * binSize) * 
-        Math.exp(-Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2))) / 
-        (stdDev * Math.sqrt(2 * Math.PI));
-      
+      const normalValue = rendements.length * binSize * Math.exp(-Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2))) / (stdDev * Math.sqrt(2 * Math.PI));
       return {
         binCenter: bin.binCenter,
         normalValue
       };
     });
-
-    return { bins, normalCurve, median, mean, stdDev };
+    return {
+      bins,
+      normalCurve,
+      median,
+      mean,
+      stdDev
+    };
   }, [selectedInvestments, batchKPIs]);
 
   // 4. Donut Data (Value Distribution)
@@ -556,8 +579,8 @@ export function ConsolidatedCharts({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="year" />
                   <YAxis yAxisId="left" tickFormatter={value => formatCurrency(value)} />
-                  <Tooltip formatter={(value) => [formatCurrency(value as number), 'Consolidé']} labelFormatter={label => `Année ${label}`} />
-                  <Legend />
+                  <Tooltip formatter={value => [formatCurrency(value as number), 'Consolidé']} labelFormatter={label => `Année ${label}`} />
+                  
                   <Line yAxisId="left" type="monotone" dataKey="consolidated" stroke="hsl(var(--primary))" strokeWidth={3} name="Consolidé" />
                 </LineChart>
               </ResponsiveContainer>
@@ -765,75 +788,49 @@ export function ConsolidatedCharts({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={histogramData.bins}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                  <XAxis 
-                    dataKey="range" 
-                    angle={isMobile ? -45 : 0} 
-                    textAnchor={isMobile ? 'end' : 'middle'} 
-                    height={isMobile ? 60 : 40}
-                    tick={{ fontSize: 11 }}
-                  />
-                  <YAxis 
-                    label={{ value: 'Occurrences', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length > 0) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-popover border border-border rounded-lg p-3 shadow-lg max-w-xs">
+                  <XAxis dataKey="range" angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 40} tick={{
+                    fontSize: 11
+                  }} />
+                  <YAxis label={{
+                    value: 'Occurrences',
+                    angle: -90,
+                    position: 'insideLeft'
+                  }} />
+                  <Tooltip content={({
+                    active,
+                    payload
+                  }) => {
+                    if (active && payload && payload.length > 0) {
+                      const data = payload[0].payload;
+                      return <div className="bg-popover border border-border rounded-lg p-3 shadow-lg max-w-xs">
                             <p className="text-sm font-semibold mb-2">{data.range}</p>
                             <p className="text-sm mb-2">Occurrences: {data.occurrences}</p>
                             <div className="border-t border-border pt-2">
                               <p className="text-xs font-semibold mb-1">Actifs:</p>
-                              {data.investments.map((inv: any, idx: number) => (
-                                <div key={idx} className="text-xs mb-1">
+                              {data.investments.map((inv: any, idx: number) => <div key={idx} className="text-xs mb-1">
                                   <span className="font-medium">{inv.investmentName}</span>
                                   <span className="text-muted-foreground ml-1">
                                     ({formatPercentage(inv.rendementNet)})
                                   </span>
-                                </div>
-                              ))}
+                                </div>)}
                             </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar 
-                    dataKey="occurrences" 
-                    fill="hsl(200 70% 60%)" 
-                    fillOpacity={0.8}
-                    stroke="hsl(200 70% 50%)"
-                    strokeWidth={1}
-                  />
+                          </div>;
+                    }
+                    return null;
+                  }} />
+                  <Bar dataKey="occurrences" fill="hsl(200 70% 60%)" fillOpacity={0.8} stroke="hsl(200 70% 50%)" strokeWidth={1} />
                   {/* Normal distribution curve */}
-                  <Line 
-                    type="monotone" 
-                    dataKey={(data) => {
-                      const curvePoint = histogramData.normalCurve.find(
-                        c => c.binCenter === data.binCenter
-                      );
-                      return curvePoint?.normalValue || 0;
-                    }}
-                    stroke="hsl(var(--foreground))" 
-                    strokeWidth={2}
-                    dot={false}
-                    name="Distribution normale"
-                  />
+                  <Line type="monotone" dataKey={data => {
+                    const curvePoint = histogramData.normalCurve.find(c => c.binCenter === data.binCenter);
+                    return curvePoint?.normalValue || 0;
+                  }} stroke="hsl(var(--foreground))" strokeWidth={2} dot={false} name="Distribution normale" />
                   {/* Median line */}
-                  <ReferenceLine 
-                    x={`${histogramData.median.toFixed(1)}%`}
-                    stroke="hsl(0 84.2% 60.2%)" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    label={{ 
-                      value: 'Médiane', 
-                      position: 'top',
-                      fill: 'hsl(0 84.2% 60.2%)',
-                      fontSize: 12
-                    }}
-                  />
+                  <ReferenceLine x={`${histogramData.median.toFixed(1)}%`} stroke="hsl(0 84.2% 60.2%)" strokeWidth={2} strokeDasharray="5 5" label={{
+                    value: 'Médiane',
+                    position: 'top',
+                    fill: 'hsl(0 84.2% 60.2%)',
+                    fontSize: 12
+                  }} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
