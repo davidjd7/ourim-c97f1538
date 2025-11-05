@@ -74,6 +74,8 @@ export const InvestmentKPIRow = React.memo(({
         return formatCurrencyWithSign(kpis?.xirrDetails?.totalCfni || 0);
       case 'xirr':
         return formatPercentageWithSign(kpis?.xirr || 0);
+      case 'xirrUnleveraged':
+        return formatPercentageWithSign(kpis?.xirrUnleveraged || 0);
       case 'totalVarValeur':
         return formatCurrencyWithSign(kpis?.xirrDetails?.deltaValeur || 0);
       case 'lastVarValeur':
@@ -194,6 +196,9 @@ export const InvestmentKPIRow = React.memo(({
           break;
         case 'xirr':
           value = kpis?.xirr || 0;
+          break;
+        case 'xirrUnleveraged':
+          value = kpis?.xirrUnleveraged || 0;
           break;
         case 'totalVarValeur':
           value = kpis?.xirrDetails?.deltaValeur || 0;

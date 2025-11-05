@@ -239,6 +239,60 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
     // Calculate XIRR
     const xirr = calculateXIRR(syntheseData);
     
+    // Calculate XIRR Unleveraged
+    let xirrUnleveraged = 0;
+    if (syntheseData.length >= 2) {
+      const firstRow = syntheseData[0];
+      const unleveragedFlows: SyntheseRow[] = [];
+      
+      // Premier flux: -valeur de la première année
+      unleveragedFlows.push({
+        date: firstRow.date,
+        flux: 0,
+        valeur: firstRow.valeur,
+        crd: 0,
+        fp: firstRow.valeur
+      });
+      
+      // Flux intermédiaires: NOI ajusté de chaque année
+      for (let i = 1; i < syntheseData.length - 1; i++) {
+        const currentRow = syntheseData[i];
+        
+        // Calculer le NOI ajusté pour cette ligne
+        const cashflowRow = cashflows.filter(cf => cf.date === currentRow.date);
+        const ebitdaRow = cashflowRow.reduce((sum, cf) => sum + calculateNOI(cf), 0);
+        const immobilisationRow = immobilisations.filter(immo => immo.date === currentRow.date);
+        const immobilisationAmountRow = immobilisationRow.reduce((sum, immo) => sum + (immo.montant || 0), 0);
+        const noiAjusteRow = ebitdaRow - immobilisationAmountRow;
+        
+        unleveragedFlows.push({
+          date: currentRow.date,
+          flux: noiAjusteRow,
+          valeur: 0,
+          crd: 0,
+          fp: 0
+        });
+      }
+      
+      // Dernier flux: valeur courante + NOI ajusté courant
+      const lastRow = syntheseData[syntheseData.length - 1];
+      const lastCashflows = cashflows.filter(cf => cf.date === lastRow.date);
+      const lastEbitda = lastCashflows.reduce((sum, cf) => sum + calculateNOI(cf), 0);
+      const lastImmobilisations = immobilisations.filter(immo => immo.date === lastRow.date);
+      const lastImmobilisationAmount = lastImmobilisations.reduce((sum, immo) => sum + (immo.montant || 0), 0);
+      const lastNoiAjuste = lastEbitda - lastImmobilisationAmount;
+      
+      unleveragedFlows.push({
+        date: lastRow.date,
+        flux: lastNoiAjuste,
+        valeur: lastRow.valeur,
+        crd: 0,
+        fp: lastRow.valeur
+      });
+      
+      xirrUnleveraged = calculateXIRR(unleveragedFlows);
+    }
+    
     // Calculate additional XIRR details
     const totalCfni = syntheseData.reduce((sum, row) => {
       const rowCashflows = cashflows.filter(cf => cf.date === row.date);
@@ -286,7 +340,8 @@ export const calculateKPIs = (data: InvestmentRawData): InvestmentKPIs => {
       totalReturn,
       totalReturnDetails,
       xirr,
-      xirrDetails
+      xirrDetails,
+      xirrUnleveraged
     };
   } catch (error) {
     logError(error, { function: 'calculateKPIs' });
@@ -316,5 +371,6 @@ export const getDefaultKPIs = (): InvestmentKPIs => ({
     gain1Year: new Date().getFullYear(), 
     latestCf: 0, 
     latestCfYear: new Date().getFullYear() 
-  }
+  },
+  xirrUnleveraged: 0
 });

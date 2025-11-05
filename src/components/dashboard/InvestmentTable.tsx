@@ -58,6 +58,7 @@ export function InvestmentTable({
         totalReturn: kpis.totalReturn,
         totalCfni: kpis.xirrDetails.totalCfni,
         xirr: kpis.xirr,
+        xirrUnleveraged: kpis.xirrUnleveraged,
         totalVarValeur: kpis.xirrDetails.deltaValeur,
         lastVarValeur: kpis.xirrDetails.variationValeurDerniereAnnee,
         lastCfni: kpis.xirrDetails.cfniDerniereAnnee,
