@@ -1265,7 +1265,7 @@ export function PerformanceTab({
                               <Tooltip>
                                 <TooltipTrigger className="cursor-help">Gain</TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Delta FP + CF</p>
+                                  <p>FP + CF / ΔVal + CFNI</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TableHead>
@@ -1573,7 +1573,7 @@ export function PerformanceTab({
                                <Tooltip>
                                  <TooltipTrigger className="cursor-help">Gain</TooltipTrigger>
                                  <TooltipContent>
-                                   <p>Delta FP + CF</p>
+                                   <p>FP + CF / ΔVal + CFNI</p>
                                  </TooltipContent>
                                </Tooltip>
                              </TableHead>
