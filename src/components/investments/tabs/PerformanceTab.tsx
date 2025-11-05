@@ -1338,19 +1338,35 @@ export function PerformanceTab({
                                fp: 0
                              });
                              
-                             // 2. Gains de chaque année (variation de valeur)
-                             for (let i = 1; i <= index; i++) {
-                               const currentRow = syntheseData[i];
-                               const prevRow = syntheseData[i - 1];
-                               const yearGain = currentRow.valeur - prevRow.valeur;
-                               unleveragedFlows.push({
-                                 date: currentRow.date,
-                                 flux: yearGain,
-                                 valeur: 0,
-                                 crd: 0,
-                                 fp: 0
-                               });
-                             }
+                            // 2. Gains de chaque année (Gain 1)
+                            for (let i = 1; i <= index; i++) {
+                              const currentRow = syntheseData[i];
+                              const prevRow = syntheseData[i - 1];
+                              
+                              // Recalculer Gain 1 pour cette année
+                              const debtFlowYear = debtFlows.find(debt => debt.date === currentRow.date);
+                              const rmbtCapitalYear = debtFlowYear?.rmbtCapital || 0;
+                              const rmbtInteretYear = debtFlowYear?.rmbtInteret || 0;
+                              
+                              const cashflowYear = cashflows.find(cf => cf.date === currentRow.date);
+                              const ebitdaYear = cashflowYear ? calculateEBITDA(cashflowYear) : 0;
+                              const immobilisationYear = immobilisations.find(immo => immo.date === currentRow.date);
+                              const immobilisationAmountYear = immobilisationYear?.montant || 0;
+                              const noiAjusteYear = ebitdaYear - immobilisationAmountYear;
+                              const cfniYear = noiAjusteYear - rmbtInteretYear;
+                              const cfYear = cfniYear - rmbtCapitalYear;
+                              
+                              const variationFPYear = currentRow.fp - prevRow.fp;
+                              const yearGain1 = variationFPYear + cfYear; // Gain 1 = Variation FP + CF
+                              
+                              unleveragedFlows.push({
+                                date: currentRow.date,
+                                flux: yearGain1,
+                                valeur: 0,
+                                crd: 0,
+                                fp: 0
+                              });
+                            }
                              
                              // 3. Valeur la plus récente (positive, comme un retour final)
                              unleveragedFlows.push({
@@ -1649,19 +1665,35 @@ export function PerformanceTab({
                               fp: 0
                             });
                             
-                            // 2. Gains de chaque année (variation de valeur)
-                            for (let i = 1; i <= index; i++) {
-                              const currentRow = syntheseData[i];
-                              const prevRow = syntheseData[i - 1];
-                              const yearGain = currentRow.valeur - prevRow.valeur;
-                              unleveragedFlows.push({
-                                date: currentRow.date,
-                                flux: yearGain,
-                                valeur: 0,
-                                crd: 0,
-                                fp: 0
-                              });
-                            }
+                           // 2. Gains de chaque année (Gain 1)
+                           for (let i = 1; i <= index; i++) {
+                             const currentRow = syntheseData[i];
+                             const prevRow = syntheseData[i - 1];
+                             
+                             // Recalculer Gain 1 pour cette année
+                             const debtFlowYear = debtFlows.find(debt => debt.date === currentRow.date);
+                             const rmbtCapitalYear = debtFlowYear?.rmbtCapital || 0;
+                             const rmbtInteretYear = debtFlowYear?.rmbtInteret || 0;
+                             
+                             const cashflowYear = cashflows.find(cf => cf.date === currentRow.date);
+                             const ebitdaYear = cashflowYear ? calculateEBITDA(cashflowYear) : 0;
+                             const immobilisationYear = immobilisations.find(immo => immo.date === currentRow.date);
+                             const immobilisationAmountYear = immobilisationYear?.montant || 0;
+                             const noiAjusteYear = ebitdaYear - immobilisationAmountYear;
+                             const cfniYear = noiAjusteYear - rmbtInteretYear;
+                             const cfYear = cfniYear - rmbtCapitalYear;
+                             
+                             const variationFPYear = currentRow.fp - prevRow.fp;
+                             const yearGain1 = variationFPYear + cfYear; // Gain 1 = Variation FP + CF
+                             
+                             unleveragedFlows.push({
+                               date: currentRow.date,
+                               flux: yearGain1,
+                               valeur: 0,
+                               crd: 0,
+                               fp: 0
+                             });
+                           }
                             
                             // 3. Valeur la plus récente (positive, comme un retour final)
                             unleveragedFlows.push({
