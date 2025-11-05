@@ -283,43 +283,47 @@ export function ConsolidatedKPIView({
       const rollingData = consolidatedSynthesis.slice(0, index + 1);
       const rollingXirr = rollingData.length >= 2 ? calculateXIRR(rollingData) : 0;
 
-      // Calculate unleveraged XIRR based on values only
-      // Sequence: - oldest value, gains per year, + most recent value
+      // Calculate unleveraged XIRR using NOI ajusté (same logic as individual investments)
       let xirrUnleveraged = 0;
-      if (index >= 1) {
+      if (index === 0) {
+        xirrUnleveraged = 0; // Première année: 0 par défaut
+      } else {
         const firstRow = consolidatedSynthesis[0] as any;
         const unleveragedFlows: ConsolidatedRow[] = [];
         
-        // 1. Oldest value (negative, like an investment)
+        // Premier flux: -valeur de la première année (investment outlay)
         unleveragedFlows.push({
           date: firstRow.date,
-          cashFlow: -firstRow.valeur,
-          valeur: 0,
+          cashFlow: 0,
+          valeur: firstRow.valeur,
           crd: 0,
-          fp: 0
+          fp: firstRow.valeur // calculateXIRR utilisera -fp => -valeur
         });
         
-        // 2. Gains for each year (using deltaValeur for each year)
-        for (let i = 1; i <= index; i++) {
+        // Flux intermédiaires: NOI ajusté de chaque année (de l'année 2 à l'année n-1)
+        for (let i = 1; i < index; i++) {
           const currentRow = consolidatedSynthesis[i] as any;
-          const prevRow = consolidatedSynthesis[i - 1] as any;
-          const yearGain = currentRow.valeur - prevRow.valeur;
+          
+          // Calculer le NOI ajusté pour cette ligne (NOI - immobilisations)
+          const noiAjusteRow = currentRow.noi - currentRow.immobilisations;
+          
           unleveragedFlows.push({
             date: currentRow.date,
-            cashFlow: yearGain,
+            cashFlow: noiAjusteRow,
             valeur: 0,
             crd: 0,
             fp: 0
           });
         }
         
-        // 3. Most recent value (positive, like a final return)
+        // Dernier flux: valeur courante + NOI ajusté courant
+        const noiAjuste = row.noi - row.immobilisations;
         unleveragedFlows.push({
           date: row.date,
-          cashFlow: row.valeur,
-          valeur: 0,
+          cashFlow: noiAjuste,
+          valeur: row.valeur,
           crd: 0,
-          fp: 0
+          fp: row.valeur // calculateXIRR fera flux + fp => valeur + NOI
         });
         
         // Calculate XIRR with these flows
