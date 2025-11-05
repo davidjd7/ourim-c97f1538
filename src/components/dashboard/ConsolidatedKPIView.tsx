@@ -450,7 +450,6 @@ export function ConsolidatedKPIView({
                   <TableHead className="text-right">CF</TableHead>
                   <TableHead className="text-right">Δ Valeur</TableHead>
                   <TableHead className="text-right">Gain 1</TableHead>
-                  <TableHead className="text-right">Gain 2</TableHead>
                   <TableHead className="text-right">Total ROE</TableHead>
                   <TableHead className="text-right">XIRR glissant</TableHead>
                 </tr>
@@ -474,9 +473,6 @@ export function ConsolidatedKPIView({
                     </TableCell>
                     <TableCell className={`text-right ${getValueClass(row.gain1)}`}>
                       {formatCurrency(row.gain1)}
-                    </TableCell>
-                    <TableCell className={`text-right ${getValueClass(row.gain2)}`}>
-                      {formatCurrency(row.gain2)}
                     </TableCell>
                     <TableCell className={`text-right ${getValueClass(row.totalReturn)}`}>
                       {formatPercentage(row.totalReturn)}
@@ -511,9 +507,6 @@ export function ConsolidatedKPIView({
                     </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(syntheticTableData.reduce((sum, row) => sum + row.gain1, 0))}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(syntheticTableData.reduce((sum, row) => sum + row.gain2, 0))}
                     </TableCell>
                     <TableCell className="text-right">
                       {formatPercentage(syntheticTableData.filter(row => row.totalReturn !== 0).reduce((sum, row) => sum + row.totalReturn, 0) / syntheticTableData.filter(row => row.totalReturn !== 0).length || 0)}
