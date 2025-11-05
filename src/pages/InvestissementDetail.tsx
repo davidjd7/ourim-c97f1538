@@ -89,7 +89,8 @@ export default function InvestissementDetail() {
       gain1Year: 0,
       latestCf: 0,
       latestCfYear: 0
-    }
+    },
+    xirrUnleveraged: 0
   } : batchKPIs[id || ''] || {
     fondPropre: 0,
     fondPropreDetails: {
@@ -129,7 +130,8 @@ export default function InvestissementDetail() {
       gain1Year: 0,
       latestCf: 0,
       latestCfYear: 0
-    }
+    },
+    xirrUnleveraged: 0
   };
   const [tempEditData, setTempEditData] = useState({
     name: '',
@@ -488,12 +490,15 @@ export default function InvestissementDetail() {
              <div className="p-4">
                <p className="text-sm text-muted-foreground font-bold mb-3">XIRR ({kpis.xirrDetails.years}Y)</p>
                <div className="flex justify-between items-start">
-                 <div className="flex flex-col">
-                   <p className={`text-2xl font-bold ${kpis.xirr >= 0 ? 'text-success' : 'text-destructive'}`}>
-                     {formatPercentage(kpis.xirr)}
-                   </p>
-                   {kpis.xirrDetails.latestCf !== 0 && kpis.xirrDetails.latestCfYear !== 0}
-                 </div>
+                  <div className="flex flex-col">
+                    <p className={`text-2xl font-bold ${kpis.xirr >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {formatPercentage(kpis.xirr)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Unleveraged: {formatPercentage(kpis.xirrUnleveraged)}
+                    </p>
+                    {kpis.xirrDetails.latestCf !== 0 && kpis.xirrDetails.latestCfYear !== 0}
+                  </div>
                  <div className="text-xs text-muted-foreground space-y-1">
                    <div>
                      CFNI: {formatCurrency(kpis.xirrDetails.totalCfni)}
