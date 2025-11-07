@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import ourimLogo from '@/assets/ourim-logo.png';
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,7 +63,9 @@ export default function Auth() {
   return <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Ourim</CardTitle>
+          <div className="flex justify-center mb-4">
+            <img src={ourimLogo} alt="Ourim" className="h-24 w-auto" />
+          </div>
           <CardDescription>
             Connectez-vous à votre compte pour accéder au tableau de bord
           </CardDescription>
