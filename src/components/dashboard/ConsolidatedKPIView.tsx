@@ -550,7 +550,7 @@ export function ConsolidatedKPIView({
                   <TableHead className="text-right">Gain 1</TableHead>
                   <TableHead className="text-right">Total ROE</TableHead>
                   <TableHead className="text-right">IRR Leveraged</TableHead>
-                  <TableHead className="text-right">XIRR Unleveraged</TableHead>
+                  <TableHead className="text-right">IRR Unleveraged</TableHead>
                 </tr>
               </TableHeader>
               <TableBody>
