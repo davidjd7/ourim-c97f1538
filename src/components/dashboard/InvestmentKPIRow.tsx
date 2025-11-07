@@ -73,14 +73,7 @@ export const InvestmentKPIRow = React.memo(({
       case 'totalCfni':
         return formatCurrencyWithSign(kpis?.xirrDetails?.totalCfni || 0);
       case 'xirr':
-        return (
-          <div className="flex flex-col items-end">
-            <span>{formatPercentageWithSign(kpis?.xirr || 0)}</span>
-            <span className="text-xs text-muted-foreground">
-              Unleveraged: {formatPercentageWithSign(kpis?.xirrUnleveraged || 0)}
-            </span>
-          </div>
-        );
+        return formatPercentageWithSign(kpis?.xirr || 0);
       case 'xirrUnleveraged':
         return formatPercentageWithSign(kpis?.xirrUnleveraged || 0);
       case 'totalVarValeur':
