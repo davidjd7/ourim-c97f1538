@@ -22,7 +22,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useUserRole } from '@/hooks/useUserRole';
-import logo from '@/assets/logo.png';
 
 const navigation = [
   {
@@ -65,8 +64,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="animate-slide-in-right">
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-3 px-2 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0">
-            <img src={logo} alt="Ourim Logo" className="h-8 w-8 object-contain" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground flex-shrink-0">
+            <Building className="h-4 w-4" />
           </div>
           {!isCollapsed && (
             <div className="animate-fade-in">
