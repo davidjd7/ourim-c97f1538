@@ -30,15 +30,9 @@ export function ConsolidatedKPIView({
   } = useBatchPerformanceKPIs(investmentIds);
 
   // Calculate available years and default cutoff year
-  const {
-    availableYears,
-    defaultCutoffYear
-  } = useMemo(() => {
+  const { availableYears, defaultCutoffYear } = useMemo(() => {
     if (Object.keys(rawByInvestment).length === 0) {
-      return {
-        availableYears: [],
-        defaultCutoffYear: new Date().getFullYear()
-      };
+      return { availableYears: [], defaultCutoffYear: new Date().getFullYear() };
     }
 
     // Collect ALL years from all selected investments
@@ -57,18 +51,17 @@ export function ConsolidatedKPIView({
         allYearsSet.add(new Date(df.date).getFullYear());
       });
     });
+
     const sortedYears = Array.from(allYearsSet).sort((a, b) => a - b);
+    
     if (sortedYears.length === 0) {
-      return {
-        availableYears: [],
-        defaultCutoffYear: new Date().getFullYear()
-      };
+      return { availableYears: [], defaultCutoffYear: new Date().getFullYear() };
     }
 
     // Default to the latest available year
-    return {
-      availableYears: sortedYears,
-      defaultCutoffYear: sortedYears[sortedYears.length - 1]
+    return { 
+      availableYears: sortedYears, 
+      defaultCutoffYear: sortedYears[sortedYears.length - 1] 
     };
   }, [rawByInvestment]);
 
@@ -81,6 +74,7 @@ export function ConsolidatedKPIView({
       onAvailableYearsChange(availableYears);
     }
   }, [availableYears, onAvailableYearsChange]);
+
   React.useEffect(() => {
     if (cutoffYear === null && defaultCutoffYear) {
       onCutoffYearChange(defaultCutoffYear);
@@ -103,9 +97,10 @@ export function ConsolidatedKPIView({
 
     // Filter data by cutoff year and collect all dates
     const cutoffDate = new Date(`${effectiveCutoffYear}-12-31`);
-
+    
     // Use Maps to track unique entries per investment per date to prevent duplicates
     const valorisationsByInvestmentDate = new Map<string, ValorisationRow>();
+    
     Object.entries(rawByInvestment).forEach(([investmentId, investmentData]) => {
       // Group cashflows by date (filtered by cutoff)
       investmentData.cashflows.filter(cf => new Date(cf.date) <= cutoffDate).forEach(cf => {
@@ -155,9 +150,9 @@ export function ConsolidatedKPIView({
         }
       });
     });
-
+    
     // Now add all unique valorisations to dateMap
-    valorisationsByInvestmentDate.forEach(valo => {
+    valorisationsByInvestmentDate.forEach((valo) => {
       if (!dateMap.has(valo.date)) {
         dateMap.set(valo.date, {
           cashflows: [],
@@ -234,13 +229,13 @@ export function ConsolidatedKPIView({
 
     // Calculate consolidated XIRR using the full series
     const xirr = calculateXIRR(consolidatedSynthesis);
-
+    
     // Calculate consolidated unleveraged XIRR
     let xirrUnleveraged = 0;
     if (consolidatedSynthesis.length >= 2) {
       const firstRow = consolidatedSynthesis[0] as any;
       const unleveragedFlows: ConsolidatedRow[] = [];
-
+      
       // Premier flux: -valeur de la première année
       unleveragedFlows.push({
         date: firstRow.date,
@@ -249,11 +244,12 @@ export function ConsolidatedKPIView({
         crd: 0,
         fp: firstRow.valeur
       });
-
+      
       // Flux intermédiaires: NOI ajusté de chaque année
       for (let i = 1; i < consolidatedSynthesis.length - 1; i++) {
         const currentRow = consolidatedSynthesis[i] as any;
         const noiAjusteRow = currentRow.noi - currentRow.immobilisations;
+        
         unleveragedFlows.push({
           date: currentRow.date,
           cashFlow: noiAjusteRow,
@@ -262,7 +258,7 @@ export function ConsolidatedKPIView({
           fp: 0
         });
       }
-
+      
       // Dernier flux: valeur courante + NOI ajusté courant
       const noiAjuste = latestData.noi - latestData.immobilisations;
       unleveragedFlows.push({
@@ -272,8 +268,10 @@ export function ConsolidatedKPIView({
         crd: 0,
         fp: latestData.valeur
       });
+      
       xirrUnleveraged = calculateXIRR(unleveragedFlows);
     }
+    
     return {
       fondPropre,
       fondPropreDetails: {
@@ -336,7 +334,7 @@ export function ConsolidatedKPIView({
       } else {
         const firstRow = consolidatedSynthesis[0] as any;
         const unleveragedFlows: ConsolidatedRow[] = [];
-
+        
         // Premier flux: -valeur de la première année (investment outlay)
         unleveragedFlows.push({
           date: firstRow.date,
@@ -345,13 +343,14 @@ export function ConsolidatedKPIView({
           crd: 0,
           fp: firstRow.valeur // calculateXIRR utilisera -fp => -valeur
         });
-
+        
         // Flux intermédiaires: NOI ajusté de chaque année (de l'année 2 à l'année n-1)
         for (let i = 1; i < index; i++) {
           const currentRow = consolidatedSynthesis[i] as any;
-
+          
           // Calculer le NOI ajusté pour cette ligne (NOI - immobilisations)
           const noiAjusteRow = currentRow.noi - currentRow.immobilisations;
+          
           unleveragedFlows.push({
             date: currentRow.date,
             cashFlow: noiAjusteRow,
@@ -360,7 +359,7 @@ export function ConsolidatedKPIView({
             fp: 0
           });
         }
-
+        
         // Dernier flux: valeur courante + NOI ajusté courant
         const noiAjuste = row.noi - row.immobilisations;
         unleveragedFlows.push({
@@ -370,10 +369,11 @@ export function ConsolidatedKPIView({
           crd: 0,
           fp: row.valeur // calculateXIRR fera flux + fp => valeur + NOI
         });
-
+        
         // Calculate XIRR with these flows
         xirrUnleveraged = unleveragedFlows.length >= 2 ? calculateXIRR(unleveragedFlows) : 0;
       }
+
       return {
         date: row.date,
         valeur: row.valeur,
@@ -504,7 +504,8 @@ export function ConsolidatedKPIView({
                 <p className={`text-2xl font-bold ${getValueClass(consolidatedData.xirr)}`}>
                   {formatPercentage(consolidatedData.xirr)}
                 </p>
-                <p className={`text-sm text-muted-foreground mt-1`}>Unleveraged: +8.8%<span className={getValueClass(consolidatedData.xirrUnleveraged)}>
+                <p className={`text-sm text-muted-foreground mt-1`}>
+                  IRR Unleveraged: <span className={getValueClass(consolidatedData.xirrUnleveraged)}>
                     {formatPercentage(consolidatedData.xirrUnleveraged)}
                   </span>
                 </p>
@@ -521,7 +522,13 @@ export function ConsolidatedKPIView({
       </div>
 
       {/* Charts Section */}
-      <ConsolidatedCharts selectedInvestments={selectedInvestments} batchKPIs={batchKPIs} rawByInvestment={rawByInvestment} syntheticTableData={syntheticTableData} cutoffYear={effectiveCutoffYear} />
+      <ConsolidatedCharts 
+        selectedInvestments={selectedInvestments} 
+        batchKPIs={batchKPIs} 
+        rawByInvestment={rawByInvestment} 
+        syntheticTableData={syntheticTableData}
+        cutoffYear={effectiveCutoffYear}
+      />
 
       {/* Synthetic Table */}
       <div className="card-financial">
