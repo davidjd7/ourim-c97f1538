@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { logError } from '@/lib/errorHandler';
+import { noteSchema } from '@/lib/validationSchemas';
+import { toast } from 'sonner';
 
 interface Note {
   id: string;
@@ -59,7 +61,15 @@ export function useNotes(investmentId: string) {
   });
 
   const addNote = async (noteData: { title: string; content: string; isPrivate: boolean }) => {
-    if (!user || !noteData.title.trim() || !noteData.content.trim()) return false;
+    if (!user) return false;
+
+    // Validate input
+    try {
+      noteSchema.parse(noteData);
+    } catch (validationError: any) {
+      toast.error(validationError.errors?.[0]?.message || 'Données invalides');
+      return false;
+    }
 
     try {
       const data = {
@@ -95,7 +105,15 @@ export function useNotes(investmentId: string) {
   };
 
   const updateNote = async (noteId: string, noteData: { title: string; content: string; isPrivate: boolean }) => {
-    if (!user || !noteData.title.trim() || !noteData.content.trim()) return false;
+    if (!user) return false;
+
+    // Validate input
+    try {
+      noteSchema.parse(noteData);
+    } catch (validationError: any) {
+      toast.error(validationError.errors?.[0]?.message || 'Données invalides');
+      return false;
+    }
 
     try {
       const updateData = {

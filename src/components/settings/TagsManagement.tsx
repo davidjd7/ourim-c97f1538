@@ -9,6 +9,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Edit, Trash2, Tag as TagIcon } from 'lucide-react';
 import { useTags, Tag } from '@/hooks/useTags';
 import { useUserRole } from '@/hooks/useUserRole';
+import { tagSchema } from '@/lib/validationSchemas';
+import { toast } from 'sonner';
 
 const DEFAULT_COLORS = [
   '#EF4444', // Red
@@ -30,7 +32,13 @@ export function TagsManagement() {
   const [newTagColor, setNewTagColor] = useState(DEFAULT_COLORS[0]);
 
   const handleCreateTag = async () => {
-    if (!newTagName.trim()) return;
+    // Validate input
+    try {
+      tagSchema.parse({ name: newTagName, color: newTagColor });
+    } catch (validationError: any) {
+      toast.error(validationError.errors?.[0]?.message || 'Données invalides');
+      return;
+    }
     
     try {
       await createTag(newTagName.trim(), newTagColor);
@@ -43,7 +51,15 @@ export function TagsManagement() {
   };
 
   const handleEditTag = async () => {
-    if (!editingTag || !newTagName.trim()) return;
+    if (!editingTag) return;
+    
+    // Validate input
+    try {
+      tagSchema.parse({ name: newTagName, color: newTagColor });
+    } catch (validationError: any) {
+      toast.error(validationError.errors?.[0]?.message || 'Données invalides');
+      return;
+    }
     
     try {
       await updateTag(editingTag.id, newTagName.trim(), newTagColor);

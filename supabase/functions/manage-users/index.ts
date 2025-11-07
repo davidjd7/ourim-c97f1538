@@ -1,5 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Validation schemas
+const userEmailSchema = z.string().trim().email().max(255);
+const userPasswordSchema = z.string()
+  .min(12, "Le mot de passe doit contenir au moins 12 caractères")
+  .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/, 
+    "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial");
+const userRoleSchema = z.enum(['admin', 'analyste', 'lecteur']);
+const uuidSchema = z.string().uuid();
+const companyIdsSchema = z.array(z.string().uuid());
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -101,6 +112,21 @@ serve(async (req) => {
       case 'create': {
         const { email, role, password } = params;
         
+        // Validate inputs
+        try {
+          userEmailSchema.parse(email);
+          userRoleSchema.parse(role);
+          if (password) {
+            userPasswordSchema.parse(password);
+          }
+        } catch (validationError) {
+          console.error('Validation error:', validationError);
+          return new Response(
+            JSON.stringify({ error: 'Données invalides' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
         // Create user with optional password
         const createUserParams: any = {
           email,
@@ -134,9 +160,14 @@ serve(async (req) => {
       case 'update_password': {
         const { userId, password } = params;
         
-        if (!password || password.length < 6) {
+        // Validate inputs
+        try {
+          uuidSchema.parse(userId);
+          userPasswordSchema.parse(password);
+        } catch (validationError) {
+          console.error('Validation error:', validationError);
           return new Response(
-            JSON.stringify({ error: 'Password must be at least 6 characters' }),
+            JSON.stringify({ error: 'Données invalides' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
@@ -156,6 +187,18 @@ serve(async (req) => {
 
       case 'update_role': {
         const { userId, role } = params;
+        
+        // Validate inputs
+        try {
+          uuidSchema.parse(userId);
+          userRoleSchema.parse(role);
+        } catch (validationError) {
+          console.error('Validation error:', validationError);
+          return new Response(
+            JSON.stringify({ error: 'Données invalides' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         // Delete existing role
         await supabaseAdmin
@@ -182,6 +225,17 @@ serve(async (req) => {
       case 'delete': {
         const { userId } = params;
         
+        // Validate inputs
+        try {
+          uuidSchema.parse(userId);
+        } catch (validationError) {
+          console.error('Validation error:', validationError);
+          return new Response(
+            JSON.stringify({ error: 'Données invalides' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
         const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
         if (error) throw error;
@@ -194,6 +248,17 @@ serve(async (req) => {
 
       case 'get_company_access': {
         const { userId } = params;
+        
+        // Validate inputs
+        try {
+          uuidSchema.parse(userId);
+        } catch (validationError) {
+          console.error('Validation error:', validationError);
+          return new Response(
+            JSON.stringify({ error: 'Données invalides' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         const { data: companyAccess, error } = await supabaseAdmin
           .from('user_company_access')
@@ -210,6 +275,20 @@ serve(async (req) => {
 
       case 'update_company_access': {
         const { userId, companyIds } = params;
+        
+        // Validate inputs
+        try {
+          uuidSchema.parse(userId);
+          if (companyIds && companyIds.length > 0) {
+            companyIdsSchema.parse(companyIds);
+          }
+        } catch (validationError) {
+          console.error('Validation error:', validationError);
+          return new Response(
+            JSON.stringify({ error: 'Données invalides' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         // Delete all existing access
         await supabaseAdmin
@@ -246,7 +325,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Une erreur est survenue' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
