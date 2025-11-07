@@ -229,6 +229,49 @@ export function ConsolidatedKPIView({
 
     // Calculate consolidated XIRR using the full series
     const xirr = calculateXIRR(consolidatedSynthesis);
+    
+    // Calculate consolidated unleveraged XIRR
+    let xirrUnleveraged = 0;
+    if (consolidatedSynthesis.length >= 2) {
+      const firstRow = consolidatedSynthesis[0] as any;
+      const unleveragedFlows: ConsolidatedRow[] = [];
+      
+      // Premier flux: -valeur de la première année
+      unleveragedFlows.push({
+        date: firstRow.date,
+        cashFlow: 0,
+        valeur: firstRow.valeur,
+        crd: 0,
+        fp: firstRow.valeur
+      });
+      
+      // Flux intermédiaires: NOI ajusté de chaque année
+      for (let i = 1; i < consolidatedSynthesis.length - 1; i++) {
+        const currentRow = consolidatedSynthesis[i] as any;
+        const noiAjusteRow = currentRow.noi - currentRow.immobilisations;
+        
+        unleveragedFlows.push({
+          date: currentRow.date,
+          cashFlow: noiAjusteRow,
+          valeur: 0,
+          crd: 0,
+          fp: 0
+        });
+      }
+      
+      // Dernier flux: valeur courante + NOI ajusté courant
+      const noiAjuste = latestData.noi - latestData.immobilisations;
+      unleveragedFlows.push({
+        date: latestData.date,
+        cashFlow: noiAjuste,
+        valeur: latestData.valeur,
+        crd: 0,
+        fp: latestData.valeur
+      });
+      
+      xirrUnleveraged = calculateXIRR(unleveragedFlows);
+    }
+    
     return {
       fondPropre,
       fondPropreDetails: {
@@ -251,6 +294,7 @@ export function ConsolidatedKPIView({
         cfni: latestData.cfni
       },
       xirr,
+      xirrUnleveraged,
       xirrDetails: {
         years: 3,
         totalCfni: consolidatedSynthesis.reduce((sum, row: any) => sum + row.cfni, 0),
@@ -460,6 +504,11 @@ export function ConsolidatedKPIView({
                 <p className={`text-2xl font-bold ${getValueClass(consolidatedData.xirr)}`}>
                   {formatPercentage(consolidatedData.xirr)}
                 </p>
+                <p className={`text-sm text-muted-foreground mt-1`}>
+                  IRR Unleveraged: <span className={getValueClass(consolidatedData.xirrUnleveraged)}>
+                    {formatPercentage(consolidatedData.xirrUnleveraged)}
+                  </span>
+                </p>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
                 <div>Total CFNI: {formatCurrency(consolidatedData.xirrDetails.totalCfni)}</div>
@@ -593,7 +642,14 @@ export function ConsolidatedKPIView({
                     <div>Total ROE</div>
                     <div className="text-xs text-muted-foreground">({effectiveCutoffYear})</div>
                   </th>
-                  <th className="text-right p-2">XIRR</th>
+                  <th className="text-right p-2">
+                    <div>IRR Leveraged</div>
+                    <div className="text-xs text-muted-foreground">(3Y)</div>
+                  </th>
+                  <th className="text-right p-2">
+                    <div>IRR Unleveraged</div>
+                    <div className="text-xs text-muted-foreground">(3Y)</div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -613,6 +669,9 @@ export function ConsolidatedKPIView({
                       <td className={`p-2 text-right ${getValueClass(kpi.xirr)}`}>
                         {formatPercentage(kpi.xirr)}
                       </td>
+                      <td className={`p-2 text-right ${getValueClass(kpi.xirrUnleveraged)}`}>
+                        {formatPercentage(kpi.xirrUnleveraged)}
+                      </td>
                     </tr>;
               })}
                 <tr className="border-t-2 font-semibold bg-muted/20">
@@ -626,6 +685,9 @@ export function ConsolidatedKPIView({
                   </td>
                   <td className={`p-2 text-right ${getValueClass(consolidatedData.xirr)}`}>
                     {formatPercentage(consolidatedData.xirr)}
+                  </td>
+                  <td className={`p-2 text-right ${getValueClass(consolidatedData.xirrUnleveraged)}`}>
+                    {formatPercentage(consolidatedData.xirrUnleveraged)}
                   </td>
                 </tr>
               </tbody>
