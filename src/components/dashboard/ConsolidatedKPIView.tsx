@@ -454,7 +454,7 @@ export function ConsolidatedKPIView({
         {/* XIRR */}
         <div className="card-financial">
           <div className="p-4">
-            <p className="text-sm text-muted-foreground font-bold mb-3">XIRR (3Y)</p>
+            <p className="text-sm text-muted-foreground font-bold mb-3">IRR Leveraged (3Y)</p>
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
                 <p className={`text-2xl font-bold ${getValueClass(consolidatedData.xirr)}`}>
