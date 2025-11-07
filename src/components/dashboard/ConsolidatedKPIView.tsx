@@ -505,7 +505,7 @@ export function ConsolidatedKPIView({
                   {formatPercentage(consolidatedData.xirr)}
                 </p>
                 <p className={`text-sm text-muted-foreground mt-1`}>
-                  IRR Unleveraged: <span className={getValueClass(consolidatedData.xirrUnleveraged)}>
+                  Unleveraged: <span className={getValueClass(consolidatedData.xirrUnleveraged)}>
                     {formatPercentage(consolidatedData.xirrUnleveraged)}
                   </span>
                 </p>
