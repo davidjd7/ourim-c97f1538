@@ -75,14 +75,19 @@ export default function Dashboard() {
           </p>
         </div>
         
-        {/* Year picker */}
-        {availableYears.length > 0 && (
-          <YearPicker
-            value={cutoffYear ? `${cutoffYear}-12-31` : `${new Date().getFullYear()}-12-31`}
-            onChange={handleYearPickerChange}
-            availableYears={availableYears}
-          />
-        )}
+        {/* Year picker and investment count */}
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            {doneInvestments.length} investissement{doneInvestments.length > 1 ? 's' : ''}
+          </div>
+          {availableYears.length > 0 && (
+            <YearPicker
+              value={cutoffYear ? `${cutoffYear}-12-31` : `${new Date().getFullYear()}-12-31`}
+              onChange={handleYearPickerChange}
+              availableYears={availableYears}
+            />
+          )}
+        </div>
       </div>
 
       {/* Consolidated KPI View with Done investments only */}
