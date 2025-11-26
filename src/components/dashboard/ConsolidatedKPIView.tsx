@@ -221,11 +221,12 @@ export function ConsolidatedKPIView({
     const rendementNet = latestData.valeur > 0 ? latestData.noi / latestData.valeur * 100 : 0;
     const cocNet = latestData.fp > 0 ? latestData.cfni / latestData.fp * 100 : 0;
 
-    // Calculate delta valeur and total return
-    const previousData = consolidatedSynthesis.length > 1 ? consolidatedSynthesis[consolidatedSynthesis.length - 2] as any : null;
-    const deltaValeur = previousData ? latestData.valeur - previousData.valeur : 0;
-    const gain1 = latestData.cfni + deltaValeur;
-    const totalReturn = latestData.fp > 0 ? gain1 / latestData.fp * 100 : 0;
+    // Calculate delta valeur (total variation from start to end) and total return
+    const firstData = consolidatedSynthesis[0] as any;
+    const deltaValeur = latestData.valeur - firstData.valeur;
+    const totalCfni = consolidatedSynthesis.reduce((sum, row: any) => sum + row.cfni, 0);
+    const gain = totalCfni + deltaValeur;
+    const totalReturn = latestData.fp > 0 ? gain / latestData.fp * 100 : 0;
 
     // Calculate consolidated XIRR using the full series
     const xirr = calculateXIRR(consolidatedSynthesis);
@@ -289,7 +290,7 @@ export function ConsolidatedKPIView({
       totalReturn,
       totalReturnDetails: {
         cocNet,
-        gain: gain1,
+        gain,
         deltaValeur,
         cfni: latestData.cfni
       },
@@ -297,11 +298,11 @@ export function ConsolidatedKPIView({
       xirrUnleveraged,
       xirrDetails: {
         years: 3,
-        totalCfni: consolidatedSynthesis.reduce((sum, row: any) => sum + row.cfni, 0),
+        totalCfni,
         cfDerniereAnnee: latestData.cashFlow,
         cfDerniereAnneeYear: latestYear,
         deltaValeur,
-        total: gain1
+        gain
       }
     };
   }, [consolidatedSynthesis]);
@@ -514,7 +515,7 @@ export function ConsolidatedKPIView({
                 <div>Total CFNI: {formatCurrency(consolidatedData.xirrDetails.totalCfni)}</div>
                 
                 <div>Δ Valeur: {formatCurrency(consolidatedData.xirrDetails.deltaValeur)}</div>
-                <div>Total: {formatCurrency(consolidatedData.xirrDetails.total)}</div>
+                <div>Gain: {formatCurrency(consolidatedData.xirrDetails.gain)}</div>
               </div>
             </div>
           </div>
