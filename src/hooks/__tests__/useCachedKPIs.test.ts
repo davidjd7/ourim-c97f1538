@@ -12,7 +12,7 @@ const mockKPIs: InvestmentKPIs = {
   totalReturn: 0.15,
   totalReturnDetails: { cfni: 5000, deltaValeur: 10000, cocNet: 20000, cfniPlusDeltaValeur: 15000, totalEarning: 15000, year: 2023 },
   xirr: 0.12,
-  xirrDetails: { totalCfni: 5000, cfniDerniereAnnee: 5000, deltaValeur: 10000, variationValeurDerniereAnnee: 10000, total: 15000, years: 1, gain1: 15000, lastCfniYear: 2023, lastVarValeurYear: 2023, gain1Year: 2023, latestCf: 5000, latestCfYear: 2023 },
+  xirrDetails: { totalCfni: 5000, cfniDerniereAnnee: 5000, deltaValeur: 10000, variationValeurDerniereAnnee: 10000, gain: 15000, years: 1, gain1: 15000, lastCfniYear: 2023, lastVarValeurYear: 2023, gain1Year: 2023, latestCf: 5000, latestCfYear: 2023 },
   xirrUnleveraged: 0.10
 };
 

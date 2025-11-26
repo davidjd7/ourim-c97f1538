@@ -506,7 +506,7 @@ export default function InvestissementDetail() {
                    <div>
                      Valeur: {formatCurrency(kpis.xirrDetails.deltaValeur)}
                    </div>
-                   <div>Total: {formatCurrency(kpis.xirrDetails.total)}</div>
+                   <div>Gain: {formatCurrency(kpis.xirrDetails.gain)}</div>
                  </div>
                </div>
             </div>

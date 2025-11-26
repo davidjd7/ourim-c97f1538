@@ -46,7 +46,7 @@ export interface InvestmentKPIs {
   totalReturn: number;
   totalReturnDetails: { cfni: number; deltaValeur: number; cocNet: number; cfniPlusDeltaValeur: number; totalEarning: number; year: number };
   xirr: number;
-  xirrDetails: { totalCfni: number; cfniDerniereAnnee: number; deltaValeur: number; variationValeurDerniereAnnee: number; total: number; years: number; gain1: number; lastCfniYear: number; lastVarValeurYear: number; gain1Year: number; latestCf: number; latestCfYear: number };
+  xirrDetails: { totalCfni: number; cfniDerniereAnnee: number; deltaValeur: number; variationValeurDerniereAnnee: number; gain: number; years: number; gain1: number; lastCfniYear: number; lastVarValeurYear: number; gain1Year: number; latestCf: number; latestCfYear: number };
   xirrUnleveraged: number;
 }
 
